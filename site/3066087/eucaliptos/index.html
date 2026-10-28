@@ -6,14 +6,14 @@
 <title>Apartamento à venda na Avenida dos Eucaliptos, Indianópolis · Marcelo Osawa</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Apartamento à venda em Indianópolis, São Paulo: 130 m², 2 suítes e 2 vagas, a poucos passos da estação Eucaliptos do metrô. Tour por cômodo, ficha completa e agendamento de visita pelo WhatsApp.">
-<link rel="canonical" href="https://marceloosawaimoveis.com.br/eucaliptos/">
+<link rel="canonical" href="https://marceloosawaimoveis.com.br/3066087/eucaliptos/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="Marcelo Osawa · Corretor de imóveis">
 <meta property="og:title" content="Avenida dos Eucaliptos, Indianópolis: 130 m², 2 suítes e 2 vagas">
 <meta property="og:description" content="R$ 2.300.000, a poucos passos do metrô Eucaliptos. Veja o tour por cômodo, receba a ficha completa ou agende uma visita pelo WhatsApp.">
-<meta property="og:url" content="https://marceloosawaimoveis.com.br/eucaliptos/">
-<meta property="og:image" content="https://marceloosawaimoveis.com.br/eucaliptos/img/foto/living.jpg">
+<meta property="og:url" content="https://marceloosawaimoveis.com.br/3066087/eucaliptos/">
+<meta property="og:image" content="https://marceloosawaimoveis.com.br/3066087/eucaliptos/img/foto/living.jpg">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="1066">
 <meta property="og:image:alt" content="Living do apartamento, com painel de madeira e cristaleira iluminada">
@@ -32,6 +32,7 @@
   --card:#F9F8F5; --ink:#15181B; --muted:#646A6E; --line:#E2E1DC; --field:#FFFFFF; --soft:#EFECE4;
   --gold:#CDAD6E; --gold-deep:#B18F4E; --on-gold:#17140D;
   --stage:#0C0E10; --error:#B5443A;
+  --form:#1A1D20; --form-field:#111315;
   --font:'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --r-s:10px; --r-m:16px; --r-l:22px;
   --shadow:0 24px 60px -30px rgba(0,0,0,.7);
@@ -57,7 +58,7 @@ a{color:inherit}
 svg{flex:none}
 
 /* Cabeçalho */
-.top{position:relative;border-bottom:1px solid var(--on-line);backdrop-filter:blur(8px);background:rgba(14,16,18,.5)}
+.top{position:absolute;top:0;left:0;right:0;z-index:5;background:linear-gradient(to bottom, rgba(8,10,12,.75), rgba(8,10,12,0))}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:0}
 .mark{width:46px;height:46px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;color:var(--gold);flex:none;background:var(--on-fill)}
@@ -74,42 +75,75 @@ svg{flex:none}
 .top .btn{display:none}
 @media (min-width:720px){ .top .btn{display:inline-flex;min-height:42px;padding:8px 16px;font-size:.92rem} }
 
-/* Grade principal */
-.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding-block:28px 48px}
+/* Seções: respiro generoso no desktop, mais contido no celular */
+main{position:relative}
 .hero,.tour,.content{min-width:0}
-@media (min-width:960px){
-  .layout{grid-template-columns:minmax(0,430px) minmax(0,1fr);column-gap:56px;row-gap:36px;padding-block:44px 72px}
-  .tour{grid-column:1;grid-row:1 / span 2;position:sticky;top:20px;align-self:start}
-  .hero,.content{grid-column:2}
-}
+.sec{padding-block:72px}
+.sec-head{display:grid;gap:6px;margin:0 0 28px}
+.sec-head h2{font-weight:300;font-size:clamp(1.5rem, 3.6vw, 2.1rem);line-height:1.15;margin:0;text-wrap:balance}
+.sec-head p{margin:0;color:var(--on-muted);font-weight:300;font-size:.95rem}
+@media (min-width:960px){ .sec{padding-block:120px} .sec-head{margin-bottom:40px} }
 
-/* Hero */
-.hero{display:grid;gap:16px}
+/* Hero em tela cheia: a foto do living ocupa a primeira dobra; o texto flutua sobre um degradê */
+.hero{position:relative;min-height:88svh;display:grid;align-items:end;background:var(--stage) url(img/foto/living.jpg) center 40% / cover no-repeat;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(to top, rgba(10,12,14,.97) 0%, rgba(10,12,14,.86) 40%, rgba(10,12,14,.5) 72%, rgba(10,12,14,.18) 100%)}
+.hero-in .kicker,.hero-in .bairro,.hero-in h1,.hero-in .price{text-shadow:0 1px 2px rgba(0,0,0,.6), 0 8px 30px rgba(0,0,0,.5)}
+.hero-in{display:grid;gap:16px;width:100%;padding-top:calc(96px + env(safe-area-inset-top, 0px));padding-bottom:40px}
+@media (min-width:960px){
+  .hero{min-height:min(92svh, 860px)}
+  .hero::before{background:linear-gradient(to top, rgba(10,12,14,.94) 0%, rgba(10,12,14,.55) 45%, rgba(10,12,14,.05) 100%),
+    linear-gradient(to right, rgba(10,12,14,.72) 0%, rgba(10,12,14,.25) 55%, rgba(10,12,14,0) 100%)}
+  .hero-in{max-width:1180px;padding-bottom:72px;gap:18px}
+  .hero-in > *{max-width:640px}
+}
 .kicker{margin:0;font-size:.9rem;color:var(--on-muted);font-weight:300}
 .bairro{display:inline-flex;align-items:center;gap:10px;margin:0;font-weight:600;font-size:clamp(1.7rem, 6vw, 2.5rem);line-height:1.05;color:var(--gold);letter-spacing:.005em}
 .bairro svg{width:.85em;height:.85em}
 h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margin:0;text-wrap:balance}
 .highs{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.highs li{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--on-line);border-radius:999px;background:var(--on-fill);font-weight:500;font-size:.9rem}
+.highs li{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid rgba(243,243,240,.22);border-radius:999px;background:rgba(10,12,14,.35);backdrop-filter:blur(6px);font-weight:500;font-size:.9rem}
 .highs svg{width:16px;height:16px;color:var(--gold)}
-.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;margin-top:6px;font-variant-numeric:tabular-nums;padding-top:16px;border-top:1px solid var(--on-line)}
-.price strong{font-weight:600;font-size:2rem;line-height:1.1}
+.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;margin-top:6px;font-variant-numeric:tabular-nums;padding-top:16px;border-top:1px solid rgba(243,243,240,.22)}
+.price strong{font-weight:600;font-size:clamp(2rem, 4vw, 2.6rem);line-height:1.1}
 .price span{color:var(--on-muted);font-size:.95rem}
 .price small{flex-basis:100%;color:var(--on-muted);font-size:.8rem;font-weight:300}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:50px;padding:12px 22px;border-radius:999px;font:600 1rem/1.2 var(--font);text-decoration:none;cursor:pointer;border:1.5px solid transparent;transition:background-color .15s,border-color .15s,transform .15s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:50px;padding:12px 22px;border-radius:999px;font:600 1rem/1.2 var(--font);text-decoration:none;cursor:pointer;border:1.5px solid transparent;transition:background-color .3s ease,border-color .3s ease,transform .3s ease,box-shadow .3s ease}
 .btn:active{transform:translateY(1px)}
 .btn-primary{background:var(--gold);color:var(--on-gold)}
 .btn-primary:hover{background:var(--gold-deep)}
-.btn-ghost{background:transparent;color:var(--on);border-color:var(--on-line)}
+.btn-ghost{background:rgba(10,12,14,.3);color:var(--on);border-color:rgba(243,243,240,.3)}
 .btn-ghost:hover{border-color:var(--gold)}
 .btn svg{width:21px;height:21px}
 
+/* Galeria: grade editorial no desktop, carrossel com scroll snap no celular */
+.grid{list-style:none;margin:0 -16px;padding:0 16px 10px;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.grid::-webkit-scrollbar{display:none}
+.grid li{flex:0 0 84%;scroll-snap-align:center;min-width:0}
+.grid button{display:block;width:100%;padding:0;border:0;background:var(--stage);border-radius:var(--r-m);overflow:hidden;cursor:pointer;position:relative;aspect-ratio:3/2;color:#fff;text-align:left;box-shadow:var(--shadow)}
+.grid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
+.grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 14px;background:linear-gradient(to top, rgba(6,8,9,.8), rgba(6,8,9,0));font:500 .92rem/1.3 var(--font)}
+.grid figcaption small{display:block;font-weight:300;font-size:.8rem;opacity:.85}
+.grid-note{color:var(--on-muted);font-size:.8rem;margin:10px 0 0;font-weight:300;text-align:center}
+@media (min-width:720px){
+  .grid{margin:0;padding:0;display:grid;grid-template-columns:repeat(4, minmax(0,1fr));grid-auto-rows:minmax(180px, 16vw);grid-auto-flow:dense;gap:12px;overflow:visible;scroll-snap-type:none}
+  .grid li{flex:none}
+  .grid button{height:100%;aspect-ratio:auto;border-radius:var(--r-s)}
+  .grid li:nth-child(1){grid-column:span 2;grid-row:span 2}
+  .grid li:nth-child(6),.grid li:nth-child(9),.grid li:nth-child(10){grid-column:span 2}
+  .grid button:hover img,.grid button:focus-visible img{transform:scale(1.04)}
+  .grid-note{display:none}
+}
+@media (min-width:960px){ .grid{gap:16px;grid-auto-rows:minmax(200px, 15vw)} }
+
 /* Tour */
+.tour .wrap{display:grid;justify-items:center}
+.tour .frame{width:100%}
 .frame{position:relative}
 .stage{position:relative;width:min(100%, calc(76svh * 9 / 16));aspect-ratio:9/16;max-width:100%;margin-inline:auto;background:var(--stage);border-radius:var(--r-l);overflow:hidden;box-shadow:var(--shadow);outline:1px solid var(--on-line);outline-offset:6px;transition:width .3s ease}
-.stage.wide{width:100%;aspect-ratio:3/2}
+.stage.wide{width:100%;max-width:960px;aspect-ratio:3/2}
 .stage video,.stage img.photo{position:absolute;inset:0;width:100%;height:100%;background:var(--stage);object-fit:cover}
 .stage.fs{position:fixed;inset:0;z-index:50;width:100vw;max-width:none;aspect-ratio:auto;height:100vh;height:100dvh;margin:0;border-radius:0;outline:0;box-shadow:none}
 .stage.fs video,.stage.fs img.photo{object-fit:contain}
@@ -137,17 +171,23 @@ h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margi
 .stage.fs .auto,.stage.fs .mode{top:max(14px, env(safe-area-inset-top,0px))}
 .stage.fs .mode{right:max(64px, calc(52px + env(safe-area-inset-right,0px)))}
 .stage.fs .auto{left:max(12px, env(safe-area-inset-left,0px))}
-.rooms{list-style:none;margin:16px 0 0;padding:2px 2px 8px;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--on-line) transparent}
+.rooms{list-style:none;margin:16px auto 0;padding:2px 2px 8px;display:flex;gap:8px;max-width:100%;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--on-line) transparent}
 .rooms li{flex:none;scroll-snap-align:start}
 .rooms button{display:grid;gap:5px;width:84px;padding:0;border:0;background:none;color:var(--on-muted);font:500 .74rem/1.25 var(--font);text-align:left;cursor:pointer}
 .rooms img{width:84px;height:64px;object-fit:cover;border-radius:var(--r-s);border:2px solid transparent;opacity:.8}
 .rooms button[aria-current="true"]{color:var(--on)}
 .rooms button[aria-current="true"] img{border-color:var(--gold);opacity:1}
-.tour-note{color:var(--on-muted);font-size:.78rem;margin:6px 0 0;font-weight:300}
+.tour-note{color:var(--on-muted);font-size:.78rem;margin:6px 0 0;font-weight:300;text-align:center}
 
-/* Conteúdo em cartões */
+/* Detalhes: conteúdo rola à esquerda, formulário fica fixo à direita no desktop */
+.details-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.side{min-width:0}
+@media (min-width:960px){
+  .details-grid{grid-template-columns:minmax(0,1fr) 400px;column-gap:48px;align-items:start}
+  .side{position:sticky;top:24px}
+}
 .content{display:grid;gap:22px}
-.card{background:var(--card);color:var(--ink);border-radius:var(--r-m);padding:24px 20px;box-shadow:var(--shadow)}
+.card{background:var(--card);color:var(--ink);border-radius:var(--r-m);padding:24px 20px;box-shadow:var(--shadow);line-height:1.7}
 @media (min-width:600px){ .card{padding:30px 32px} }
 .card h2{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.25rem;line-height:1.2;margin:0 0 16px;text-wrap:balance}
 .card h2 svg{width:22px;height:22px;color:var(--gold-deep)}
@@ -160,12 +200,12 @@ h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margi
 @media (min-width:600px){ .facts{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 24px}
-.list li{position:relative;padding-left:24px;font-size:.96rem}
-.list li::before{content:"";position:absolute;left:2px;top:.55em;width:8px;height:8px;border-radius:2px;background:var(--gold);transform:rotate(45deg)}
+.list li{position:relative;padding-left:24px;font-size:.96rem;line-height:1.7}
+.list li::before{content:"";position:absolute;left:2px;top:.65em;width:8px;height:8px;border-radius:2px;background:var(--gold);transform:rotate(45deg)}
 .near{margin:0;padding:0;list-style:none;display:grid;gap:10px}
 .near li{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:10px;font-size:.96rem}
 .near span:last-child{color:var(--muted);text-align:right}
-.maplink{display:flex;align-items:center;gap:14px;margin-top:18px;padding:12px 16px 12px 12px;border:1.5px solid var(--gold);border-radius:999px;text-decoration:none;font-weight:600;transition:background-color .15s}
+.maplink{display:flex;align-items:center;gap:14px;margin-top:18px;padding:12px 16px 12px 12px;border:1.5px solid var(--gold);border-radius:999px;text-decoration:none;font-weight:600;transition:background-color .3s ease}
 .maplink:hover{background:var(--soft)}
 .maplink .pin{width:44px;height:44px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;flex:none}
 .maplink .pin svg{width:24px;height:24px}
@@ -175,7 +215,19 @@ h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margi
 @media (max-width:480px){ .maplink{border-radius:var(--r-m);font-size:.95rem} .maplink > svg{display:none} }
 
 /* Formulário */
-.lead{scroll-margin-top:16px;border:1.5px solid var(--gold);position:relative}
+.lead{scroll-margin-top:16px;position:relative;background:var(--form);color:var(--on);border:1px solid rgba(255,255,255,.06);box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+.lead h2 svg{color:var(--gold)}
+.lead a{color:var(--on)}
+.lead .sub,.lead .consent,.lead .fine,.lead .demo{color:var(--on-muted)}
+.lead .field input[type=text],.lead .field input[type=tel]{background:var(--form-field);color:var(--on);border-color:rgba(255,255,255,.1)}
+.lead .field input::placeholder{color:var(--on-muted)}
+.lead .field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(205,173,110,.18)}
+.lead .opts label{background:var(--form-field);color:var(--on);border-color:rgba(255,255,255,.1)}
+.lead .opts label:has(input:checked){border-color:var(--gold);background:rgba(205,173,110,.12)}
+.lead .err{color:#E08A80}
+.lead .done .tick{background:rgba(205,173,110,.15);color:var(--gold)}
+.lead .demo{border-color:rgba(205,173,110,.5)}
+.lead .demo b{color:var(--on)}
 .lead h2{margin-bottom:6px}
 .lead .sub{color:var(--muted);margin:0 0 20px;font-size:.95rem}
 .field{display:grid;gap:6px;margin-bottom:14px}
@@ -188,14 +240,14 @@ h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margi
 .choice{border:0;margin:0 0 18px;padding:0;min-width:0}
 .choice legend{padding:0;margin-bottom:8px;font-weight:500;font-size:.92rem}
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
-.opts label{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--field);color:var(--ink);font-weight:500;font-size:.98rem;cursor:pointer;transition:border-color .15s,background-color .15s}
+.opts label{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--field);color:var(--ink);font-weight:500;font-size:.98rem;cursor:pointer;transition:border-color .3s ease,background-color .3s ease}
 .opts input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--gold-deep)}
 .opts label:has(input:checked){border-color:var(--gold-deep);background:var(--soft)}
 .opts label:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .lead .btn{width:100%;margin-top:6px}
-.lead .btn-primary{background:var(--ink);color:var(--card)}
-.lead .btn-primary:hover{background:#000}
+.lead .btn-primary{background:var(--gold);color:var(--on-gold)}
+.lead .btn-primary:hover{background:var(--gold-deep)}
 .consent{color:var(--muted);font-size:.82rem;margin:12px 0 0;line-height:1.5}
 .fine{color:var(--muted);font-size:.8rem;margin:8px 0 0}
 .done{display:grid;gap:12px}
@@ -209,7 +261,7 @@ h1{font-weight:300;font-size:clamp(1.6rem, 5.4vw, 2.4rem);line-height:1.15;margi
 
 /* Rodapé */
 footer{border-top:1px solid var(--on-line);background:rgba(8,10,12,.45);color:var(--on-muted);font-size:.86rem}
-footer .wrap{display:grid;gap:26px;padding-block:36px calc(100px + env(safe-area-inset-bottom, 0px))}
+footer .wrap{display:grid;gap:26px;padding-block:40px calc(100px + env(safe-area-inset-bottom, 0px))}
 @media (min-width:720px){ footer .wrap{grid-template-columns:1.3fr 1fr 1fr;gap:32px} }
 @media (min-width:960px){ footer .wrap{padding-block:40px 44px} }
 footer h3{margin:0 0 10px;font-size:.92rem;color:var(--gold);font-weight:600}
@@ -235,7 +287,7 @@ footer a:hover{border-color:var(--gold)}
 .dock .btn-primary{flex:1}
 .dock .btn-ghost{padding-inline:14px}
 @media (min-width:960px){ .dock{display:none} }
-@media (prefers-reduced-motion:reduce){ .dock,.btn,.bar i,.stage{transition:none} .icons svg{animation:none} }
+@media (prefers-reduced-motion:reduce){ .dock,.btn,.bar i,.stage,.grid img{transition:none} .icons svg{animation:none} }
 </style>
 </head>
 <body>
@@ -281,8 +333,9 @@ footer a:hover{border-color:var(--gold)}
   </div>
 </header>
 
-<main class="wrap layout" id="inicio">
-  <div class="hero">
+<main id="inicio">
+  <section class="hero" aria-label="Apresentação do imóvel">
+  <div class="wrap hero-in">
     <p class="kicker">Apartamento à venda em São Paulo</p>
     <p class="bairro"><svg aria-hidden="true"><use href="#i-pin"/></svg>Indianópolis</p>
     <h1>Avenida dos Eucaliptos, a poucos passos do metrô</h1>
@@ -302,11 +355,28 @@ footer a:hover{border-color:var(--gold)}
     <div class="actions">
       <a class="btn btn-primary" href="#ficha" data-scroll="ficha" data-interesse="ficha"><svg aria-hidden="true"><use href="#i-wa"/></svg>Receber a ficha no WhatsApp</a>
       <a class="btn btn-ghost" href="#ficha" data-scroll="ficha" data-interesse="visita">Agendar uma visita</a>
-      <a class="btn btn-ghost" href="#tour" data-scroll="tour">Ver o tour</a>
+      <a class="btn btn-ghost" href="#fotos" data-scroll="fotos">Ver as fotos</a>
     </div>
   </div>
+  </section>
 
-  <section class="tour" id="tour" aria-label="Tour por cômodo">
+  <section class="sec" id="fotos" aria-labelledby="h-fotos">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-fotos">O apartamento, cômodo a cômodo</h2>
+        <p>Toque numa foto para ver o cômodo em movimento no tour.</p>
+      </div>
+      <ul class="grid" id="gallery"></ul>
+      <p class="grid-note">Deslize para o lado para ver as outras fotos.</p>
+    </div>
+  </section>
+
+  <section class="sec tour" id="tour" aria-labelledby="h-tour">
+    <div class="wrap">
+    <div class="sec-head" style="text-align:center">
+      <h2 id="h-tour">Tour em vídeo</h2>
+      <p>As cenas usam as fotos reais do imóvel, só com movimento de câmera.</p>
+    </div>
     <div class="frame">
     <div class="stage" id="stage">
       <video id="vid" muted playsinline autoplay preload="metadata" aria-hidden="true"></video>
@@ -329,8 +399,11 @@ footer a:hover{border-color:var(--gold)}
     </div>
     <ul class="rooms" id="rooms"></ul>
     <p class="tour-note">O tour avança sozinho. Toque na tela para parar e navegar no seu ritmo; vire o celular para ver em tela cheia.</p>
+    </div>
   </section>
 
+  <section class="sec" aria-label="Detalhes e contato">
+  <div class="wrap details-grid">
   <div class="content">
     <section class="card" aria-labelledby="h-ficha">
       <h2 id="h-ficha"><svg aria-hidden="true"><use href="#i-ruler"/></svg>Ficha técnica</h2>
@@ -346,49 +419,6 @@ footer a:hover{border-color:var(--gold)}
       </dl>
     </section>
 
-    <section class="card lead" id="ficha" aria-labelledby="h-lead">
-      <form id="form" novalidate>
-        <h2 id="h-lead"><svg aria-hidden="true"><use href="#i-wa"/></svg>Receba a ficha ou agende uma visita</h2>
-        <p class="sub">Deixe seu nome e WhatsApp: um corretor da equipe de Marcelo Osawa fala com você em breve por lá.</p>
-
-        <fieldset class="choice">
-          <legend>O que você prefere?</legend>
-          <div class="opts">
-            <label><input type="radio" name="interesse" value="ficha" checked>Receber a ficha completa</label>
-            <label><input type="radio" name="interesse" value="visita">Agendar uma visita</label>
-          </div>
-        </fieldset>
-
-        <div class="field">
-          <label for="nome">Seu nome</label>
-          <input type="text" id="nome" name="nome" autocomplete="name" placeholder="Como podemos te chamar?" required aria-describedby="nome-err">
-          <p class="err" id="nome-err" hidden>Escreva seu nome.</p>
-        </div>
-        <div class="field">
-          <label for="whats">Seu WhatsApp</label>
-          <input type="tel" id="whats" name="whatsapp" inputmode="tel" autocomplete="tel-national" placeholder="DDD + número" required aria-describedby="whats-err">
-          <p class="err" id="whats-err" hidden>Confira o número: digite o DDD e o número, com 10 ou 11 dígitos.</p>
-        </div>
-
-        <div class="hp" aria-hidden="true">
-          <label for="empresa">Empresa</label>
-          <input type="text" id="empresa" name="empresa" tabindex="-1" autocomplete="off">
-        </div>
-
-        <button class="btn btn-primary" type="submit" id="send"><svg aria-hidden="true"><use href="#i-wa"/></svg><span id="sendTxt">Quero receber a ficha</span></button>
-        <p class="consent" id="consent-txt">Ao enviar, você autoriza o contato pelo WhatsApp sobre este imóvel e concorda com a <a href="privacidade.html">Política de Privacidade</a>.</p>
-        <p class="fine">Seus dados são de uso exclusivo da equipe do corretor, apenas para o contato sobre imóveis. Você pode pedir a exclusão quando quiser.</p>
-      </form>
-
-      <div class="done" id="done" hidden>
-        <div class="tick" aria-hidden="true"><svg><use href="#i-check"/></svg></div>
-        <h2 id="doneTitle">Obrigado pelo interesse!</h2>
-        <p id="doneMsg">Seu contato chegou à equipe de Marcelo Osawa, que vai falar com você em breve pelo WhatsApp.</p>
-        <p>Quer antecipar? Com um toque a conversa já começa: a mensagem vai pronta, e a equipe responde por lá.</p>
-        <a class="btn btn-primary" id="doneWa" href="#" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Começar a conversa</a>
-        <div class="demo" id="demo" hidden></div>
-      </div>
-    </section>
 
     <section class="card" aria-labelledby="h-apto">
       <h2 id="h-apto"><svg aria-hidden="true"><use href="#i-sofa"/></svg>O apartamento</h2>
@@ -436,6 +466,53 @@ footer a:hover{border-color:var(--gold)}
       </a>
     </section>
   </div>
+  <aside class="side">
+  <section class="card lead" id="ficha" aria-labelledby="h-lead">
+    <form id="form" novalidate>
+      <h2 id="h-lead"><svg aria-hidden="true"><use href="#i-wa"/></svg>Receba a ficha ou agende uma visita</h2>
+      <p class="sub">Deixe seu nome e WhatsApp: um corretor da equipe de Marcelo Osawa fala com você em breve por lá.</p>
+
+      <fieldset class="choice">
+        <legend>O que você prefere?</legend>
+        <div class="opts">
+          <label><input type="radio" name="interesse" value="ficha" checked>Receber a ficha completa</label>
+          <label><input type="radio" name="interesse" value="visita">Agendar uma visita</label>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" name="nome" autocomplete="name" placeholder="Como podemos te chamar?" required aria-describedby="nome-err">
+        <p class="err" id="nome-err" hidden>Escreva seu nome.</p>
+      </div>
+      <div class="field">
+        <label for="whats">Seu WhatsApp</label>
+        <input type="tel" id="whats" name="whatsapp" inputmode="tel" autocomplete="tel-national" placeholder="DDD + número" required aria-describedby="whats-err">
+        <p class="err" id="whats-err" hidden>Confira o número: digite o DDD e o número, com 10 ou 11 dígitos.</p>
+      </div>
+
+      <div class="hp" aria-hidden="true">
+        <label for="empresa">Empresa</label>
+        <input type="text" id="empresa" name="empresa" tabindex="-1" autocomplete="off">
+      </div>
+
+      <button class="btn btn-primary" type="submit" id="send"><svg aria-hidden="true"><use href="#i-wa"/></svg><span id="sendTxt">Quero receber a ficha</span></button>
+      <p class="consent" id="consent-txt">Ao enviar, você autoriza o contato pelo WhatsApp sobre este imóvel e concorda com a <a href="privacidade.html">Política de Privacidade</a>.</p>
+      <p class="fine">Seus dados são de uso exclusivo da equipe do corretor, apenas para o contato sobre imóveis. Você pode pedir a exclusão quando quiser.</p>
+    </form>
+
+    <div class="done" id="done" hidden>
+      <div class="tick" aria-hidden="true"><svg><use href="#i-check"/></svg></div>
+      <h2 id="doneTitle">Obrigado pelo interesse!</h2>
+      <p id="doneMsg">Seu contato chegou à equipe de Marcelo Osawa, que vai falar com você em breve pelo WhatsApp.</p>
+      <p>Quer antecipar? Com um toque a conversa já começa: a mensagem vai pronta, e a equipe responde por lá.</p>
+      <a class="btn btn-primary" id="doneWa" href="#" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Começar a conversa</a>
+      <div class="demo" id="demo" hidden></div>
+    </div>
+  </section>
+  </aside>
+  </div>
+  </section>
 </main>
 
 <footer>
@@ -557,6 +634,15 @@ ROOMS.forEach((r, i) => {
   b.innerHTML = `<img src="img/thumb/${r.id}.jpg" alt="" loading="lazy" width="84" height="64"><span>${r.n}</span>`;
   b.addEventListener('click', () => { stopAuto(); show(i); });
   li.appendChild(b); list.appendChild(li);
+});
+/* Galeria: uma foto por cômodo; tocar leva ao tour naquele cômodo */
+const gallery = document.getElementById('gallery');
+ROOMS.forEach((r, i) => {
+  const li = document.createElement('li'), b = document.createElement('button');
+  b.type = 'button'; b.setAttribute('aria-label', `${r.n}: ${r.d}. Ver no tour`);
+  b.innerHTML = `<img src="img/foto/${r.id}.jpg" alt="" loading="${i < 3 ? 'eager' : 'lazy'}" width="1600" height="1066"><figcaption>${r.n}<small>${r.d}</small></figcaption>`;
+  b.addEventListener('click', () => { stopAuto(); show(i); document.getElementById('tour').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'start'}); });
+  li.appendChild(b); gallery.appendChild(li);
 });
 /* Vídeo em 9:16, foto em 3:2: a janela acompanha o formato do que está sendo mostrado. */
 function setMode(p) {

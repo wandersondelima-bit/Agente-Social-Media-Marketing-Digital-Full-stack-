@@ -2,6 +2,7 @@
   "domain": "marceloosawaimoveis.com.br",
   "username": "u573603556",
   "type": "static",
-  "path": "eucaliptos",
-  "source": "site/eucaliptos"
+  "path": "3066087/eucaliptos",
+  "source": "site/3066087/eucaliptos",
+  "padrao_de_endereco": "/{codigo-do-imovel}/{rua}/"
 }
