@@ -3,17 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- MODELO DE LANDING PAGE · Marcelo Osawa Imóveis
+     Tudo o que muda de um apartamento para outro está marcado com "TROCAR".
+     Checklist completo em site/_modelo/README.md. -->
 <title>Apartamento à venda na Avenida dos Eucaliptos, Indianópolis · Marcelo Osawa</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Apartamento à venda em Indianópolis, São Paulo: 130 m², 2 suítes e 2 vagas, a poucos passos da estação Eucaliptos do metrô. Tour por cômodo e agendamento de visita pelo WhatsApp.">
-<link rel="canonical" href="https://marceloosawaimoveis.com.br/3066087/eucaliptos/">
+<link rel="canonical" href="https://marceloosawaimoveis.com.br/3066087/indianopolis/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="Marcelo Osawa · Corretor de imóveis">
 <meta property="og:title" content="Avenida dos Eucaliptos, Indianópolis: 130 m², 2 suítes e 2 vagas">
 <meta property="og:description" content="R$ 2.300.000, a poucos passos do metrô Eucaliptos. Veja o tour por cômodo e agende uma visita pelo WhatsApp.">
-<meta property="og:url" content="https://marceloosawaimoveis.com.br/3066087/eucaliptos/">
-<meta property="og:image" content="https://marceloosawaimoveis.com.br/3066087/eucaliptos/img/foto/living.jpg">
+<meta property="og:url" content="https://marceloosawaimoveis.com.br/3066087/indianopolis/">
+<meta property="og:image" content="https://marceloosawaimoveis.com.br/3066087/indianopolis/img/foto/living.jpg">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="1066">
 <meta property="og:image:alt" content="Living do apartamento, com painel de madeira e cristaleira iluminada">
@@ -325,6 +328,7 @@ footer a:hover{border-color:var(--gold)}
 </header>
 
 <main id="inicio">
+  <!-- TROCAR: bairro, título, destaques, preço, condomínio e IPTU -->
   <section class="hero" aria-label="Apresentação do imóvel">
   <div class="wrap hero-in">
     <p class="kicker">Apartamento à venda em São Paulo</p>
@@ -345,20 +349,9 @@ footer a:hover{border-color:var(--gold)}
     </div>
     <div class="actions">
       <a class="btn btn-primary" href="#ficha" data-scroll="ficha" data-interesse="visita"><svg aria-hidden="true"><use href="#i-wa"/></svg>Agendar uma visita</a>
-      <a class="btn btn-ghost" href="#fotos" data-scroll="fotos">Ver as fotos</a>
+      <a class="btn btn-ghost" href="#tour" data-scroll="tour">Ver o tour</a>
     </div>
   </div>
-  </section>
-
-  <section class="sec" id="fotos" aria-labelledby="h-fotos">
-    <div class="wrap">
-      <div class="sec-head">
-        <h2 id="h-fotos">O apartamento, cômodo a cômodo</h2>
-        <p>Toque numa foto para ver o cômodo em movimento no tour.</p>
-      </div>
-      <ul class="grid" id="gallery"></ul>
-      <p class="grid-note">Deslize para o lado para ver as outras fotos.</p>
-    </div>
   </section>
 
   <section class="sec tour" id="tour" aria-labelledby="h-tour">
@@ -392,9 +385,21 @@ footer a:hover{border-color:var(--gold)}
     </div>
   </section>
 
+  <section class="sec" id="fotos" aria-labelledby="h-fotos">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-fotos">O apartamento, cômodo a cômodo</h2>
+        <p>Toque numa foto para rever o cômodo em movimento no tour.</p>
+      </div>
+      <ul class="grid" id="gallery"></ul>
+      <p class="grid-note">Deslize para o lado para ver as outras fotos.</p>
+    </div>
+  </section>
+
   <section class="sec" aria-label="Detalhes e contato">
   <div class="wrap details-grid">
   <div class="content">
+    <!-- TROCAR: ficha técnica, listas do apartamento e do condomínio, região e link do mapa -->
     <section class="card" aria-labelledby="h-ficha">
       <h2 id="h-ficha"><svg aria-hidden="true"><use href="#i-ruler"/></svg>Ficha técnica</h2>
       <dl class="facts">
@@ -534,7 +539,7 @@ footer a:hover{border-color:var(--gold)}
 </div>
 
 <script>
-/* ===== Configuração do imóvel: é o que muda de um apartamento para outro ===== */
+/* ===== TROCAR: configuração do imóvel (código, título, cômodos). O WhatsApp e a planilha são os mesmos para todos. ===== */
 const CONFIG = {
   codigo: '3066087',
   titulo: 'Avenida dos Eucaliptos, Indianópolis',

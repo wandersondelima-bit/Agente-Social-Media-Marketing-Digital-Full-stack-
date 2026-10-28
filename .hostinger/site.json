@@ -2,7 +2,7 @@
   "domain": "marceloosawaimoveis.com.br",
   "username": "u573603556",
   "type": "static",
-  "path": "3066087/eucaliptos",
-  "source": "site/3066087/eucaliptos",
-  "padrao_de_endereco": "/{codigo-do-imovel}/{rua}/"
+  "path": "3066087/indianopolis",
+  "source": "site/3066087/indianopolis",
+  "padrao_de_endereco": "/{codigo-do-imovel}/{bairro}/"
 }
