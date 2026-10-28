@@ -34,3 +34,4 @@ um `.htaccess` com `Redirect 301` para a raiz (como em `site/eucaliptos/.htacces
 - Upload por TUS com `hosting_files_generate-upload-url` (MCP da Hostinger); todo deploy sobrescreve só os arquivos enviados.
 - Antes de publicar qualquer alteração em página que já está no ar, mostrar a prévia e pedir confirmação.
 - Depois de publicar, conferir com `curl` as URLs principais (página, privacidade, um vídeo, uma foto, redirecionamentos, um endereço inexistente).
+- A CDN da Hostinger guarda cópias antigas das páginas: depois de publicar, rodar `hosting_cache_clear` (scope `all`) no domínio e conferir num navegador de verdade (Playwright), não só com `curl`, que pode receber uma versão diferente da que o celular recebe.
