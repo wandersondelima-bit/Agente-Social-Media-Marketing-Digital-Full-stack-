@@ -1,6 +1,6 @@
 ---
 name: "reels-imoveis-alto-padrao"
-description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de Reels/TikTok de imóveis de alto padrão em São Paulo capital (R$1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling), roteiro CapCut em 3 blocos e copywriting AIDA para Instagram/TikTok. Também cobre os parâmetros de impulsionamento pago no Instagram para esses Reels."
+description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
 ---
 
 # Reels de Imóveis de Alto Padrão (SP Capital)
@@ -127,18 +127,41 @@ O modelo acima não é regra fixa de formatação — pode ser ajustado visando 
 
 ## Landing page do imóvel (etapa fixa, a partir do 3066087)
 
-Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.com.br (Hostinger), feita a partir do modelo aprovado no 3066087 (Av. dos Eucaliptos, Indianópolis). Ela entra na entrega final junto com o Reel e a copy; o link dela vai na bio e nos anúncios.
+Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.com.br (Hostinger), feita a partir do modelo aprovado no 3066087 (Av. dos Eucaliptos, Indianópolis). Nunca entregar o pacote sem ela. O link vai na copy, na bio e nos anúncios. Esta seção vale igual no chat (Cowork) e no Claude Code: é a fonte única das regras do site.
 
-- **Modelo:** repositório `wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-`, pasta `site/_modelo/` (README com o checklist). Criar a página com `scripts/nova-landing.sh <codigo> <bairro>`; o resultado fica em `site/<codigo>/<bairro>/`. Não redesenhar: só trocar os trechos marcados com `TROCAR` (meta/Open Graph, hero, ficha, listas, região, `CONFIG` e `ROOMS`).
-- **Endereço:** sempre `marceloosawaimoveis.com.br/<codigo-do-imovel>/<bairro>/` (bairro postal do Passo 0, minúsculo, sem acento; ex.: `/3066087/indianopolis/`). Pasta na Hostinger: `public_html/<codigo>/<bairro>/`, no site `marceloosawaimoveis.com.br` (usuário em `.hostinger/site.json`). Nunca mexer no WordPress da raiz.
-- **Mídia, reaproveitada do próprio Reel** (mesmo `id` de cômodo em todas as pastas): `img/foto/<id>.jpg` foto original 3:2 a 1600 px; `video/<id>.mp4` o clipe 9:16 do cômodo (pan digital ou Kling, sem áudio, recomprimir para ≤ 1,5 MB); `img/poster/<id>.jpg` primeiro frame do clipe a 720 px; `img/thumb/<id>.jpg` miniatura 168×112. A foto do hero é a mais ampla da área social.
-- **Layout fixo:** hero em tela cheia → tour em vídeo → galeria de fotos → detalhes com o formulário ao lado (fixo no desktop). Formulário só de agendamento de visita (nome + WhatsApp), que grava na planilha com o interesse "Agendar uma visita" e abre o WhatsApp com a mensagem pronta. Rastreamento por `?ref=`: usar `?ref=reel-01`, `?ref=bio`, `?ref=ads` nos links.
-- **Textos:** mesmas regras da copy (só dados da ficha, sem nome do condomínio, sem "mobiliado", sem valores de m² da região). Preço com o mês de referência; condomínio e IPTU em 10x como na copy.
-- **Antes de entregar:** abrir no celular e no desktop, conferir vídeo e fotos carregando, enviar um teste pelo formulário e ver a linha na planilha. Depois confirmar a URL no ar e colocar o link na copy do Instagram/TikTok no lugar de "link da bio".
+### Onde está o projeto
+- Repositório GitHub `wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-` (branch padrão `main`): `site/` é exatamente o que está no ar; `site/_modelo/` é o modelo (README com o checklist); `scripts/nova-landing.sh` cria a página; `.hostinger/site.json` tem domínio e usuário da hospedagem.
+- **No Mac:** a cópia fica em `~/AgenteSocialMedia/site-repo` (no Cowork, `$HOME/mnt/AgenteSocialMedia/site-repo`). Se não existir, clonar: `git clone https://github.com/wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-.git site-repo` dentro de `AgenteSocialMedia`. Antes de começar, `git pull` na `main`.
+- **Em sessão na nuvem do Claude Code:** o repositório já é a pasta de trabalho.
+- Nunca montar a página do zero nem redesenhar: sempre a partir do modelo.
+
+### Passos, sempre nesta ordem
+1. `scripts/nova-landing.sh <codigo> <bairro>` cria `site/<codigo>/<bairro>/`.
+2. Trocar só os trechos marcados com `TROCAR` em `index.html`: `<title>`, meta e Open Graph, hero (bairro, título, destaques, preço com mês de referência, condomínio, IPTU em 10x), ficha técnica, listas do apartamento e do condomínio, região e link do Google Maps, `CONFIG` (código e título), `ROOMS` (um item por cômodo, na ordem do tour) e o código no rodapé.
+3. Mídia reaproveitada do próprio Reel, com o mesmo `id` de cômodo em todas as pastas: `img/foto/<id>.jpg` foto original 3:2 a 1600 px; `video/<id>.mp4` o clipe 9:16 do cômodo (pan digital ou Kling, sem áudio, recomprimido para ≤ 1,5 MB); `img/poster/<id>.jpg` primeiro frame do clipe a 720 px; `img/thumb/<id>.jpg` 168×112. A foto do hero é a mais ampla da área social (se o `id` não for `living`, trocar a URL em `.hero{background:...}`).
+4. Testar localmente (`python3 -m http.server` dentro de `site/`) no celular (390 px) e no desktop (1440 px), de preferência com Playwright: vídeo tocando, fotos carregando, sem rolagem lateral, sem erro no console. **Interceptar o envio do formulário** (rota para `script.google.com`) para não gravar lead falso; conferir que o payload sai com interesse "Agendar uma visita".
+5. Mostrar a prévia ao usuário (artifact) e **só publicar depois do OK**.
+6. Publicar na Hostinger em `public_html/<codigo>/<bairro>/`: `hosting_files_generate-upload-url` (usuário e domínio do `.hostinger/site.json`) e upload TUS de cada arquivo (`POST` com `Upload-Length`, depois `PATCH` com o conteúdo; conferir `Upload-Offset` = tamanho). Todo upload sobrescreve só os arquivos enviados.
+7. Acrescentar o imóvel na lista `IMOVEIS` do `site/index.html` (código, endereço da página, bairro, título, foto, área, quartos, vagas, preço, destaque) e republicar a página inicial.
+8. **Limpar o cache:** `hosting_cache_clear` (scope `all`) no domínio. A CDN guarda cópias antigas e o celular pode receber a versão velha mesmo com o servidor certo.
+9. Conferir no ar com navegador de verdade, não só `curl`: página do imóvel, página inicial (cartão novo aparecendo), política de privacidade, um vídeo, uma foto e um endereço inexistente (deve cair na página 404).
+10. Registrar no GitHub: commit numa branch nova a partir da `main` e pull request para a `main`.
+11. Colocar o link `marceloosawaimoveis.com.br/<codigo>/<bairro>/?ref=reel-01` na copy (e `?ref=bio` na bio, `?ref=ads` em anúncio) no lugar de "link da bio".
+
+### Padrões que não mudam
+- Endereço: `/<codigo-do-imovel>/<bairro>/`, com o bairro postal do Passo 0, minúsculo, sem acento (ex.: `/3066087/indianopolis/`).
+- Visual: grafite em gradiente, champanhe como único acento, Poppins. Ordem: hero em tela cheia → tour em vídeo → galeria de fotos → detalhes com o formulário ao lado (fixo no desktop). O nome "Marcelo Osawa" leva à página inicial; o rodapé tem "Outros imóveis à venda".
+- Formulário só de agendamento de visita (nome + WhatsApp). Grava na planilha "Leads Imóveis" com interesse "Agendar uma visita" e abre o WhatsApp com a mensagem pronta. WhatsApp, endereço da planilha (`CONFIG.endpoint`), versão do consentimento e política de privacidade são os mesmos para todos os imóveis: nunca trocar.
+- O aviso de lead novo sai por e-mail de contato@marceloosawaimoveis.com.br para ele mesmo (Apps Script da planilha); nada a fazer por imóvel.
+- Textos seguem as regras da copy: só dados da ficha, sem nome do condomínio, sem "mobiliado", sem valores de m² da região.
+- A raiz do domínio é a página inicial estática com os imóveis. Não existe WordPress nem outro CMS; endereço inexistente cai em `/404.html`.
+
+### Imóvel vendido ou retirado
+Apagar a linha dele em `IMOVEIS` e republicar a página inicial. No lugar dos arquivos da pasta do imóvel, deixar só um `.htaccess` com `Redirect 301 /<codigo>/<bairro>/ https://marceloosawaimoveis.com.br/` (como em `site/eucaliptos/.htaccess`). Limpar o cache e conferir.
 
 ## Entrega final
 
-Entregar tudo de uma vez (nunca em etapas separadas): catálogo de fotos selecionadas, prompts de geração de vídeo, roteiro CapCut completo (3 blocos), copy de Instagram (TXT/MD), copy de TikTok (TXT/MD) e o **link da landing page publicada** — como arquivos separados em `/outputs`, apresentados juntos.
+Entregar tudo de uma vez (nunca em etapas separadas): catálogo de fotos selecionadas, prompts de geração de vídeo, roteiro CapCut completo (3 blocos), copy de Instagram (TXT/MD), copy de TikTok (TXT/MD) e o **link da landing page publicada** (já na página inicial, com cache limpo e conferida no celular) — como arquivos separados em `/outputs`, apresentados juntos.
 
 Convenção de nome de arquivo: `[ID_QUINTOANDAR]_[BAIRRO_MAIUSCULO_UNDERSCORE]_RUA_[NOME_RUA_MAIUSCULO_UNDERSCORE]_[TIPO_DE_ARQUIVO]`.
 
