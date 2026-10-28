@@ -14,6 +14,10 @@ ErrorDocument 404 /404.html
   RewriteCond %{HTTPS} !=on [OR]
   RewriteCond %{HTTP_HOST} ^www\. [NC]
   RewriteRule ^ https://marceloosawaimoveis.com.br%{REQUEST_URI} [L,R=301]
+
+  # WordPress desativado: seus endereços respondem com a página 404 do site, como se não existissem
+  RewriteRule ^(wp-admin|wp-includes|wp-content|wp-json)(/|$) - [R=404,L]
+  RewriteRule ^(wp-[a-z-]+\.php|xmlrpc\.php|index\.php|default\.php|readme\.html|license\.txt|llms\.txt)$ - [R=404,L]
 </IfModule>
 
 <IfModule mod_expires.c>
