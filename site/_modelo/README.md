@@ -38,3 +38,12 @@ canônico, e deixa as pastas de mídia prontas. Depois:
 - O comportamento: tour automático, galeria, formulário só de agendamento de visita,
   rastreamento por `?ref=` (use `?ref=reel-01`, `?ref=bio` etc. nos links dos Reels e da bio).
 - A ordem das seções no celular: hero → tour em vídeo → fotos → detalhes → formulário.
+
+## Página inicial e 404
+
+- `site/index.html` é a página inicial do domínio. A lista de imóveis fica na constante `IMOVEIS`,
+  no fim do arquivo: um item por apartamento (código, endereço da página, bairro, título, foto,
+  metragem, quartos, vagas, preço). Para tirar um imóvel vendido do site, apague a linha dele.
+- `site/404.html` é a página de endereço inexistente; o `.htaccess` da raiz aponta para ela
+  (`ErrorDocument 404 /404.html`), então não precisa de plugin nem de WordPress.
+- Ao publicar um imóvel novo: subir a pasta dele, acrescentar o item em `IMOVEIS` e subir o `index.html` de novo.
