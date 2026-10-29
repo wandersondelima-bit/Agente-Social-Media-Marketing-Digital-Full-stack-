@@ -1,11 +1,11 @@
 ---
 name: "reels-imoveis-alto-padrao"
-description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
+description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$ 1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
 ---
 
 # Reels de Imóveis de Alto Padrão (SP Capital)
 
-Pipeline fim-a-fim para transformar um anúncio do QuintoAndar (R$1-5M, São Paulo capital) em um pacote pronto para postar: vídeo 9:16 gerado por IA a partir de fotos reais, roteiro de edição para CapCut e copy de Instagram/TikTok. Objetivo: fluxo "copia e cola" — o cliente entra só com fotos + link/dados, sai tudo pronto de uma vez, sem etapas separadas.
+Pipeline fim-a-fim para transformar um anúncio do QuintoAndar (R$ 1-5M, São Paulo capital) em um pacote pronto para postar: vídeo 9:16 gerado por IA a partir de fotos reais, roteiro de edição para CapCut e copy de Instagram/TikTok. Objetivo: fluxo "copia e cola" — o cliente entra só com fotos + link/dados, sai tudo pronto de uma vez, sem etapas separadas.
 
 ## Passo 0 — Confirmar bairro pelo CEP (fazer ANTES de tudo)
 
@@ -94,12 +94,13 @@ ffmpeg -loop 1 -framerate 30 -i FOTO.jpg -t $T \
 Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial → texto de conexão emocional → **💰 Venda:** logo após a introdução → lista de detalhes com emoji próprio em CADA item (inclusive amenidades do condomínio, um por linha, sem separador) → bloco de lazer/condomínio → repetir preço de venda + condomínio + IPTU no bloco final → CTA de WhatsApp → código QuintoAndar (`🔗 QuintoAndar #[CODIGO]`) → hashtags.
 
 **Regras permanentes de legenda:**
-- Tom acolhedor e humanizado, mas vocabulário elevado ("endereço", "projeto assinado", "visita reservada") para público de R$1-5M — evitar gírias/coloquialismos.
+- Tom acolhedor e humanizado, mas vocabulário elevado ("endereço", "visita reservada", "ficha completa") para público de R$ 1-5M — evitar gírias/coloquialismos.
 - Emojis estratégicos em toda seção temática (🚨 abertura, 💰 preço, 🛏️ quartos, 🚿 banheiros, 🧖 amenidades etc.) — aumenta escaneabilidade no mobile.
 - Sempre citar o nome da rua (sem número) em algum ponto do texto.
 - Sempre destacar vagas de garagem e deixar claro quando os quartos são suítes.
 - Nunca prometer "mobiliado" mesmo se a ficha indicar isso.
 - Nunca divulgar o nome próprio do condomínio.
+- Nenhum qualificador que as fotos e a ficha não comprovam ("projeto assinado", "assinado por escritório", "projetado por arquiteto", "marcenaria planejada"). Vale para todo texto publicado, inclusive a etiqueta (`tag`) do cartão da página inicial e os destaques e listas da landing page.
 - No bloco de comparação de preço, nunca citar valores de m² ou média da região — argumentar de forma qualitativa ("preço competitivo para o padrão da região").
 - CTA de captação de WhatsApp (vale para os imóveis depois do 2167152 e substitui o CTA de comentário de palavra-chave): o objetivo é o cliente enviar o número de WhatsApp por mensagem. Uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
   - Instagram (antes do `🔗 QuintoAndar #[CODIGO]`):
@@ -117,7 +118,7 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
 - Última frase é sempre: "Envie seu WhatsApp por mensagem e agende sua visita reservada." — serve para Instagram e TikTok com o mesmo áudio ("direct" não existe no TikTok). Substitui a antiga "Agende sua visita reservada pelo direct." a partir dos imóveis depois do 2167152. São 9 palavras: reservar pelo menos 3,5 s no último bloco de narração.
 - Sem vácuo: todo intervalo com texto na tela precisa de narração cobrindo o mesmo trecho.
 
-O modelo acima não é regra fixa de formatação — pode ser ajustado visando melhor performance de venda, sempre pensando no comprador de R$1-5M em São Paulo capital.
+O modelo acima não é regra fixa de formatação — pode ser ajustado visando melhor performance de venda, sempre pensando no comprador de R$ 1-5M em São Paulo capital.
 
 ## Tráfego pago (impulsionamento Instagram)
 
@@ -130,22 +131,23 @@ O modelo acima não é regra fixa de formatação — pode ser ajustado visando 
 Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.com.br (Hostinger), feita a partir do modelo aprovado no 3066087 (Av. dos Eucaliptos, Indianópolis). Nunca entregar o pacote sem ela. O link vai na copy, na bio e nos anúncios. Esta seção vale igual no chat (Cowork) e no Claude Code: é a fonte única das regras do site.
 
 ### Onde está o projeto
-- Repositório GitHub `wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-` (branch padrão `main`): `site/` é exatamente o que está no ar; `site/_modelo/` é o modelo (README com o checklist); `scripts/nova-landing.sh` cria a página; `.hostinger/site.json` tem domínio e usuário da hospedagem.
+- Repositório GitHub `wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-` (branch padrão `main`): `site/` é exatamente o que está no ar; `site/_modelo/` é o modelo (README com o checklist); `./scripts/nova-landing.sh` cria a página; `.hostinger/site.json` tem domínio e usuário da hospedagem.
 - **No Mac:** a cópia fica em `~/AgenteSocialMedia/site-repo` (no Cowork, `$HOME/mnt/AgenteSocialMedia/site-repo`). Se não existir, clonar: `git clone https://github.com/wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-.git site-repo` dentro de `AgenteSocialMedia`. Antes de começar, `git pull` na `main`.
 - **Em sessão na nuvem do Claude Code:** o repositório já é a pasta de trabalho.
 - Nunca montar a página do zero nem redesenhar: sempre a partir do modelo.
 
 ### Passos, sempre nesta ordem
-1. `scripts/nova-landing.sh <codigo> <bairro>` cria `site/<codigo>/<bairro>/`.
+1. `./scripts/nova-landing.sh <codigo> <bairro>` cria `site/<codigo>/<bairro>/`.
 2. Trocar só os trechos marcados com `TROCAR` em `index.html`: `<title>`, meta e Open Graph, hero (bairro, título, destaques, preço com mês de referência, condomínio, IPTU em 10x), ficha técnica, listas do apartamento e do condomínio, região e link do Google Maps, `CONFIG` (código e título), `ROOMS` (um item por cômodo, na ordem do tour) e o código no rodapé.
 3. Mídia reaproveitada do próprio Reel, com o mesmo `id` de cômodo em todas as pastas: `img/foto/<id>.jpg` foto original 3:2 a 1600 px; `video/<id>.mp4` o clipe 9:16 do cômodo (pan digital ou Kling, sem áudio, recomprimido para ≤ 1,5 MB); `img/poster/<id>.jpg` primeiro frame do clipe a 720 px; `img/thumb/<id>.jpg` 168×112. A foto do hero é a mais ampla da área social (se o `id` não for `living`, trocar a URL em `.hero{background:...}`).
 4. Testar localmente (`python3 -m http.server` dentro de `site/`) no celular (390 px) e no desktop (1440 px), de preferência com Playwright: vídeo tocando, fotos carregando, sem rolagem lateral, sem erro no console. **Interceptar o envio do formulário** (rota para `script.google.com`) para não gravar lead falso; conferir que o payload sai com interesse "Agendar uma visita".
 5. Mostrar a prévia ao usuário (artifact) e **só publicar depois do OK**.
-6. Publicar na Hostinger em `public_html/<codigo>/<bairro>/`: `hosting_files_generate-upload-url` (usuário e domínio do `.hostinger/site.json`) e upload TUS de cada arquivo (`POST` com `Upload-Length`, depois `PATCH` com o conteúdo; conferir `Upload-Offset` = tamanho). Todo upload sobrescreve só os arquivos enviados.
-7. Acrescentar o imóvel na lista `IMOVEIS` do `site/index.html` (código, endereço da página, bairro, título, foto, área, quartos, vagas, preço, destaque) e republicar a página inicial.
-8. **Limpar o cache:** `hosting_cache_clear` (scope `all`) no domínio. A CDN guarda cópias antigas e o celular pode receber a versão velha mesmo com o servidor certo.
-9. Conferir no ar com navegador de verdade, não só `curl`: página do imóvel, página inicial (cartão novo aparecendo), política de privacidade, um vídeo, uma foto e um endereço inexistente (deve cair na página 404).
-10. Registrar no GitHub: commit numa branch nova a partir da `main` e pull request para a `main`.
+6. Publicar a pasta do imóvel na Hostinger em `public_html/<codigo>/<bairro>/`: `hosting_files_generate-upload-url` (usuário e domínio do `.hostinger/site.json`) e upload TUS de cada arquivo (`POST` com `Upload-Length`, depois `PATCH` com o conteúdo; conferir `Upload-Offset` = tamanho). Todo upload sobrescreve só os arquivos enviados.
+7. Registrar no GitHub antes de mexer na página inicial: acrescentar o imóvel na lista `IMOVEIS` do `site/index.html` (código, endereço da página, bairro, título, foto, área, quartos, vagas, preço, destaque), commit numa branch nova a partir da `main` atualizada, push e pull request para a `main`. O próprio agente faz o merge, sem perguntar (decisão do usuário em 29/10/2026): `gh pr merge <n> --merge` rodando **sozinho**, sem `&&` com outros comandos, porque a regra de permissão `Bash(gh pr merge *)` só cobre o comando isolado. Depois, `git checkout main`, `git pull` e apagar a branch local. Só parar e perguntar se o merge der conflito.
+8. Publicar a página inicial **só a partir da `main`**, nunca de uma branch: outras sessões podem ter publicado cartões que a branch não tem. Antes do upload, baixar o `index.html` do ar e compará-lo com o da `main` de antes do merge (`git show HEAD^1:site/index.html`). Os dois têm de ser idênticos, e a diferença para o arquivo que vai subir tem de ser só o cartão novo. Se o ar tiver algo que a `main` não tem, parar e avisar.
+   - Se o merge for barrado pelo controle de permissões: publicar a partir da branch só se o ar for igual à `origin/main` e a branch diferir apenas pelo cartão novo; deixar o PR aberto e pedir ao usuário o merge pelo link.
+9. **Limpar o cache:** `hosting_cache_clear` (scope `all`) no domínio. A CDN guarda cópias antigas e o celular pode receber a versão velha mesmo com o servidor certo.
+10. Conferir no ar com navegador de verdade, não só `curl`: página do imóvel, página inicial (cartão novo aparecendo), política de privacidade, um vídeo, uma foto e um endereço inexistente (deve cair na página 404). Conferir também que todo código de `IMOVEIS` na `main` tem cartão na página inicial no ar e que o `site/index.html` da `main` é idêntico ao do ar.
 11. Colocar o link `marceloosawaimoveis.com.br/<codigo>/<bairro>/?ref=reel-01` na copy (e `?ref=bio` na bio, `?ref=ads` em anúncio) no lugar de "link da bio".
 
 ### Padrões que não mudam
@@ -154,10 +156,13 @@ Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.co
 - Formulário só de agendamento de visita (nome + WhatsApp). Grava na planilha "Leads Imóveis" com interesse "Agendar uma visita" e abre o WhatsApp com a mensagem pronta. WhatsApp, endereço da planilha (`CONFIG.endpoint`), versão do consentimento e política de privacidade são os mesmos para todos os imóveis: nunca trocar.
 - O aviso de lead novo sai por e-mail de contato@marceloosawaimoveis.com.br para ele mesmo (Apps Script da planilha); nada a fazer por imóvel.
 - Textos seguem as regras da copy: só dados da ficha, sem nome do condomínio, sem "mobiliado", sem valores de m² da região.
-- A raiz do domínio é a página inicial estática com os imóveis. Não existe WordPress nem outro CMS; endereço inexistente cai em `/404.html`.
+- A raiz do domínio é a página inicial estática com os imóveis. Não existe WordPress nem outro CMS; endereço inexistente cai em `/404.html`. O `hosting_websites_list` da Hostinger mostra `website_type: wordpress` por uma classificação antiga: ignorar.
 
 ### Imóvel vendido ou retirado
-Apagar a linha dele em `IMOVEIS` e republicar a página inicial. No lugar dos arquivos da pasta do imóvel, deixar só um `.htaccess` com `Redirect 301 /<codigo>/<bairro>/ https://marceloosawaimoveis.com.br/` (como em `site/eucaliptos/.htaccess`). Limpar o cache e conferir.
+Apagar a linha dele em `IMOVEIS` e seguir os Passos 7 a 10 (PR, merge, página inicial a partir da `main`, cache, conferência).
+- **Apagar a pasta do imóvel no servidor:** o conector da Hostinger não tem operação para apagar arquivo. Use a API do File Browser com as mesmas credenciais do upload (`auth_key` e `rest_auth_key` do `hosting_files_generate-upload-url`): `DELETE {base}/api/resources/public_html/<codigo>/<bairro>/` com os cabeçalhos `X-Auth` e `X-Auth-Rest`, onde `{base}` é a `url` do upload sem o final `/api/tus/public_html`. Responde 204 e apaga a pasta inteira (verificado em 29/10/2026 com arquivo e pasta descartáveis). O endpoint não é documentado: se não responder 204, use a reserva abaixo e avise o usuário.
+- **Redirecionar o endereço antigo:** subir em `public_html/<codigo>/<bairro>/.htaccess` a linha `RedirectMatch 301 ^/<codigo>/<bairro>/.* https://marceloosawaimoveis.com.br/`, que leva para a página inicial qualquer arquivo da pasta, apagado ou não. Também é a reserva quando o `DELETE` falhar. Registrar o `.htaccess` no repositório no lugar da pasta.
+- Limpar o cache e conferir no ar: a página antiga redireciona para a página inicial e o cartão sumiu.
 
 ## Entrega final
 
