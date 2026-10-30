@@ -316,6 +316,8 @@ def render_html(j, f):
     h = h.replace("/3066087/indianopolis/", f"/{cod}/{bslug}/").replace("3066087", cod)
     if j.get("iptu_10x"):   # valor confirmado pelo usuário, tem prioridade sobre o do anúncio
         f = dict(f, iptu_10x=j["iptu_10x"])
+    if j.get("condominio_valor"):   # idem para o condomínio corrigido pelo usuário
+        f = dict(f, condominio=j["condominio_valor"])
     preco = f"R$ {brl(f['preco'])}"
     hoje = date.today()
     area = f["area"]

@@ -31,6 +31,7 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 ## Exceções
 
 - IPTU confirmado pelo usuário: `"iptu_10x": 1050` no `imovel.json` (vale mais que o do anúncio).
+- Condomínio confirmado/corrigido pelo usuário: `"condominio_valor": 1400` no `imovel.json` (vale mais que o do anúncio).
 - IPTU `ALERTA`/`NAO_ENCONTRADO` no `check`: perguntar ao usuário. O script já compara só com unidades de mesmo nº de vagas.
 - Fotos de condomínio com marca d'água do QuintoAndar (logo "N" translúcido): não usar nos cômodos; só texto.
 
