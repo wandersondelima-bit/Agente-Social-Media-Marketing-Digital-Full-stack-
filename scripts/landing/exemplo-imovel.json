@@ -1,0 +1,172 @@
+{
+ "codigo": "2597070",
+ "bairro": "Vila Sofia",
+ "bairro_slug": "vila-sofia",
+ "rua": "Rua Sócrates",
+ "argumento": "cobertura de 240 m² com área gourmet e jacuzzi",
+ "resumo": "cobertura de 240 m² em andar alto, 3 suítes, 4 vagas, área gourmet com churrasqueira e jacuzzi",
+ "og_argumento": "cobertura com 3 suítes, área gourmet e jacuzzi",
+ "hero": "sala",
+ "hero_alt": "Sala ampla da cobertura, com mesa de jantar, estar e janelas para a cidade",
+ "destaques": [
+  {
+   "icone": "building",
+   "texto": "Cobertura em andar alto"
+  },
+  {
+   "icone": "sofa",
+   "texto": "Área gourmet com jacuzzi"
+  }
+ ],
+ "ficha_extra": [],
+ "suites_nota": "a principal com closet, varanda e dois banheiros",
+ "apartamento": [
+  "Cobertura com três suítes",
+  "Sala ampla com varanda envidraçada e vista para a cidade",
+  "Suíte principal com varanda, closet e dois banheiros",
+  "Banheira de hidromassagem na suíte principal",
+  "Cozinha com ilha, cooktop e armários",
+  "Lavabo",
+  "Área de serviço com quarto e banheiro de serviço",
+  "Área gourmet com churrasqueira e jacuzzi no terraço",
+  "Ar-condicionado",
+  "Quatro vagas de garagem"
+ ],
+ "condominio": [
+  "Piscina",
+  "Piscina coberta",
+  "Academia",
+  "Sauna",
+  "Churrasqueira",
+  "Quadra esportiva",
+  "Playground",
+  "Brinquedoteca",
+  "Salão de festas",
+  "Salão de jogos",
+  "Área verde",
+  "Portaria 24 horas",
+  "Elevador"
+ ],
+ "regiao": [
+  [
+   "Santa Casa de Santo Amaro",
+   "na região"
+  ],
+  [
+   "Centro Universitário Senac",
+   "na região"
+  ],
+  [
+   "Colégio Magister e Colégio Santa Maria",
+   "na região"
+  ]
+ ],
+ "comodos": [
+  {
+   "id": "sala",
+   "n": "Sala",
+   "d": "Jantar e estar integrados, com janelas amplas",
+   "foto": 0,
+   "pan": "dir"
+  },
+  {
+   "id": "estar",
+   "n": "Estar com varanda",
+   "d": "Varanda envidraçada com vista aberta",
+   "foto": 7,
+   "pan": "esq"
+  },
+  {
+   "id": "cozinha",
+   "n": "Cozinha",
+   "d": "Ilha com cooktop, forno e armários",
+   "foto": 74,
+   "pan": "in"
+  },
+  {
+   "id": "suite1",
+   "n": "Suíte principal",
+   "d": "Com varanda, closet e dois banheiros",
+   "foto": 17,
+   "pan": "dir"
+  },
+  {
+   "id": "closet",
+   "n": "Closet da suíte principal",
+   "d": "Prateleiras e cabideiros planejados",
+   "foto": 30,
+   "pan": "in"
+  },
+  {
+   "id": "banho1",
+   "n": "Banheiro com banheira",
+   "d": "Hidromassagem com vista para a cidade",
+   "foto": 34,
+   "pan": "out"
+  },
+  {
+   "id": "suite2",
+   "n": "Segunda suíte",
+   "d": "Com armários e banheiro privativo",
+   "foto": 48,
+   "pan": "esq"
+  },
+  {
+   "id": "suite3",
+   "n": "Terceira suíte",
+   "d": "Com ar-condicionado e banheiro privativo",
+   "foto": 57,
+   "pan": "in"
+  },
+  {
+   "id": "lavabo",
+   "n": "Lavabo",
+   "d": "Parede em tom escuro e espelho decorativo",
+   "foto": 66,
+   "pan": "in"
+  },
+  {
+   "id": "gourmet",
+   "n": "Área gourmet",
+   "d": "Churrasqueira no terraço da cobertura",
+   "foto": 92,
+   "pan": "dir"
+  },
+  {
+   "id": "jacuzzi",
+   "n": "Jacuzzi",
+   "d": "No terraço, com vista aberta",
+   "foto": 94,
+   "pan": "in"
+  },
+  {
+   "id": "academia",
+   "n": "Academia",
+   "d": "Lazer do condomínio",
+   "foto": 101,
+   "pan": "esq"
+  }
+ ],
+ "descartadas": [],
+ "_conferir": {
+  "iptu": {
+   "status": "ALERTA",
+   "mensagem": "IPTU do anúncio está ACIMA do teórico — conferir no Portal do IPTU (valor pode estar errado ou ser de outra unidade).",
+   "razao": 1.71,
+   "apto_identificado": false,
+   "parcela_teorica_10x": 665.33,
+   "sql": "090.462.0624-6",
+   "complemento": "AP 11 E 3 VG"
+  },
+  "bairro_postal": "Vila Sofia",
+  "bairro_quintoandar": "Vila Sofia",
+  "andar": {
+   "min": 24,
+   "max": 27
+  },
+  "tipo": "Apartamento",
+  "mobiliado": true,
+  "descricao_anunciante": null
+ },
+ "iptu_10x": 1050
+}
