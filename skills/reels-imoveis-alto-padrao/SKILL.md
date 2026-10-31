@@ -1,6 +1,6 @@
 ---
 name: "reels-imoveis-alto-padrao"
-description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$ 1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
+description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$ 1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling e conector Google Flow, para hooks e transições), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
 ---
 
 # Reels de Imóveis de Alto Padrão (SP Capital)
@@ -53,6 +53,7 @@ O cliente quer SEMPRE os cômodos mostrados com amplitude, nunca com foco em uma
 
 - **Um pan amplo por ambiente principal** sempre que existir uma foto horizontal aberta: área social (sala + jantar + varanda), cozinha integrada, varanda gourmet e suíte (se a foto aberta não tiver espelho no centro, pessoa ou objeto pessoal). Meta de **3 a 5 pans por Reel**.
 - **Kling (push-in)** só complementa: hook, fechamento com vista, ou cômodo que não tem foto horizontal aberta. Nunca use Kling em recorte de detalhe (bancada, arandela, nicho) como cena principal de um cômodo.
+- **Flow** (seção "Cenas pelo conector Google Flow", abaixo) também só complementa: hook, transição entre ambientes ou entre imóveis. Os pans continuam sendo a base.
 - **Curadoria:** priorize as fotos que mostram mais do cômodo de uma vez (vários ambientes ou o cômodo de parede a parede). Fotos de detalhe viram reserva.
 - **Direção:** a janela 9:16 desliza com easing suave e TERMINA no ponto de maior valor (varanda, vista, churrasqueira, ilha). Pode ir da esquerda para a direita (X0 < X1) ou da direita para a esquerda (X0 > X1). Gere 6 s e corte em 5,0 s no CapCut.
 - **Comando.** Largura da foto na altura de 1920 = L. Curso de 60 até L − 1080 − 60. Upscale 2x antes do crop para não tremer.
@@ -69,6 +70,28 @@ ffmpeg -loop 1 -framerate 30 -i FOTO.jpg -t $T \
 - **Conferência:** frames em 0 / 1,5 / 2,5 / 3,5 / 4,9 s para garantir que nenhum trecho passe por pessoa, TV ligada, foto pessoal, espelho no centro ou objeto de marca (notebook, rótulos).
 - **Ordem no roteiro:** hook → primeiro pan amplo (área social, cena 2) → demais pans intercalados com os clipes Kling complementares → fechamento. Se um clipe Kling repetir o trecho de um pan (ex: push-in sala → varanda), o Kling sai do corte e fica como reserva.
 - **Alternativa**, só se o cliente pedir profundidade: gerar no Kling em 16:9 a partir da foto inteira (push-in de no máximo ~8%) e aplicar o mesmo pan 9:16 por cima. Fica um pouco menos nítido e não é 100% fiel.
+
+## Cenas pelo conector Google Flow (a partir do 2255516)
+
+Além dos pans e do Kling, uma cena pode ser criada pelo conector `flow` (Google Flow). A dinâmica é a mesma do resto do pipeline: a **curadoria das fotos** decide, e a pergunta é "qual ambiente ou par de ambientes vira o momento mais impressionante que um pan não entrega?". As possibilidades são abertas; os exemplos do usuário são **sala → varanda** e **churrasqueira → sala**. Usos:
+- **Hook** de abertura a partir da foto mais forte (a vista, a varanda).
+- **Transição entre ambientes** (`first_frame` = foto de saída, `last_frame` = foto de chegada, mais um `technique` de `flow_techniques`, categoria `transition`).
+- **Transição de um imóvel para outro**, quando houver outro imóvel com fotos já curadas. O clipe mostra um ambiente que não é do imóvel do Reel: pedir ao usuário onde usar, nunca descrevê-lo na copy, no roteiro nem nos textos de tela, e passar pela mesma curadoria (sem pessoa, marca ou reflexo) as fotos dos dois imóveis.
+
+**Passo de curadoria.** Na seção "Candidatas a cena Flow" do `Catalogo_Fotos.md`, listar de 1 a 3 candidatas: tipo (hook, transição de ambientes, transição de imóveis), fotos de entrada e de saída, por que impressiona, modelo e custo estimado. Cada candidata nasce da curadoria, nunca de um capricho de prompt.
+
+**Crédito e autorização.** O Flow gasta créditos Google AI do usuário (valores da descrição da ferramenta, conferir no momento: Omni 1.1 Flash 7-12, Veo 3.1 Lite 10, Fast 20, Quality 100). Nunca gerar sem o OK do usuário para aquela cena, sempre com `max_credits` na chamada (`flow_continue` não mostra cotação: perguntar antes). Falha do conector: parar e reportar o erro, sem refazer a geração nem mexer no conector sem pedido do usuário.
+
+**Pré-requisito.** O projeto do Flow tem de estar aberto no Chrome do conector. Pedir ao usuário que abra e esperar o "aberto" antes de chamar `flow_generate`.
+
+**Como gerar (verificado no hook do 2255516).**
+- `flow_generate` com `first_frame` = o pré-corte 9:16 da foto (mesma regra do Kling: `crop=ih*9/16:ih`, posição do corte escolhida por foto), `aspect_ratio` "9:16", `model` "Omni 1.1 Flash", `duration` 6, `resolution` "720p". Resultado: 720×1280, 6 s, sem áudio, 10 créditos. Acompanhar com `flow_wait`.
+- Prompt em inglês, uma câmera e um movimento só, descrevendo apenas o que já está visível nos quadros de entrada e de saída (mesma regra do Kling). Acrescentar sempre: "keep the sky color, lighting and every object exactly as in the first frame; no people, no text".
+- Salvar em `03_Cenas_Prontas/` como `C[NN]_[DESCRICAO]_FLOW.mp4` e registrar o prompt, o modelo e os créditos em `Prompts_Higgsfield.md`, seção "Flow". Se vier com áudio, `ffmpeg -i in.mp4 -c:v copy -an out.mp4`.
+- **Inspeção obrigatória** com `inspetor-clipes`, avisando que o clipe é do Flow: além do checklist de sempre, mudança de cor do céu ou da luz, objeto novo inventado e canto degradado. O hook do 2255516 mudou a cor do céu e inventou uma estrela, e só foi aproveitável cortado em 4,5 s. O Roteiro usa só o trecho aprovado ("Trecho a usar").
+- No Roteiro, o clipe do Flow é complementar (hook até 4,5-5,0 s, demais 3,0-4,0 s) e respeita o limite de 36 s. Se repetir um pan do mesmo ambiente, um dos dois sai do corte. O arquivo do Flow tem 720×1280 e os pans 1080×1920: avisar no Bloco 1 para escalar no CapCut.
+
+**Não testados** (a descrição da ferramenta diz que existem; ninguém rodou aqui): `last_frame` e os `technique` de transição, `chain_previous`, `flow_continue`, `download_quality` "upscaled", `flow_assemble`, `variants`. Ao usar um deles, relatar o que de fato aconteceu para reescrever o item e tirá-lo desta lista.
 
 ## Roteiro CapCut — estrutura padrão aprovada (repetir sempre)
 
@@ -87,7 +110,7 @@ ffmpeg -loop 1 -framerate 30 -i FOTO.jpg -t $T \
 - Abertura/hook com 4,0-5,0 s, primeiro pan amplo (área social) logo em seguida, demais pans no miolo, e fechamento com pelo menos 3,5 s para caber a frase final da narração.
 - Quando passar de 36 s, cortam primeiro os clipes Kling de detalhe. Os pans amplos têm prioridade no corte final.
 - Textos na tela: 5-6 cards. Narração total de ~70-80 palavras (até ~2,7 palavras por segundo).
-- Gerar no Kling só os clipes que vão entrar no corte, mais 1-2 de reserva, para não gastar crédito com cenas que o limite de tempo vai descartar. Os pans não gastam crédito: gere um para cada foto ampla boa e escolha no roteiro.
+- Gerar no Kling (e no Flow, depois do OK do usuário) só os clipes que vão entrar no corte, mais 1-2 de reserva, para não gastar crédito com cenas que o limite de tempo vai descartar. Os pans não gastam crédito: gere um para cada foto ampla boa e escolha no roteiro.
 
 ## Copywriting — Instagram e TikTok (AIDA)
 
@@ -138,7 +161,7 @@ Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.co
 
 ### Passos, sempre nesta ordem
 1. `./scripts/nova-landing.sh <codigo> <bairro>` cria `site/<codigo>/<bairro>/`.
-   - **Atalho a partir do link do QuintoAndar:** `python3 scripts/landing/landing.py prep <link>`, preencher `_trabalho/<codigo>/imovel.json`, `landing.py build <codigo>` (faz os passos 1–3 de uma vez, com pan digital local; ver `scripts/landing/README.md`).
+   - **Atalho a partir do link do QuintoAndar:** `python3 ./scripts/landing/landing.py prep <link>`, preencher `_trabalho/<codigo>/imovel.json`, `landing.py build <codigo>` (faz os passos 1–3 de uma vez, com pan digital local; ver `./scripts/landing/README.md`).
 2. Trocar só os trechos marcados com `TROCAR` em `index.html`: `<title>`, meta e Open Graph, hero (bairro, título, destaques, preço com mês de referência, condomínio, IPTU em 10x), ficha técnica, listas do apartamento e do condomínio, região e link do Google Maps, `CONFIG` (código e título), `ROOMS` (um item por cômodo, na ordem do tour) e o código no rodapé.
 3. Mídia reaproveitada do próprio Reel, com o mesmo `id` de cômodo em todas as pastas: `img/foto/<id>.jpg` foto original 3:2 a 1600 px; `video/<id>.mp4` o clipe 9:16 do cômodo (pan digital ou Kling, sem áudio, recomprimido para ≤ 1,5 MB); `img/poster/<id>.jpg` primeiro frame do clipe a 720 px; `img/thumb/<id>.jpg` 168×112. A foto do hero é a mais ampla da área social (se o `id` não for `living`, trocar a URL em `.hero{background:...}`).
 4. Testar localmente (`python3 -m http.server` dentro de `site/`) no celular (390 px) e no desktop (1440 px), de preferência com Playwright: vídeo tocando, fotos carregando, sem rolagem lateral, sem erro no console. **Interceptar o envio do formulário** (rota para `script.google.com`) para não gravar lead falso; conferir que o payload sai com interesse "Agendar uma visita".
