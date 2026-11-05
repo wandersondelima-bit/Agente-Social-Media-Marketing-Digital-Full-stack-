@@ -42,6 +42,28 @@ def get(url, binario=False, tent=3):
     return None
 
 
+def baixar_foto(url, destino, tamanhos=("3240x2160", "1440x960")):
+    """Baixa a foto para um arquivo temporário e só então troca pelo destino. Uma falha (ex.: 503 do CDN) tenta o
+    próximo tamanho e nunca deixa arquivo vazio ou parcial no cache. Um arquivo vazio de rodada anterior é refeito."""
+    if os.path.exists(destino) and os.path.getsize(destino) > 0:
+        return destino
+    tmp, ultimo = destino + ".tmp", None
+    for t in tamanhos:
+        try:
+            dados = get(IMG.format(t, url), True)
+            if not dados:
+                raise ValueError("resposta vazia")
+            with open(tmp, "wb") as fh:
+                fh.write(dados)
+            os.replace(tmp, destino)
+            return destino
+        except Exception as e:
+            ultimo = e
+            if os.path.exists(tmp):
+                os.remove(tmp)
+    raise RuntimeError(f"não consegui baixar {url} em {', '.join(tamanhos)}: {ultimo}")
+
+
 def sem_acento(s):
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
@@ -124,11 +146,13 @@ def bairro_postal(f):
     return None, None
 
 
-def consulta_iptu(f):
+def consulta_iptu(f, apto=None):
     if not os.path.exists(IPTU_PY):
         return {"status": "SEM_SCRIPT"}
     cmd = [sys.executable, IPTU_PY, "buscar", "--rua", f["rua"], "--numero", str(f["numero"]), "--iptu-anuncio",
            str(f["iptu_anuncio_12x"]), "--area", str(f["area"]), "--bairro", f["bairro_qa"] or "", "--limite", "300", "--json"]
+    if apto:
+        cmd += ["--apto", str(apto)]   # sem o nº da unidade a checagem compara com outra unidade do prédio
     r = subprocess.run(cmd, capture_output=True, text=True)
     try:
         d = json.loads(r.stdout)
@@ -173,7 +197,7 @@ def folhas_de_contato(f, d):
     def baixar(x):
         p = os.path.join(mini, f"{x['i']:03d}.jpg")
         if not os.path.exists(p):
-            open(p, "wb").write(get(IMG.format("480x320", x["url"]), True))
+            baixar_foto(x["url"], p, ("480x320",))
     with ThreadPoolExecutor(8) as ex:
         list(ex.map(baixar, f["fotos"]))
     for x in f["fotos"]:
@@ -232,7 +256,9 @@ def cmd_prep(a):
     f = extrair_ficha(a.alvo)
     d = pasta_trab(f["codigo"]); os.makedirs(d, exist_ok=True)
     bairro, log = bairro_postal(f)
-    iptu = consulta_iptu(f)
+    iptu = consulta_iptu(f, a.apto)
+    if not a.apto:
+        print('AVISO: sem --apto o IPTU é comparado com unidades parecidas do prédio, não com a do anúncio; passe --apto N se souber o número.')
     f["bairro_postal"], f["iptu_checagem"] = bairro, iptu
     json.dump(f, open(os.path.join(d, "ficha.json"), "w"), ensure_ascii=False, indent=1)
     folhas = folhas_de_contato(f, d)
@@ -274,8 +300,7 @@ def gerar_midia(c, f, dest, d):
     x = f["fotos"][c["foto"]]
     orig = os.path.join(d, "orig", f"{c['foto']:03d}.jpg")
     os.makedirs(os.path.dirname(orig), exist_ok=True)
-    if not os.path.exists(orig):
-        open(orig, "wb").write(get(IMG.format("3240x2160", x["url"]), True))
+    baixar_foto(x["url"], orig)
     ow, oh = dims(orig)
     id_ = c["id"]
     foto = os.path.join(dest, "img", "foto", f"{id_}.jpg")
@@ -345,15 +370,22 @@ def render_html(j, f):
              f'      <small>Valor anunciado em {MESES[hoje.month - 1]}/{hoje.year}, sujeito a alteração.</small>\n    </div>\n    ')
     h = trocar_um(h, r'<p class="bairro">.*?(?=<div class="actions">)', bloco)
     # ficha técnica
-    fatos = [("Área privativa", f"{area_s} m²", "")]
+    fatos = [("Área", f"{area_s} m²", "")]   # "privativa" só se a ficha disser: j["area_rotulo"] = "Área privativa"
+    if j.get("area_rotulo"):
+        fatos[0] = (j["area_rotulo"], fatos[0][1], "")
+    if quartos:
+        fatos.append(("Quartos", str(quartos), ""))
     if suites:
         fatos.append(("Suítes", str(suites), j.get("suites_nota", "")))
     if f.get("banheiros"):
         fatos.append(("Banheiros", str(f["banheiros"]), ""))
     fatos.append(("Vagas de garagem", str(vagas), ""))
     an = f.get("andar") or {}
-    if an.get("min"):
-        fatos.append(("Andar", f"{an['min']}º" if an["min"] == an.get("max") else f"Entre o {an['min']}º e o {an['max']}º", ""))
+    if j.get("andar_texto"):   # andar da unidade, informado por quem conhece (ex.: "12º")
+        fatos.append(("Andar", j["andar_texto"], ""))
+    elif an.get("min") and an["min"] == an.get("max"):
+        fatos.append(("Andar", f"{an['min']}º", ""))
+    # faixa de andares do anúncio (ex.: 24–27) é do prédio, não da unidade: não entra na página sem "andar_texto"
     fatos += [tuple(x) for x in j.get("ficha_extra", [])]
     if f.get("condominio"): fatos.append(("Condomínio", f"R$ {brl(f['condominio'])}", "por mês"))
     if f.get("iptu_10x"): fatos.append(("IPTU", f"10x R$ {brl(f['iptu_10x'])}", ""))
@@ -461,7 +493,7 @@ def cmd_check(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="cmd", required=True)
-    p = sp.add_parser("prep"); p.add_argument("alvo"); p.add_argument("--refazer", action="store_true")
+    p = sp.add_parser("prep"); p.add_argument("alvo"); p.add_argument("--refazer", action="store_true"); p.add_argument("--apto", help="número do apartamento (para o IPTU identificar a unidade certa)")
     p = sp.add_parser("build"); p.add_argument("codigo"); p.add_argument("--so", help="ids de cômodo (vírgula) para regerar só esses"); p.add_argument("--saida", help="raiz alternativa no lugar de site/ (testes)"); p.add_argument("--forcar", action="store_true")
     p = sp.add_parser("check"); p.add_argument("codigo"); p.add_argument("--saida")
     a = ap.parse_args()
