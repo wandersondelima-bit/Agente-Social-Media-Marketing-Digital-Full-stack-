@@ -43,7 +43,14 @@ canônico, e deixa as pastas de mídia prontas. Depois:
 
 - `site/index.html` é a página inicial do domínio. A lista de imóveis fica na constante `IMOVEIS`,
   no fim do arquivo: um item por apartamento (código, endereço da página, bairro, título, foto,
-  metragem, quartos, vagas, preço). Para tirar um imóvel vendido do site, apague a linha dele.
+  metragem, quartos, vagas, preço). O filtro da página (bairro, faixa de preço, suítes, vagas) e a
+  ordenação leem esses campos direto do texto de cada item: nada a preencher a mais por imóvel.
+  A abertura da home não usa foto de imóvel (a marca é o elemento visual), então nenhum imóvel vendido a quebra.
+- **Imóvel vendido ou retirado:** `python3 scripts/remover-imovel.py <codigo>` tira o cartão da lista
+  (conferindo a sintaxe), apaga a pasta do imóvel deixando só o `.htaccess` com o redirecionamento 301
+  para a página inicial, e imprime o que falta (PR, publicar, cache, conferir). Com `--remoto` e as
+  credenciais do File Browser no ambiente, apaga a pasta no servidor e sobe o redirecionamento e o
+  `index.html`. `--dry-run` só mostra. Detalhes no cabeçalho do script.
 - `site/404.html` é a página de endereço inexistente; o `.htaccess` da raiz aponta para ela
   (`ErrorDocument 404 /404.html`), então não precisa de plugin nem de WordPress.
 - Ao publicar um imóvel novo: subir a pasta dele, acrescentar o item em `IMOVEIS` e subir o `index.html` de novo.
