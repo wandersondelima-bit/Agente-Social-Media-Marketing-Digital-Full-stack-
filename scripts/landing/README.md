@@ -6,11 +6,14 @@ Rascunhos ficam em `_trabalho/<codigo>/` (fora do git). A landing sai em `site/<
 ## Por imóvel (3 comandos + 1 edição)
 
 ```
-python3 scripts/landing/landing.py prep  <link ou código>   # ficha, IPTU, bairro pelo CEP, folhas de contato, rascunho
+python3 scripts/landing/landing.py prep  <link ou código> [--apto N]   # ficha, IPTU, bairro pelo CEP, folhas de contato, rascunho
 # ← Claude: abre as folhas (_trabalho/<cod>/folha1..N.jpg, fotos numeradas) e edita imovel.json
 python3 scripts/landing/landing.py build <codigo>           # mídia (foto/poster/thumb/vídeo) + index.html + check
 cd site && python3 -m http.server 8000                      # http://localhost:8000/<codigo>/<bairro>/
 ```
+
+**`--apto N`**: passe o número do apartamento sempre que o intake o trouxer. Sem ele o IPTU é comparado com outra unidade do prédio (o `prep` avisa).
+O download das fotos é atômico: se o CDN responder 503, o script tenta o tamanho menor (1440×960) e nunca deixa arquivo vazio no cache.
 
 `build` recusa pasta que já existe e não foi gerada por ele (marca `.gerado-por-landing`), então não sobrescreve
 as landings antigas. `--so id1,id2` regera só esses cômodos; `--saida DIR` gera numa raiz de teste.
@@ -33,6 +36,7 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 - IPTU confirmado pelo usuário: `"iptu_10x": 1050` no `imovel.json` (vale mais que o do anúncio).
 - Condomínio confirmado/corrigido pelo usuário: `"condominio_valor": 1400` no `imovel.json` (vale mais que o do anúncio).
 - IPTU `ALERTA`/`NAO_ENCONTRADO` no `check`: perguntar ao usuário. O script já compara só com unidades de mesmo nº de vagas.
+- Ficha técnica: a área sai como "Área" (a ficha do anúncio não diz que é privativa). Se confirmar, `"area_rotulo": "Área privativa"`. O andar só aparece se o anúncio indicar um andar único ou se você informar `"andar_texto": "12º"`; a faixa de andares do anúncio é do prédio e não entra na página.
 - Fotos de condomínio com marca d'água do QuintoAndar (logo "N" translúcido): não usar nos cômodos; só texto.
 
 ## Conferências antes de mostrar ao usuário
