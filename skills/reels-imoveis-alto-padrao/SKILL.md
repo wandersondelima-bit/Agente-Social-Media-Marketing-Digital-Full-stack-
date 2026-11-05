@@ -1,6 +1,6 @@
 ---
 name: "reels-imoveis-alto-padrao"
-description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$ 1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), geração de vídeo IA (Higgsfield/Kling e conector Google Flow, para hooks e transições), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok e a landing page do imóvel publicada em marceloosawaimoveis.com.br. Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
+description: "Use ao receber um novo imóvel (dados do QuintoAndar + fotos) para produzir o pacote completo de imóveis de alto padrão em São Paulo capital (R$ 1-5M) — intake, confirmação de bairro pelo CEP, IPTU automático (consulta-iptu-sp), cenas de vídeo (pan digital, parallax 2.5D, Higgsfield/Kling e Google Flow), roteiro CapCut em 3 blocos, copywriting AIDA para Instagram/TikTok, a landing page publicada em marceloosawaimoveis.com.br e a automação comentário → direct em cartão (Zernio, UTM). Também cobre impulsionamento pago no Instagram, alterações no site (página inicial, imóvel vendido) e a publicação na Hostinger. Vale igual no chat e no Claude Code."
 ---
 
 # Reels de Imóveis de Alto Padrão (SP Capital)
@@ -53,7 +53,7 @@ O cliente quer SEMPRE os cômodos mostrados com amplitude, nunca com foco em uma
 
 - **Um pan amplo por ambiente principal** sempre que existir uma foto horizontal aberta: área social (sala + jantar + varanda), cozinha integrada, varanda gourmet e suíte (se a foto aberta não tiver espelho no centro, pessoa ou objeto pessoal). Meta de **3 a 5 pans por Reel**.
 - **Kling (push-in)** só complementa: hook, fechamento com vista, ou cômodo que não tem foto horizontal aberta. Nunca use Kling em recorte de detalhe (bancada, arandela, nicho) como cena principal de um cômodo.
-- **Flow** (seção "Cenas pelo conector Google Flow", abaixo) também só complementa: hook, transição entre ambientes ou entre imóveis. Os pans continuam sendo a base.
+- **Flow** (seção "Cenas pelo conector Google Flow", abaixo) também complementa: hook, transição entre ambientes ou entre imóveis. Os pans continuam sendo a base. **A transição de passagem de cômodo é a forma de Flow que o usuário aprovou** (2255516, `whip-pan` sala→cozinha: "ficou ótima para a ideia de tour por dentro do apartamento, junto com as cenas pans"): dentro do tour, ela entra entre dois pans de cômodos vizinhos.
 - **Curadoria:** priorize as fotos que mostram mais do cômodo de uma vez (vários ambientes ou o cômodo de parede a parede). Fotos de detalhe viram reserva.
 - **Direção:** a janela 9:16 desliza com easing suave e TERMINA no ponto de maior valor (varanda, vista, churrasqueira, ilha). Pode ir da esquerda para a direita (X0 < X1) ou da direita para a esquerda (X0 > X1). Gere 6 s e corte em 5,0 s no CapCut.
 - **Comando.** Largura da foto na altura de 1920 = L. Curso de 60 até L − 1080 − 60. Upscale 2x antes do crop para não tremer.
@@ -82,16 +82,103 @@ Além dos pans e do Kling, uma cena pode ser criada pelo conector `flow` (Google
 
 **Crédito e autorização.** O Flow gasta créditos Google AI do usuário (valores da descrição da ferramenta, conferir no momento: Omni 1.1 Flash 7-12, Veo 3.1 Lite 10, Fast 20, Quality 100). Nunca gerar sem o OK do usuário para aquela cena, sempre com `max_credits` na chamada (`flow_continue` não mostra cotação: perguntar antes). Falha do conector: parar e reportar o erro, sem refazer a geração nem mexer no conector sem pedido do usuário.
 
-**Pré-requisito.** O projeto do Flow tem de estar aberto no Chrome do conector. Pedir ao usuário que abra e esperar o "aberto" antes de chamar `flow_generate`.
+**Pré-requisito.** O projeto do Flow tem de estar aberto no Chrome do conector (perfil dedicado, porta 9333) e **sem painel de sessão do agente aberto**: o Flow abre um por padrão em projeto novo, ele cobre o compositor, o botão "Agent" some da página e todo job estoura o tempo. Com o botão "Start new session" visível, o painel está aberto: fechar à mão se a correção descrita em "Falhas conhecidas" ainda não estiver carregada. Pedir ao usuário que abra o projeto e esperar o "aberto" antes de chamar `flow_generate`.
 
 **Como gerar (verificado no hook do 2255516).**
-- `flow_generate` com `first_frame` = o pré-corte 9:16 da foto (mesma regra do Kling: `crop=ih*9/16:ih`, posição do corte escolhida por foto), `aspect_ratio` "9:16", `model` "Omni 1.1 Flash", `duration` 6, `resolution` "720p". Resultado: 720×1280, 6 s, sem áudio, 10 créditos. Acompanhar com `flow_wait`.
+- `flow_generate` com `first_frame` = o pré-corte 9:16 da foto (mesma regra do Kling: `crop=ih*9/16:ih`, posição do corte escolhida por foto), `aspect_ratio` "9:16", `model` "Omni 1.1 Flash", `duration` 6, `resolution` "720p". Resultado: 720×1280, 6 s, sem áudio, 10 créditos. Acompanhar com `flow_wait`. O arquivo sai em `~/flow-mcp-out/<project>/scene-NN.mp4` (no 2255516, `scene-03.mp4`, 3,3 MB): o NN é a ordem do job, não a do roteiro, então copiar para `03_Cenas_Prontas/` já com o nome final.
 - Prompt em inglês, uma câmera e um movimento só, descrevendo apenas o que já está visível nos quadros de entrada e de saída (mesma regra do Kling). Acrescentar sempre: "keep the sky color, lighting and every object exactly as in the first frame; no people, no text".
-- Salvar em `03_Cenas_Prontas/` como `C[NN]_[DESCRICAO]_FLOW.mp4` e registrar o prompt, o modelo e os créditos em `Prompts_Higgsfield.md`, seção "Flow". Se vier com áudio, `ffmpeg -i in.mp4 -c:v copy -an out.mp4`.
+- Salvar em `03_Cenas_Prontas/` como `C[NN]_[DESCRICAO]_FLOW.mp4` e registrar o prompt, o modelo e os créditos em `Prompts_Cenas.md` (antes `Prompts_Higgsfield.md`), seção "Flow". Se vier com áudio, `ffmpeg -i in.mp4 -c:v copy -an out.mp4`.
 - **Inspeção obrigatória** com `inspetor-clipes`, avisando que o clipe é do Flow: além do checklist de sempre, mudança de cor do céu ou da luz, objeto novo inventado e canto degradado. O hook do 2255516 mudou a cor do céu e inventou uma estrela, e só foi aproveitável cortado em 4,5 s. O Roteiro usa só o trecho aprovado ("Trecho a usar").
 - No Roteiro, o clipe do Flow é complementar (hook até 4,5-5,0 s, demais 3,0-4,0 s) e respeita o limite de 36 s. Se repetir um pan do mesmo ambiente, um dos dois sai do corte. O arquivo do Flow tem 720×1280 e os pans 1080×1920: avisar no Bloco 1 para escalar no CapCut.
 
-**Não testados** (a descrição da ferramenta diz que existem; ninguém rodou aqui): `last_frame` e os `technique` de transição, `chain_previous`, `flow_continue`, `download_quality` "upscaled", `flow_assemble`, `variants`. Ao usar um deles, relatar o que de fato aconteceu para reescrever o item e tirá-lo desta lista.
+**Exercitados** no 2255516: `flow_generate` com `first_frame` (hook) e com `first_frame` + `last_frame` + `technique` `whip-pan` (passagem sala→cozinha, 10 créditos, 6 s/720p, projeto novo, job completo sem intervenção), `flow_status`, `flow_wait`, `flow_assets` e `flow_retry`. A transição saiu fiel nos dois extremos (primeiro e último frame batem com as fotos, sem objeto inventado), mas o Flow entrega o clipe **com faixa de áudio**: remover com `ffmpeg -c:v copy -an` antes de pôr no Roteiro, e prever a escala 720→1080 no CapCut. Pré-cortes 9:16 de ambas as fotos (1214×2160, recorte fixo) são feitos antes. Projeto do Flow: o conector antigo não criava (com a lista de projetos aberta o `flow_status` devolvia "no project is open"). A versão corrigida em `~/flow-mcp` (2026-11-04) cria o projeto sozinho no `flow_status` e nas gerações quando a aba está na lista de projetos, e abre uma aba se o Chrome estiver sem janelas; testado de ponta a ponta no Flow real (`flow_status` na lista de projetos criou o projeto e o job seguinte gerou o clipe sem intervenção). Vale só depois de o servidor `flow` reiniciar: o "reconectar" do app pode manter o processo antigo vivo, e enquanto o `flow_status` ainda pedir para abrir um projeto o código antigo está rodando. O primeiro processo `node …/flow-mcp/dist/index.js` é o dono do painel 8787 e os demais são clientes; encerrar o dono sem religar um deixa as ferramentas com "fetch failed" até um novo processo subir.
+
+**Transições** (`technique`): `whip-pan` já testado e **aprovado pelo usuário** como cena de tour. `seamless-loop` também foi gerado (mesma foto da vista como primeiro e último quadro, 6 s, 10 créditos, fechou a 31,9 dB do quadro inicial), mas o usuário **não aprovou** o loop como cena do projeto: não propor loop como cena nem gastar crédito com ele; o que vale é a passagem entre ambientes. Os outros (`into-the-screen`, `before-after`, `match-cut`, `logo-resolve`, `particle-dissolve`, `axis-flip`) seguem sem teste; todos pedem primeiro e último quadro, menos `seamless-loop`, que usa a mesma imagem nos dois, e `logo-resolve`, que pede o logo como último quadro.
+
+**Não testados** (a descrição da ferramenta diz que existem; ninguém rodou aqui): `chain_previous`; `flow_continue`; `download_quality` "upscaled"; `flow_assemble`; `variants`. Ao usar um deles, relatar o que de fato aconteceu para reescrever o item e tirá-lo desta lista.
+
+## Parallax 2.5D e mix de cenas (a partir do 3066087)
+
+Objetivo: o tour mais realista possível com as fotos disponíveis, sem inventar nada que não existe no apartamento. A fidelidade à foto real vem antes de qualquer efeito. Esta seção complementa "Amplitude primeiro" e "Cenas pelo conector Google Flow"; onde houver divergência, vale a regra mais restritiva (por exemplo, o OK do usuário por cena do Flow).
+
+### Mix de cenas por Reel
+| Tipo de cena | Técnica | Uso |
+|---|---|---|
+| Plano amplo do cômodo | Pan + zoom digital (ffmpeg, sem IA) | Base do tour, 60 a 70% das cenas. Mostra a dimensão do cômodo |
+| Câmera deslizando pelo ambiente | **Truck parallax** | 1 a 2 por Reel, em cômodos com objetos em primeiro plano (sofá, bancada, cama, mesa) |
+| Gancho (C01) e fechamento | **Dolly parallax** | Substitui o Kling quando acabarem os créditos do Higgsfield |
+| Passagem entre cômodos ou ângulo que nenhuma foto cobre | **Google Flow** (flow-mcp, Frames to Video, `whip-pan` aprovado no 2255516) | 0 a 2 cenas por Reel; a passagem entre dois cômodos vizinhos, entre dois pans, é a cena de Flow preferida no tour interno |
+
+- Ordem das cenas pela planta real: entrada, sala, varanda, cozinha, quartos, suíte.
+- Mesmo sentido de movimento entre cenas vizinhas; match cut em portas e aberturas.
+- Pan e truck se somam: nunca trocar um pelo outro por padrão. Um Reel bom alterna pan amplo, truck e hero shot.
+- Enquanto houver créditos no Higgsfield, o Kling continua permitido nos ganchos. Critério para trocá-lo: o parallax empatar ou ganhar no mesmo checklist de frames.
+
+### Parallax 2.5D (sem IA generativa)
+Um mapa de profundidade da própria foto move uma câmera virtual alguns centímetros dentro do cômodo: o primeiro plano se desloca mais que o fundo. Só reaproveita pixels da foto, por isso não aparece móvel, viga ou janela inventada. Saída: 1080×1920, 30 fps, sem áudio.
+
+Ferramentas, em `/Users/wandersondelima/AgenteSocialMedia/_ferramentas/`:
+- `depth.py`: gera o mapa de profundidade (modelo Depth-Anything-V2-Base, CPU do sandbox, cerca de 15 s por foto). Verificar que o arquivo existe antes de depender dele; se faltar, avisar o usuário em vez de recriá-lo por conta própria.
+- `parallax.py`: renderiza o clipe.
+
+Dependências do sandbox (instalar no início de cada sessão): `pip install --break-system-packages torch --index-url https://download.pytorch.org/whl/cpu` e `pip install --break-system-packages transformers opencv-python-headless pillow`. Rodar os scripts com `python3 -I`.
+
+Comandos validados no 3066087 (foto 3000×2000, janela 9:16 de 1125 px):
+```
+# Truck: câmera desliza para a direita (pan0 positivo → pan1 negativo = câmera vai para a direita)
+python3 -I parallax.py FOTO.jpg FOTO_depth.npy SAIDA.mp4 --x0 800 --pan0 300 --pan1 -250 --dolly 0.03 --T 6 --ss 1
+
+# Dolly: avanço de ~22% em direção ao ponto de interesse (cx,cy = ponto para onde a câmera avança, em px da foto)
+python3 -I parallax.py FOTO.jpg FOTO_depth.npy SAIDA.mp4 --x0 510 --cx 1150 --cy 900 --dolly 0.18 --T 6 --ss 1
+```
+- `--x0`: borda esquerda da janela 9:16 dentro da foto (escolher para deixar fora objetos pessoais, marcas e árvore de Natal).
+- `--dolly`: 0.10 = primeiro plano cresce cerca de 11%. Padrão para hero shots: 0.15 a 0.18.
+- `--ss 1` na produção; `--ss 2` só para uma checagem final de bordas.
+- `--blur 5 --dilate 9 --steps 48`: padrões que eliminam a tremida nas bordas (não mexer sem motivo).
+- Render: alguns minutos por clipe de 6 s; gerar em segundo plano. Truck gera 6 s; cortar o trecho útil no CapCut, como nos pans.
+
+Regras de uso:
+1. Truck: o intervalo de origem `x0 + pan` precisa ficar dentro da foto (0 a largura). Conferir antes de renderizar.
+2. Dolly com rede de proteção, grade ou malha fina: no máximo `--dolly 0.08`; acima os fios ondulam e se partem. Preferir pan comum.
+3. Nunca vidro ou espelho no centro do caminho da câmera (mesma regra do Kling).
+4. O parallax não atravessa portas nem revela o que está atrás de parede. Para isso: corte seco, match cut ou Google Flow.
+5. Foto 3000×2000: o corte 9:16 sai com 1125 px, sem upscale. Foto de 2000×1333 sai com cerca de 750 px: fazer upscale antes, se necessário.
+6. Na curadoria, preferir fotos da vista sem rede de proteção. Se só houver foto com rede, dolly sutil ou pan.
+
+Checklist de aprovação (frames em 0 / 2,5 / 3,5 / 4,9 / 5,9 s):
+- Bordas de almofadas, listras de tecido e cantos de móveis sem tremida nem estiramento; fios de rede, grades e batentes sem ondulação.
+- Objeto indesejado (brinquedo, árvore de Natal, porta-retrato, marca) fora do quadro ao longo do movimento.
+- O elemento de venda (janela, vista, painel, bancada) continua em quadro.
+- Reprovou: reduzir `--dolly` ou o curso do pan, ou trocar por pan comum.
+
+### Google Flow via flow-mcp (só para o que a foto não resolve)
+Estado: o repositório GTAI-1/flow-mcp está em `~/flow-mcp` no Mac, e controla o Chrome clicando na interface do Flow (Playwright ligado ao Chrome por CDP na porta 9333, perfil `~/.flow-mcp/chrome-profile`, painel local em 127.0.0.1:8787, saídas em `~/flow-mcp-out`; plano Google AI Pro: 1.000 créditos por mês + 50 por dia). **Exercitado uma vez**, no hook do 2255516 e com `first_frame` (hook) e com `first_frame` + `last_frame` (transição `whip-pan` sala→cozinha, fiel nos dois extremos; ver "Como gerar"). O painel do agente não chegou a abrir no projeto novo do segundo teste: a correção não falhou, mas ainda não foi provada contra o painel aberto. Se as ferramentas `flow_*` não estiverem conectadas, usar o Flow manualmente, com o mesmo fluxo e os mesmos prompts. Vale a seção "Cenas pelo conector Google Flow" para crédito e autorização (OK do usuário por cena, `max_credits` sempre).
+- Usar: `flow_generate` com `first_frame` e `last_frame` (duas fotos reais; o modelo só interpola), `flow_continue` / `chain_previous`, `flow_download` (1080p ou 2K sem gastar crédito), `flow_status` e `flow_wait`.
+- Não usar: `flow_agent_images` (gera imagem nova e traz a "maquiagem"), `flow_narrate` e `flow_captions` (narração e legenda ficam no CapCut), `flow_assemble` (não entregar prévia montada).
+- Configuração fixa: Gemini Omni 1.1 Flash, 9:16 forçado, 1 variante, `max_credits: 15` (custo informado: 15 créditos por 10 s em 720p; verificado no 2255516: 6 s em 720p custa 10 créditos, então `max_credits: 12` basta para 6 s). Clipes mudos.
+- Quando: passagem entre cômodos (porta, corredor, abertura) com duas fotos reais dos dois lados; ou completar um cômodo cujo ângulo nenhuma foto cobre, com duas fotos reais do mesmo cômodo. Pré-cortar as duas fotos em 9:16 sem elementos indesejados.
+
+Prompt-base (inglês, colar sempre com a confirmação por escrito):
+```
+Animate the two uploaded photos directly: first frame = photo A, last frame = photo B. Interpolate only the camera movement between them. 9:16 vertical, ultra-smooth slow steadycam, straight line, no rotation. Strictly preserve every wall, floor, ceiling, furniture, material, color and lighting exactly as in the photos. Do not add, remove, invent or improve any furniture, object, light fixture or architectural element. No people, no text, no reflections of people. Do not generate a new image: animate the uploaded photos.
+Confirm in writing before generating: aspect ratio 9:16, first frame = photo A, last frame = photo B, 1 variant.
+```
+Checklist de aprovação (frames em 2,5 / 3,5 / 4,9 s): mobília ou objeto inventado (em apartamento vazio, isso primeiro); material, luz ou layout diferente das fotos; pessoa, silhueta ou reflexo humano, texto, formato diferente de 9:16; geometria deformada, porta ou parede virando outra coisa. Reprovou: não gastar mais crédito; corte seco ou pan.
+
+Cuidados: o README do flow-mcp diz que o uso automatizado pode violar os termos do Google e a conta é a principal; usar em baixo volume, nunca em lote noturno, e preferir o Flow manual na dúvida. Um clipe por vez, pausa de 25 a 70 s entre eles; o Mac precisa ficar acordado e com a tela ligada. Pode quebrar quando o Google mudar a interface: se falhar, voltar ao Flow manual.
+
+**Falhas conhecidas e como diagnosticar.**
+- *Timeout esperando o botão "Agent"*, três vezes seguidas no 2255516. Causa real: o painel de sessão do agente aberto cobrindo o compositor. A hipótese do idioma da interface estava errada: o erro continuou com o Flow em inglês. A correção está em `ensureProjectGrid`, em `~/flow-mcp/src/flow.ts`: se o botão "Start new session" estiver visível, fecha o painel antes de procurar o "Agent". Está compilada em `dist/`, mas só vale depois de o usuário reconectar o servidor `flow` (a ferramenta de reconexão da sessão só atua em conectores com falha, e o `flow` aparece como conectado mesmo com o código antigo). Ainda não foi commitada nem testada de ponta a ponta com o servidor reconectado; se o repositório for atualizado, conferir com `grep -n "Start new session" src/flow.ts`.
+- *Diagnóstico:* erro de "elemento não encontrado" se investiga olhando a página real da aba do conector (captura ou árvore de acessibilidade) antes de levantar hipótese. A mesma falha três vezes seguidas: parar e reportar. Investigar ou corrigir o conector só com pedido do usuário.
+- *Gasto:* as falhas por timeout aconteceram antes do envio; o gasto registrado foi só o do clipe final, 10 créditos.
+
+Teste de validação (primeiro imóvel em que for usado com duas fotos): o 2255516 já cobriu "hook a partir de uma foto"; a passagem de cômodo (sala→cozinha, `whip-pan`) também foi coberta e aprovada pelo inspetor; falta o completar-cômodo (duas fotos do mesmo ambiente). Gerar, aplicar o checklist e registrar na memória do projeto se o resultado atende. Só depois tornar rotina.
+
+### Entrega e registro por imóvel
+- Arquivos em `03_Cenas_Prontas/` com prefixos `PLX_Cxx_..._TRUCK.mp4`, `PLX_Cxx_..._DOLLY.mp4`, `FLOW_Cxx_....mp4`, além dos `..._PAN.mp4` de sempre. Todos sem faixa de áudio.
+- `04_Documentos/Prompts_Higgsfield.md` passa a se chamar `Prompts_Cenas.md`, com os comandos exatos (pan, truck, dolly, Flow) de cada cena.
+- `Roteiro_CapCut.md` mantém os 3 blocos. No Bloco 1, informar a técnica de cada clipe e o trecho útil em segundos, conferido por frames (nunca duração uniforme). Não entregar prévia montada.
+- Depois de cada imóvel, anotar na memória do projeto: técnicas que funcionaram, valores de `--dolly` e `--x0` aprovados, cenas reprovadas e o motivo, e se o Flow foi usado e com que resultado.
 
 ## Roteiro CapCut — estrutura padrão aprovada (repetir sempre)
 
@@ -125,13 +212,23 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
 - Nunca divulgar o nome próprio do condomínio.
 - Nenhum qualificador que as fotos e a ficha não comprovam ("projeto assinado", "assinado por escritório", "projetado por arquiteto", "marcenaria planejada"). Vale para todo texto publicado, inclusive a etiqueta (`tag`) do cartão da página inicial e os destaques e listas da landing page.
 - No bloco de comparação de preço, nunca citar valores de m² ou média da região — argumentar de forma qualitativa ("preço competitivo para o padrão da região").
-- CTA de captação de WhatsApp (vale para os imóveis depois do 2167152 e substitui o CTA de comentário de palavra-chave): o objetivo é o cliente enviar o número de WhatsApp por mensagem. Uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
-  - Instagram (antes do `🔗 QuintoAndar #[CODIGO]`):
+- CTA de captação (regra a partir de 04/11/2026, decisão do usuário): todo Reel novo sai com a landing page, então o CTA do Instagram é o de comentário com a palavra da automação Zernio (abaixo). O CTA de WhatsApp vale para o TikTok e para o Reel sem landing page. Em qualquer CTA: uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
+  - Instagram, Reel COM landing page e automação Zernio (padrão a partir do 3066087; a palavra vem do Checklist da seção "Automação Comentário → Direct → Landing"). Antes do `🔗 QuintoAndar #[CODIGO]`:
+    ```
+    📋 Quer a ficha completa deste apartamento?
+    💬 Comente {PALAVRA_SEM_ACENTO} e receba no seu direct o tour completo com todos os detalhes.
+    📲 Prefere falar com um corretor? Me chame no direct.
+    ```
+    Comentário fixado no Reel:
+    ```
+    📋 Ficha completa deste apartamento: comente {PALAVRA_SEM_ACENTO} e receba o link no seu direct.
+    ```
+  - Instagram, Reel SEM landing page (imóvel antigo, sem automação): use o bloco de WhatsApp abaixo, sem o comentário.
     ```
     📲 Receba a ficha completa no seu WhatsApp: envie seu número com DDD no direct.
     🗓️ Prefere conhecer pessoalmente? Pelo mesmo direct, reservamos o horário da sua visita.
     ```
-  - TikTok (substitui o antigo "link da bio"):
+  - TikTok (substitui o antigo "link da bio"; sem automação no TikTok, este CTA não muda):
     ```
     📩 Envie seu WhatsApp com DDD por mensagem e receba a ficha completa e o agendamento da sua visita reservada.
     ```
@@ -157,40 +254,119 @@ Todo imóvel sai com a própria landing page publicada em marceloosawaimoveis.co
 - Repositório GitHub `wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-` (branch padrão `main`): `site/` é exatamente o que está no ar; `site/_modelo/` é o modelo (README com o checklist); `./scripts/nova-landing.sh` cria a página; `.hostinger/site.json` tem domínio e usuário da hospedagem.
 - **No Mac:** a cópia fica em `~/AgenteSocialMedia/site-repo` (no Cowork, `$HOME/mnt/AgenteSocialMedia/site-repo`). Se não existir, clonar: `git clone https://github.com/wandersondelima-bit/Agente-Social-Media-Marketing-Digital-Full-stack-.git site-repo` dentro de `AgenteSocialMedia`. Antes de começar, `git pull` na `main`.
 - **Em sessão na nuvem do Claude Code:** o repositório já é a pasta de trabalho.
-- Nunca montar a página do zero nem redesenhar: sempre a partir do modelo.
+- Nunca montar a página do zero nem redesenhar por conta própria: sempre a partir do modelo.
+- **Reforma de marca ou de layout, só com pedido explícito do usuário** (feita em 05/11/2026): edita-se `site/_modelo/index.html` e propaga-se às páginas já publicadas por script de substituição com contagem exata, depois de provar que os blocos compartilhados (cabeçalho, rodapé, `<symbol>` da marca, favicon) são idênticos em todas as páginas (hash dos blocos; se uma página divergir, o script falha e a página é tratada à mão). Republicar **todas** as pastas alteradas, não só a home, e atualizar "Padrões que não mudam" aqui no mesmo dia.
 
 ### Passos, sempre nesta ordem
 1. `./scripts/nova-landing.sh <codigo> <bairro>` cria `site/<codigo>/<bairro>/`.
    - **Atalho a partir do link do QuintoAndar:** `python3 ./scripts/landing/landing.py prep <link>`, preencher `_trabalho/<codigo>/imovel.json`, `landing.py build <codigo>` (faz os passos 1–3 de uma vez, com pan digital local; ver `./scripts/landing/README.md`).
-2. Trocar só os trechos marcados com `TROCAR` em `index.html`: `<title>`, meta e Open Graph, hero (bairro, título, destaques, preço com mês de referência, condomínio, IPTU em 10x), ficha técnica, listas do apartamento e do condomínio, região e link do Google Maps, `CONFIG` (código e título), `ROOMS` (um item por cômodo, na ordem do tour) e o código no rodapé.
+2. Trocar só os trechos marcados com `TROCAR` em `index.html`: `<title>`, meta e Open Graph, hero (bairro, título, destaques, preço com mês de referência, condomínio, IPTU em 10x), ficha técnica, listas do apartamento e do condomínio, região e link do Google Maps, `CONFIG` (código e título), `ROOMS` (um item por cômodo, na ordem do tour) e o código no rodapé. As tags Open Graph (`og:image`, `og:title`, `og:description`) são obrigatórias: o cartão do direct automático lê os três direto da landing.
 3. Mídia reaproveitada do próprio Reel, com o mesmo `id` de cômodo em todas as pastas: `img/foto/<id>.jpg` foto original 3:2 a 1600 px; `video/<id>.mp4` o clipe 9:16 do cômodo (pan digital ou Kling, sem áudio, recomprimido para ≤ 1,5 MB); `img/poster/<id>.jpg` primeiro frame do clipe a 720 px; `img/thumb/<id>.jpg` 168×112. A foto do hero é a mais ampla da área social (se o `id` não for `living`, trocar a URL em `.hero{background:...}`).
 4. Testar localmente (`python3 -m http.server` dentro de `site/`) no celular (390 px) e no desktop (1440 px), de preferência com Playwright: vídeo tocando, fotos carregando, sem rolagem lateral, sem erro no console. **Interceptar o envio do formulário** (rota para `script.google.com`) para não gravar lead falso; conferir que o payload sai com interesse "Agendar uma visita".
 5. Mostrar a prévia ao usuário (artifact) e **só publicar depois do OK**.
 6. Publicar a pasta do imóvel na Hostinger em `public_html/<codigo>/<bairro>/`: `hosting_files_generate-upload-url` (usuário e domínio do `.hostinger/site.json`) e upload TUS de cada arquivo (`POST` com `Upload-Length`, depois `PATCH` com o conteúdo; conferir `Upload-Offset` = tamanho). Todo upload sobrescreve só os arquivos enviados.
-7. Registrar no GitHub antes de mexer na página inicial: acrescentar o imóvel na lista `IMOVEIS` do `site/index.html` (código, endereço da página, bairro, título, foto, área, quartos, vagas, preço, destaque), commit numa branch nova a partir da `main` atualizada, push e pull request para a `main`. O próprio agente faz o merge, sem perguntar (decisão do usuário em 29/10/2026): `gh pr merge <n> --merge` rodando **sozinho**, sem `&&` com outros comandos, porque a regra de permissão `Bash(gh pr merge *)` só cobre o comando isolado. Depois, `git checkout main`, `git pull` e apagar a branch local. Só parar e perguntar se o merge der conflito.
+7. Registrar no GitHub antes de mexer na página inicial: acrescentar o imóvel na lista `IMOVEIS` do `site/index.html` (código, endereço da página, bairro, título, foto, área, quartos, vagas, preço, destaque). **Antes do commit, conferir a sintaxe da lista** (uma vírgula faltando derruba a home inteira): `node -e 'const h=require("fs").readFileSync("site/index.html","utf8");const m=h.match(/const IMOVEIS = \[\n([\s\S]*?)\n\];/);console.log(new Function("return ["+m[1]+"]")().length)'` tem de imprimir o número de cartões. Depois, commit numa branch nova a partir da `main` atualizada, push e pull request para a `main`. O próprio agente faz o merge, sem perguntar (decisão do usuário em 29/10/2026): `gh pr merge <n> --merge` rodando **sozinho**, sem `&&` com outros comandos, porque a regra de permissão `Bash(gh pr merge *)` só cobre o comando isolado. Depois, `git checkout main`, `git pull` e apagar a branch local. Só parar e perguntar se o merge der conflito.
 8. Publicar a página inicial **só a partir da `main`**, nunca de uma branch: outras sessões podem ter publicado cartões que a branch não tem. Antes do upload, baixar o `index.html` do ar e compará-lo com o da `main` de antes do merge (`git show HEAD^1:site/index.html`). Os dois têm de ser idênticos, e a diferença para o arquivo que vai subir tem de ser só o cartão novo. Se o ar tiver algo que a `main` não tem, parar e avisar.
    - Se o merge for barrado pelo controle de permissões: publicar a partir da branch só se o ar for igual à `origin/main` e a branch diferir apenas pelo cartão novo; deixar o PR aberto e pedir ao usuário o merge pelo link.
 9. **Limpar o cache:** `hosting_cache_clear` (scope `all`) no domínio. A CDN guarda cópias antigas e o celular pode receber a versão velha mesmo com o servidor certo.
 10. Conferir no ar com navegador de verdade, não só `curl`: página do imóvel, página inicial (cartão novo aparecendo), política de privacidade, um vídeo, uma foto e um endereço inexistente (deve cair na página 404). Conferir também que todo código de `IMOVEIS` na `main` tem cartão na página inicial no ar e que o `site/index.html` da `main` é idêntico ao do ar.
-11. Colocar o link `marceloosawaimoveis.com.br/<codigo>/<bairro>/?ref=reel-01` na copy (e `?ref=bio` na bio, `?ref=ads` em anúncio) no lugar de "link da bio".
+11. Colocar o link na copy no lugar de "link da bio". Link entregue pelo direct automático: UTM completa (ver "Automação Comentário → Direct → Landing"). Bio e anúncio: `?ref=bio` e `?ref=ads` (ou `utm_medium=bio`). Link na legenda e no comentário não é clicável no Instagram: a entrega do link do Reel é pelo direct.
+12. Com a landing no ar e conferida, seguir para a seção "Automação Comentário → Direct → Landing" (depois de publicar o Reel).
 
 ### Padrões que não mudam
 - Endereço: `/<codigo-do-imovel>/<bairro>/`, com o bairro postal do Passo 0, minúsculo, sem acento (ex.: `/3066087/indianopolis/`).
-- Visual: grafite em gradiente, champanhe como único acento, Poppins. Ordem: hero em tela cheia → tour em vídeo → galeria de fotos → detalhes com o formulário ao lado (fixo no desktop). O nome "Marcelo Osawa" leva à página inicial; o rodapé tem "Outros imóveis à venda".
+- Visual: grafite em gradiente, champanhe como único acento, **Poppins como única fonte** (pesos leves nos títulos, 600 nos preços; o usuário recusou serifa). Ordem: hero em tela cheia → tour em vídeo → galeria de fotos → detalhes com o formulário ao lado (fixo no desktop). O nome "Marcelo Osawa" leva à página inicial; o rodapé tem "Outros imóveis à venda".
+- **Marca (decisão do usuário em 05/11/2026):** monograma **anel** (M dentro de um anel duplo, traço fino champanhe), em SVG inline como `<symbol id="i-marca">` e no favicon; fontes em `site/_marca/` (README, `monograma.svg`, `favicon.svg`). Lockup: "Marcelo Osawa" em destaque e "Imóveis" embaixo, menor, em caixa alta espaçada; em `<title>`, `og:site_name` e textos corridos, "Marcelo Osawa Imóveis" (igual ao Instagram). Sem ícone de prédio nem ícones decorativos no cabeçalho.
+- **CRECI não aparece em lugar nenhum do site** (home, páginas de imóvel, privacidade, 404, modelo), por decisão do usuário em 05/11/2026, avisado de que a norma do COFECI exige o número em anúncios. Se voltar a ser exigido, o lugar é a linha `.legal` do rodapé, nunca ao lado do nome.
+- **Página inicial:** o hero não usa foto de imóvel (qualquer apartamento pode ser vendido a qualquer momento); a marca é o elemento visual e o Open Graph é fixo em `site/img/og-home.jpg`. A barra de filtro (bairro, faixa de preço, suítes, vagas) e a ordenação leem os campos de texto de cada item de `IMOVEIS`: nada a preencher a mais por imóvel. Os cartões continuam no modelo de `IMOVEIS` (código, url, bairro, título, foto, alt, área, quartos, vagas, preço, tag).
 - Formulário só de agendamento de visita (nome + WhatsApp). Grava na planilha "Leads Imóveis" com interesse "Agendar uma visita" e abre o WhatsApp com a mensagem pronta. WhatsApp, endereço da planilha (`CONFIG.endpoint`), versão do consentimento e política de privacidade são os mesmos para todos os imóveis: nunca trocar.
 - O aviso de lead novo sai por e-mail de contato@marceloosawaimoveis.com.br para ele mesmo (Apps Script da planilha); nada a fazer por imóvel.
 - Textos seguem as regras da copy: só dados da ficha, sem nome do condomínio, sem "mobiliado", sem valores de m² da região.
 - A raiz do domínio é a página inicial estática com os imóveis. Não existe WordPress nem outro CMS; endereço inexistente cai em `/404.html`. O `hosting_websites_list` da Hostinger mostra `website_type: wordpress` por uma classificação antiga: ignorar.
 
 ### Imóvel vendido ou retirado
-Apagar a linha dele em `IMOVEIS` e seguir os Passos 7 a 10 (PR, merge, página inicial a partir da `main`, cache, conferência).
+Vale para venda pela equipe ou por outro corretor do QuintoAndar: o site só mostra imóveis à venda.
+1. `python3 ./scripts/remover-imovel.py <codigo> --dry-run` (mostra o cartão que sai e confere a sintaxe da lista), depois sem `--dry-run`: tira o cartão de `IMOVEIS`, apaga a pasta `site/<codigo>/<bairro>/` deixando só o `.htaccess` com o `RedirectMatch 301` para a página inicial, e imprime o que falta.
+2. Passos 7 a 10 (PR, merge, página inicial a partir da `main`, cache, conferência no ar: cartão sumiu e o endereço antigo redireciona para a inicial).
+3. No servidor: `--remoto`, com `HOSTINGER_FILES_URL`, `HOSTINGER_AUTH_KEY` e `HOSTINGER_REST_KEY` no ambiente (valores de `hosting_files_generate-upload-url`), apaga a pasta pela API do File Browser e sobe o `.htaccess` e o `index.html`. **Ainda não exercitado contra a Hostinger** (05/11/2026): na primeira venda real, conferir o resultado e, se funcionar, apagar este aviso. Sem credenciais no ambiente, fazer o lado do servidor à mão, como abaixo.
+4. Fora do site: tirar o Reel do Instagram e do TikTok e pausar a automação Zernio do post.
+
+Reserva manual (quando o script ou o `DELETE` falhar):
 - **Apagar a pasta do imóvel no servidor:** o conector da Hostinger não tem operação para apagar arquivo. Use a API do File Browser com as mesmas credenciais do upload (`auth_key` e `rest_auth_key` do `hosting_files_generate-upload-url`): `DELETE {base}/api/resources/public_html/<codigo>/<bairro>/` com os cabeçalhos `X-Auth` e `X-Auth-Rest`, onde `{base}` é a `url` do upload sem o final `/api/tus/public_html`. Responde 204 e apaga a pasta inteira (verificado em 29/10/2026 com arquivo e pasta descartáveis). O endpoint não é documentado: se não responder 204, use a reserva abaixo e avise o usuário.
 - **Redirecionar o endereço antigo:** subir em `public_html/<codigo>/<bairro>/.htaccess` a linha `RedirectMatch 301 ^/<codigo>/<bairro>/.* https://marceloosawaimoveis.com.br/`, que leva para a página inicial qualquer arquivo da pasta, apagado ou não. Também é a reserva quando o `DELETE` falhar. Registrar o `.htaccess` no repositório no lugar da pasta.
 - Limpar o cache e conferir no ar: a página antiga redireciona para a página inicial e o cartão sumiu.
 
+## Automação Comentário → Direct → Landing (Zernio, a partir do 3066087)
+
+Playbook atualizado em 04/11/2026; modelo cartão **validado** com conta que não segue o perfil. Automações no ar neste modelo: Reel 3066087 (Av. dos Eucaliptos, Indianópolis) e Reel 2255516 (Rua Eugênio de Medeiros, Pinheiros). Vale só para Instagram; TikTok não tem automação. O comentário com a palavra dispara um direct em **cartão** (foto da landing + título + subtítulo + botão "Ver o apartamento" com o link da landing e UTM). A automação é criada na Zernio PAUSADA e só é ativada depois de conferida e com o "ative" explícito do usuário.
+
+### Checklist por imóvel
+1. Landing no ar e conferida (preço igual ao da legenda), com `og:image`, `og:title` e `og:description` preenchidos: o cartão usa os três.
+2. Escolher a palavra: bairro ou rua, única entre os imóveis ativos. `{PALAVRA}` com acento e `{PALAVRA_SEM_ACENTO}`. Evitar palavra comum que aparece em comentário solto (ex.: "vista" dispara em "que vista linda").
+3. Publicar o Reel com o CTA de comentário (seção Copywriting) e fixar o comentário.
+4. Rodar o prompt abaixo na Zernio (cria pausada) e conferir o ID do post.
+5. Ativar **somente quando o usuário disser "ative"** e testar com **uma conta que não segue o perfil**: o cartão chegou (foto, título, botão), o botão abre a landing certa com UTM, a resposta pública saiu, a mensagem caiu na aba "Pedidos" e não houve disparo repetido.
+6. Lead de teste no formulário da landing e conferir a linha no Google Sheet.
+7. Acompanhar histórico de disparos e cliques nos primeiros dias (com botão ou cartão os cliques passam a contar).
+
+### Prompt reutilizável da Zernio
+Trocar: `{SHORTCODE}`, `{PALAVRA}`, `{PALAVRA_SEM_ACENTO}`, `{BAIRRO}`, `{CODIGO}`, `{bairro_slug}` (o mesmo slug da landing), `{AAAAMMDD}` (data da publicação do Reel), `{TITULO_OG}` (`og:title` da landing, até 80 caracteres), `{SUBTITULO}` (preço + frase curta da `og:description`), `{IMAGEM_URL}` (`og:image` da landing, no próprio domínio, ex.: `.../img/foto/sala.jpg`). Ler os três campos direto da landing publicada.
+
+```
+Pode criar a automação, mas PAUSADA. Não ative.
+
+Post: o Reel {SHORTCODE} (localize o ID numérico e me confirme que é o post certo antes de criar).
+
+- Gatilho: comentário no post
+- Palavras: {PALAVRA}, {PALAVRA_SEM_ACENTO}
+- Comparação: palavra inteira, com tolerância a erro de digitação
+- Público: qualquer pessoa
+- Repetição: uma vez por pessoa
+
+Direct em CARTÃO (sem botão avulso, o botão fica dentro do cartão):
+- Texto de reserva: "Olá! Tour completo deste apartamento em {BAIRRO} 👇\nQualquer dúvida, é só responder aqui."
+- Cartão genérico, 1 elemento:
+  - imagem: {IMAGEM_URL}
+  - título: {TITULO_OG}
+  - subtítulo: {SUBTITULO}
+  - botão de link "Ver o apartamento": https://marceloosawaimoveis.com.br/{CODIGO}/{bairro_slug}/?utm_source=instagram&utm_medium=dm_comentario&utm_campaign={CODIGO}_{bairro_slug}&utm_content=reel_{AAAAMMDD}
+
+Resposta pública (3 variações, enviada só depois do direct):
+1. "Enviei no seu direct 📩 Se não aparecer, confira a aba Pedidos."
+2. "Te mandei o tour por mensagem 🙂 Não achou? Olhe em Pedidos."
+3. "Pronto, está no seu direct com todos os detalhes. Se estiver em Pedidos, é só aceitar."
+
+Rastrear cliques no link: sim. Não ocultar comentário.
+
+Depois de criar, me mostre a configuração completa (ID do post, palavras, modo, textos, cartão, regras, status) para eu conferir.
+```
+O título do cartão segue as regras da copy: nome da rua sem número, sem nome do condomínio, só dados da ficha.
+
+### Padrão de UTM
+Sempre minúsculas, sem acento, `utm_campaign` no formato `CODIGO_bairro`.
+
+| Campo | Identifica | Exemplo |
+|---|---|---|
+| `utm_source` | Plataforma | `instagram` |
+| `utm_medium` | Entrada | `dm_comentario` (outros: `dm_direct`, `bio`, `stories`) |
+| `utm_campaign` | Imóvel | `3066087_indianopolis` |
+| `utm_content` | Publicação | `reel_20261024` |
+
+A landing do modelo já lê `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` e `ref` e usa o primeiro que existir como origem do lead (visto em `site/_modelo/index.html`); nada a mudar no site por imóvel.
+
+### Regras
+- **Direct em cartão** (padrão validado em 04/11/2026). O cartão só aparece no app do Instagram, não no Instagram web: aceito, porque a maioria dos clientes usa o celular. Não voltar para texto com link corrido (ficava feio e perdia o preview).
+- **Não seguidor recebe o direct na aba "Pedidos"** (regra do Instagram). As respostas públicas já avisam; não existe resposta pública diferente para seguidor e não seguidor (um só conjunto por automação, o Instagram não revela quem segue no momento do comentário).
+- **Trocar o formato de uma automação existente exige recriar:** a ferramenta de edição não aceita o campo do cartão. Fluxo: pausar a antiga, criar a nova pausada, ativar a nova. A Zernio só aceita uma automação ativa por post (erro 409).
+- Um botão só (3 botões derrubam a conversão). Tamanho máximo do direct: 1.000 bytes, só texto puro. Sem redirecionamento nem encurtador no link (podem quebrar o preview). O preview de link do Instagram fica em cache por até 30 dias por URL.
+- Uma vez por pessoa. A resposta privada vale até 7 dias após o comentário e só existe uma por comentário; se o direct falhar, o histórico mostra o erro exato.
+- Respostas no direct precisam de humano no inbox em até 24 h; sem monitoramento, remover do texto de reserva a frase "é só responder aqui".
+- Preço na legenda, sem nome de condomínio.
+- Reel sem landing page: sem automação, CTA "Quer visitar? Me chama no direct".
+
 ## Entrega final
 
-Entregar tudo de uma vez (nunca em etapas separadas): catálogo de fotos selecionadas, prompts de geração de vídeo, roteiro CapCut completo (3 blocos), copy de Instagram (TXT/MD), copy de TikTok (TXT/MD) e o **link da landing page publicada** (já na página inicial, com cache limpo e conferida no celular) — como arquivos separados em `/outputs`, apresentados juntos.
+Entregar tudo de uma vez (nunca em etapas separadas): catálogo de fotos selecionadas, prompts de geração de vídeo, roteiro CapCut completo (3 blocos), copy de Instagram (TXT/MD), copy de TikTok (TXT/MD) e o **link da landing page publicada** (já na página inicial, com cache limpo e conferida no celular) — como arquivos separados em `/outputs`, apresentados juntos. A copy de Instagram já sai com o CTA de comentário e a palavra escolhida; o prompt da Zernio no modelo cartão, com tudo preenchido (inclusive título, subtítulo e imagem lidos da landing) menos `{SHORTCODE}` e `{AAAAMMDD}`, vai junto num arquivo `Zernio_Automacao` (o Reel ainda não foi publicado na entrega, então os dois dados faltantes são preenchidos depois).
 
 Convenção de nome de arquivo: `[ID_QUINTOANDAR]_[BAIRRO_MAIUSCULO_UNDERSCORE]_RUA_[NOME_RUA_MAIUSCULO_UNDERSCORE]_[TIPO_DE_ARQUIVO]`.
 
