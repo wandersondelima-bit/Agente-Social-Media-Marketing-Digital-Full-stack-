@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="96" height="96" fill="none" stroke="#CDAD6E" stroke-linecap="round" stroke-linejoin="round" aria-label="Marcelo Osawa Imóveis">
+  <circle cx="24" cy="24" r="22" stroke-width="1.15"/>
+  <circle cx="24" cy="24" r="18.4" stroke-width=".6" opacity=".55"/>
+  <path d="M15.5 31.5V16.8l8.5 10.4 8.5-10.4v14.7" stroke-width="1.75"/>
+</svg>
