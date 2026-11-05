@@ -36,7 +36,8 @@ O usuário NÃO envia mais IPTU nem condomínio.
 - Modelo: `kling3_0_turbo`, foto real como `start_image`, 9:16 nativo, áudio desligado na narração (a locução é sempre feita depois no CapCut, nunca no Higgsfield/Kling).
 - Se o clipe vier COM áudio ambiente, remover no sandbox: `ffmpeg -i in.mp4 -c:v copy -an out.mp4`.
 - Pré-cortar cada foto para 9:16 ANTES de gerar (evita reframe caro): `ffmpeg -vf "crop=ih*9/16:ih"`. Escolher a posição horizontal do corte por foto (não sempre centralizado) para manter o elemento de venda no quadro. Fotos horizontais não recebem 9:16 automaticamente mesmo pedindo no parâmetro.
-- Upload de mídia local vai pelo `media_upload_widget` (o usuário sobe os arquivos e devolve os `media_ids` para usar como `start_image`).
+- Upload de mídia local: `media_upload` do Higgsfield e envio do arquivo com `curl` (PUT) direto do Mac, sem pedir nada ao usuário (usado no 3116143). Só se isso falhar, `media_upload_widget` (o usuário sobe os arquivos e devolve os `media_ids` para usar como `start_image`).
+- Custo conferido em 05/11/2026: `kling3_0_turbo`, 9:16, 1080p = 10 créditos por clipe, saída 1080×1920. Conferir o saldo (`balance`) antes de gerar e avisar o usuário do gasto na entrega.
 - Prompt padrão (inglês, ajustar só a palavra do cômodo): "Cinematic architectural walkthrough of a modern apartment [ROOM], 9:16 vertical aspect ratio. Ultra-smooth slow steadycam push-in shot, gliding gently forward across the room. Natural soft daylight, warm ambient lighting. Hyper-realistic materials, pristine interior architecture. Highly stable geometry, zero warping, strictly preserving walls and furniture shapes without morphing, photorealistic 8k, luxury aesthetic."
 - Regras de movimento:
   - Push-in só quando o conteúdo do frame final já está visível no frame inicial, na direção do movimento — senão usar só o frame inicial.
@@ -44,7 +45,7 @@ O usuário NÃO envia mais IPTU nem condomínio.
   - Portas de vidro, divisórias e espelhos ficam na borda do enquadramento ou fora dele, nunca no centro do caminho da câmera.
   - Nunca descrever no prompt elemento arquitetônico que não esteja 100% visível no frame JÁ CORTADO em 9:16 (o modelo inventa elementos, ex. parede virando janela, para satisfazer o texto).
 - Quando houver dúvida sobre o Hero Shot de abertura, gerar as duas opções em paralelo em vez de escolher uma de antemão.
-- Ao avaliar cada clipe: checar duração exata, ausência de pessoa/silhueta/reflexo humano, ausência de texto renderizado, direção do movimento, geometria estável, e se o elemento principal não saiu de quadro antes do fim do clipe (extrair frames em pontos intermediários para conferir).
+- Ao avaliar cada clipe: checar duração exata, ausência de pessoa/silhueta/reflexo humano, ausência de texto renderizado, direção do movimento, geometria estável, e se o elemento principal não saiu de quadro antes do fim do clipe (extrair frames em pontos intermediários para conferir). Nos clipes do Kling, conferir também luminária ou spot de forro que muda de lugar ou acende no meio do clipe (no 2918448 o spot foi para o montante da janela a partir de 3,4 s): usar o clipe só até o último quadro limpo e registrar o ponto de corte.
 - Download dos .mp4 finais: tentar `curl` no sandbox de nuvem direto para a pasta do Mac via `device_commit_files`. Se o host de hospedagem do Higgsfield retornar 403 no proxy, entregar em vez disso um documento com os links diretos (rawUrl) mapeados aos nomes de arquivo do roteiro, para download manual pelo usuário.
 
 ### Amplitude primeiro — pan digital sem IA é o PADRÃO (regra permanente, imóvel 2913657)
@@ -55,8 +56,9 @@ O cliente quer SEMPRE os cômodos mostrados com amplitude, nunca com foco em uma
 - **Kling (push-in)** só complementa: hook, fechamento com vista, ou cômodo que não tem foto horizontal aberta. Nunca use Kling em recorte de detalhe (bancada, arandela, nicho) como cena principal de um cômodo.
 - **Flow** (seção "Cenas pelo conector Google Flow", abaixo) também complementa: hook, transição entre ambientes ou entre imóveis. Os pans continuam sendo a base. **A transição de passagem de cômodo é a forma de Flow que o usuário aprovou** (2255516, `whip-pan` sala→cozinha: "ficou ótima para a ideia de tour por dentro do apartamento, junto com as cenas pans"): dentro do tour, ela entra entre dois pans de cômodos vizinhos.
 - **Curadoria:** priorize as fotos que mostram mais do cômodo de uma vez (vários ambientes ou o cômodo de parede a parede). Fotos de detalhe viram reserva.
+- **Faixa do pan, antes de renderizar (obrigatório).** Na planilha de contatos (~600 px) um pano, esponja, lixeira ou escorredor na bancada passa despercebido, e o clipe só é reprovado depois do corte planejado (2918448 e 3116143, nas duas vezes na cozinha). Para cada foto de pan, gere a faixa que a janela vai percorrer e olhe-a em tela cheia: `ffmpeg -i FOTO.jpg -vf "scale=-2:1920,crop=$((X1-X0+1080)):1920:$X0:0" -frames:v 1 FAIXA.jpg` (X0 e X1 na base de altura 1920). Item de limpeza, objeto pessoal ou de marca na faixa: mude X0/X1 para deixá-lo fora ou troque a foto. Vale também para `comodos` da landing.
 - **Direção:** a janela 9:16 desliza com easing suave e TERMINA no ponto de maior valor (varanda, vista, churrasqueira, ilha). Pode ir da esquerda para a direita (X0 < X1) ou da direita para a esquerda (X0 > X1). Gere 6 s e corte em 5,0 s no CapCut.
-- **Comando.** Largura da foto na altura de 1920 = L. Curso de 60 até L − 1080 − 60. Upscale 2x antes do crop para não tremer.
+- **Comando.** Largura da foto na altura de 1920 = L. Curso de 60 até L − 1080 − 60. Upscale 2x antes do crop para não tremer. O padrão é **pan + zoom suave (1,00 → 1,07)**, com os dois movimentos no mesmo easing de cosseno; o pan sem zoom (bloco logo abaixo) é a reserva.
   - Foto 3:2 (ex: 2000×1333): L = 2880, `scale=5760:3840`, curso 60 ↔ 1740.
   - Foto 16:9 (ex: 1280×720): L = 3413, `scale=6827:3840`, curso 60 ↔ 2273.
 
@@ -66,8 +68,16 @@ ffmpeg -loop 1 -framerate 30 -i FOTO.jpg -t $T \
  -vf "scale=5760:3840:flags=lanczos,crop=2160:3840:x='2*($X0+($X1-$X0)*(1-cos(PI*t/$T))/2)':y=0,scale=1080:1920:flags=lanczos,format=yuv420p" \
  -c:v libx264 -crf 16 -preset slow -r 30 SAIDA.mp4
 ```
+- **Pan + zoom (padrão), verificado no 2918448** (7 clipes 1080×1920, 6 s, frames conferidos). O `crop` do ffmpeg não aceita largura que varia por quadro; por isso o zoom passa pelo `scale` com `eval=frame` e o X do crop é multiplicado pelo fator de zoom. Foto 3:2: base L = 2880, curso 60 ↔ 1740.
+
+```
+T=6; X0=300; X1=1740; Z=0.07; E="(1-cos(PI*t/$T))/2"
+ffmpeg -loop 1 -framerate 30 -i FOTO.jpg -t $T \
+ -vf "scale=w='trunc(5760*(1+$Z*$E)/2)*2':h='trunc(3840*(1+$Z*$E)/2)*2':eval=frame:flags=lanczos,crop=2160:3840:x='2*(1+$Z*$E)*(($X0)+(($X1)-($X0))*$E+540)-1080':y='(ih-3840)/2',scale=1080:1920:flags=lanczos,format=yuv420p" \
+ -c:v libx264 -crf 16 -preset slow -r 30 -an SAIDA.mp4
+```
 - **Nome do arquivo:** `[PREFIXO]_C[NN]_[COMODO]_PAN.mp4` (ex: `C02_SALA_AMPLA_PAN`, `C09_COZINHA_LIVING_PAN`, `C10_VARANDA_JANTAR_PAN`).
-- **Conferência:** frames em 0 / 1,5 / 2,5 / 3,5 / 4,9 s para garantir que nenhum trecho passe por pessoa, TV ligada, foto pessoal, espelho no centro ou objeto de marca (notebook, rótulos).
+- **Conferência:** frames em 0 / 1,5 / 2,5 / 3,5 / 4,9 s para garantir que nenhum trecho passe por pessoa, TV ligada, foto pessoal, espelho no centro, objeto de marca (notebook, rótulos) ou item de limpeza (pano, esponja).
 - **Ordem no roteiro:** hook → primeiro pan amplo (área social, cena 2) → demais pans intercalados com os clipes Kling complementares → fechamento. Se um clipe Kling repetir o trecho de um pan (ex: push-in sala → varanda), o Kling sai do corte e fica como reserva.
 - **Alternativa**, só se o cliente pedir profundidade: gerar no Kling em 16:9 a partir da foto inteira (push-in de no máximo ~8%) e aplicar o mesmo pan 9:16 por cima. Fica um pouco menos nítido e não é 100% fiel.
 
@@ -298,14 +308,14 @@ Reserva manual (quando o script ou o `DELETE` falhar):
 
 ## Automação Comentário → Direct → Landing (Zernio, a partir do 3066087)
 
-Playbook atualizado em 04/11/2026; modelo cartão **validado** com conta que não segue o perfil. Automações no ar neste modelo: Reel 3066087 (Av. dos Eucaliptos, Indianópolis) e Reel 2255516 (Rua Eugênio de Medeiros, Pinheiros). Vale só para Instagram; TikTok não tem automação. O comentário com a palavra dispara um direct em **cartão** (foto da landing + título + subtítulo + botão "Ver o apartamento" com o link da landing e UTM). A automação é criada na Zernio PAUSADA e só é ativada depois de conferida e com o "ative" explícito do usuário.
+Playbook atualizado em 04/11/2026; modelo cartão **validado** com conta que não segue o perfil. Automações no ar neste modelo: Reel 3066087 (Av. dos Eucaliptos, Indianópolis) e Reel 2255516 (Rua Eugênio de Medeiros, Pinheiros). Vale só para Instagram; TikTok não tem automação. O comentário com a palavra dispara um direct em **cartão** (foto da landing + título + subtítulo + botão "Ver o apartamento" com o link da landing e UTM). A automação é criada **já ativa** assim que o usuário manda o link do Reel e o ID numérico do post bate; ele não precisa dizer "ative" (regra do usuário desde 05/11/2026, vale para todos os próximos).
 
 ### Checklist por imóvel
 1. Landing no ar e conferida (preço igual ao da legenda), com `og:image`, `og:title` e `og:description` preenchidos: o cartão usa os três.
 2. Escolher a palavra: bairro ou rua, única entre os imóveis ativos. `{PALAVRA}` com acento e `{PALAVRA_SEM_ACENTO}`. Evitar palavra comum que aparece em comentário solto (ex.: "vista" dispara em "que vista linda").
 3. Publicar o Reel com o CTA de comentário (seção Copywriting) e fixar o comentário.
-4. Rodar o prompt abaixo na Zernio (cria pausada) e conferir o ID do post.
-5. Ativar **somente quando o usuário disser "ative"** e testar com **uma conta que não segue o perfil**: o cartão chegou (foto, título, botão), o botão abre a landing certa com UTM, a resposta pública saiu, a mensagem caiu na aba "Pedidos" e não houve disparo repetido.
+4. Rodar o prompt abaixo na Zernio (cria e ativa) e conferir o ID do post antes de criar.
+5. Com a automação ativa, testar com **uma conta que não segue o perfil**: o cartão chegou (foto, título, botão), o botão abre a landing certa com UTM, a resposta pública saiu, a mensagem caiu na aba "Pedidos" e não houve disparo repetido.
 6. Lead de teste no formulário da landing e conferir a linha no Google Sheet.
 7. Acompanhar histórico de disparos e cliques nos primeiros dias (com botão ou cartão os cliques passam a contar).
 
@@ -313,7 +323,7 @@ Playbook atualizado em 04/11/2026; modelo cartão **validado** com conta que nã
 Trocar: `{SHORTCODE}`, `{PALAVRA}`, `{PALAVRA_SEM_ACENTO}`, `{BAIRRO}`, `{CODIGO}`, `{bairro_slug}` (o mesmo slug da landing), `{AAAAMMDD}` (data da publicação do Reel), `{TITULO_OG}` (`og:title` da landing, até 80 caracteres), `{SUBTITULO}` (preço + frase curta da `og:description`), `{IMAGEM_URL}` (`og:image` da landing, no próprio domínio, ex.: `.../img/foto/sala.jpg`). Ler os três campos direto da landing publicada.
 
 ```
-Pode criar a automação, mas PAUSADA. Não ative.
+Pode criar a automação e deixá-la ATIVA.
 
 Post: o Reel {SHORTCODE} (localize o ID numérico e me confirme que é o post certo antes de criar).
 
@@ -357,7 +367,7 @@ A landing do modelo já lê `utm_source`, `utm_medium`, `utm_campaign`, `utm_con
 ### Regras
 - **Direct em cartão** (padrão validado em 04/11/2026). O cartão só aparece no app do Instagram, não no Instagram web: aceito, porque a maioria dos clientes usa o celular. Não voltar para texto com link corrido (ficava feio e perdia o preview).
 - **Não seguidor recebe o direct na aba "Pedidos"** (regra do Instagram). As respostas públicas já avisam; não existe resposta pública diferente para seguidor e não seguidor (um só conjunto por automação, o Instagram não revela quem segue no momento do comentário).
-- **Trocar o formato de uma automação existente exige recriar:** a ferramenta de edição não aceita o campo do cartão. Fluxo: pausar a antiga, criar a nova pausada, ativar a nova. A Zernio só aceita uma automação ativa por post (erro 409).
+- **Trocar o formato de uma automação existente exige recriar:** a ferramenta de edição não aceita o campo do cartão. Fluxo: pausar a antiga e criar a nova já ativa. A Zernio só aceita uma automação ativa por post (erro 409).
 - Um botão só (3 botões derrubam a conversão). Tamanho máximo do direct: 1.000 bytes, só texto puro. Sem redirecionamento nem encurtador no link (podem quebrar o preview). O preview de link do Instagram fica em cache por até 30 dias por URL.
 - Uma vez por pessoa. A resposta privada vale até 7 dias após o comentário e só existe uma por comentário; se o direct falhar, o histórico mostra o erro exato.
 - Respostas no direct precisam de humano no inbox em até 24 h; sem monitoramento, remover do texto de reserva a frase "é só responder aqui".
@@ -367,6 +377,8 @@ A landing do modelo já lê `utm_source`, `utm_medium`, `utm_campaign`, `utm_con
 ## Entrega final
 
 Entregar tudo de uma vez (nunca em etapas separadas): catálogo de fotos selecionadas, prompts de geração de vídeo, roteiro CapCut completo (3 blocos), copy de Instagram (TXT/MD), copy de TikTok (TXT/MD) e o **link da landing page publicada** (já na página inicial, com cache limpo e conferida no celular) — como arquivos separados em `/outputs`, apresentados juntos. A copy de Instagram já sai com o CTA de comentário e a palavra escolhida; o prompt da Zernio no modelo cartão, com tudo preenchido (inclusive título, subtítulo e imagem lidos da landing) menos `{SHORTCODE}` e `{AAAAMMDD}`, vai junto num arquivo `Zernio_Automacao` (o Reel ainda não foi publicado na entrega, então os dois dados faltantes são preenchidos depois).
+
+**Antes de dizer que um arquivo está pronto** (pacote, roteiro, zip da skill para o claude.ai), liste-o no disco na mesma resposta (`ls -l` com o tamanho) e cite essa listagem; nunca repita o caminho de um resumo anterior. Um zip anunciado sem existir já fez o usuário perder uma subida (v4).
 
 Convenção de nome de arquivo: `[ID_QUINTOANDAR]_[BAIRRO_MAIUSCULO_UNDERSCORE]_RUA_[NOME_RUA_MAIUSCULO_UNDERSCORE]_[TIPO_DE_ARQUIVO]`.
 
