@@ -222,6 +222,11 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
 - Nunca prometer "mobiliado" mesmo se a ficha indicar isso.
 - Nunca divulgar o nome próprio do condomínio.
 - Nenhum qualificador que as fotos e a ficha não comprovam ("projeto assinado", "assinado por escritório", "projetado por arquiteto", "marcenaria planejada"). Vale para todo texto publicado, inclusive a etiqueta (`tag`) do cartão da página inicial e os destaques e listas da landing page.
+- **Fronteira do que a copy pode afirmar (decisão do usuário, 05/11/2026; vale para legenda, roteiro e landing; o `revisor-ficha-copy` cobra as mesmas regras):**
+  - Móvel solto visível na foto (mesa de jantar, sofá): pode ser citado se a foto usada no Reel o mostra, sempre com o aviso "mobília ilustrativa". Continua proibido prometer "mobiliado".
+  - Material ou característica lida na foto ("bancada em pedra", "varanda envidraçada"): só se estiver na ficha ou for inconfundível numa foto que aparece no Reel.
+  - Frase guarda-chuva ("lazer completo", "vista panorâmica"): só quando cada comodidade esperada consta como SIM na ficha; se alguma for NÃO, listar as comodidades SIM em vez da frase.
+  - "Portaria 24h", "piscina aquecida", "varanda gourmet" e afins só se o termo estiver na ficha. Distâncias: "perto de" quando não foram medidas; número só se medido no mapa.
 - No bloco de comparação de preço, nunca citar valores de m² ou média da região — argumentar de forma qualitativa ("preço competitivo para o padrão da região").
 - CTA de captação (regra a partir de 04/11/2026, decisão do usuário): todo Reel novo sai com a landing page, então o CTA do Instagram é o de comentário com a palavra da automação Zernio (abaixo). O CTA de WhatsApp vale para o TikTok e para o Reel sem landing page. Em qualquer CTA: uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
   - Instagram, Reel COM landing page e automação Zernio (padrão a partir do 3066087; a palavra vem do Checklist da seção "Automação Comentário → Direct → Landing"). Antes do `🔗 QuintoAndar #[CODIGO]`:
