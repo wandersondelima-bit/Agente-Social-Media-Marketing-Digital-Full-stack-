@@ -6,7 +6,7 @@ fundo claro), com o segundo anel gravado em meio-tom.
 
 ## Nome
 
-- Na tela: **Marcelo Osawa** em destaque (Cormorant Garamond 600) e **Imóveis** embaixo, menor e espaçado.
+- Na tela: **Marcelo Osawa** em destaque (Poppins 500, a única fonte do site) e **Imóveis** embaixo, menor e espaçado.
 - Em `<title>`, Open Graph, `og:site_name`, alt e textos corridos: **Marcelo Osawa Imóveis** (igual ao Instagram).
 - O CRECI não aparece em lugar nenhum do site.
 
@@ -30,15 +30,14 @@ fundo claro), com o segundo anel gravado em meio-tom.
 .mark{width:44px;height:44px;flex:none;color:var(--gold)}            /* sem círculo de borda: o anel já é a moldura */
 .mark svg{width:44px;height:44px;display:block}
 .brand .t{display:grid;line-height:1.05}
-.brand .t strong{font:600 1.45rem/1 'Cormorant Garamond',Georgia,serif;letter-spacing:.03em}
-.brand .t span{font:300 .66rem/1 var(--font);letter-spacing:.34em;text-transform:uppercase;color:var(--on-muted);margin-top:5px;padding-left:2px}
-@media (max-width:420px){ .mark,.mark svg{width:38px;height:38px} .brand .t strong{font-size:1.25rem} .brand .t span{font-size:.6rem;letter-spacing:.3em} }
-/* sobre foto (hero): */ .top .brand .mark{filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))} .top .brand .t{text-shadow:0 1px 2px rgba(0,0,0,.5)}
-/* fundo claro (cartões, rodapé claro): */ .light .mark{color:var(--gold-deep)}
+.brand .t strong{font-weight:500;font-size:1.12rem;letter-spacing:.04em}
+.brand .t span{font-size:.66rem;font-weight:300;color:var(--on-muted);letter-spacing:.34em;text-transform:uppercase;margin-top:5px;padding-left:2px}
+@media (max-width:420px){ .mark,.mark svg{width:38px;height:38px} .brand .t strong{font-size:1rem} .brand .t span{font-size:.6rem;letter-spacing:.3em} }
 ```
 
-Fonte: acrescentar `Cormorant+Garamond:wght@500;600` ao link do Google Fonts
-(`https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500;600&display=swap`).
+Fonte: só Poppins, já carregada pelo site
+(`https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap`). Não acrescentar serifa:
+o usuário recusou (05/11/2026).
 
 ## Favicon (traço mais grosso, para 16–32 px)
 
