@@ -42,7 +42,8 @@ def achar_pasta(cod):
 
 
 def tirar_do_index(html, cod):
-    padrao = re.compile(r"  \{codigo:'%s',.*?\},\n" % re.escape(cod), re.S)
+    # tolera qualquer indentação do cartão (o 2669878 entrou com 3 espaços em 07/11/2026)
+    padrao = re.compile(r"^[ \t]*\{codigo:'%s',.*?\},[ \t]*\n" % re.escape(cod), re.S | re.M)
     achados = padrao.findall(html)
     if len(achados) != 1:
         falha(f"esperava 1 cartão com codigo:'{cod}' em site/index.html, achei {len(achados)}")
@@ -50,7 +51,7 @@ def tirar_do_index(html, cod):
 
 
 def lista_imoveis(html):
-    m = re.search(r"const IMOVEIS = \[\n(.*?)\n\];", html, re.S)
+    m = re.search(r"const IMOVEIS = \[\n(.*?)\n[ \t]*\];", html, re.S)
     if not m:
         falha("não achei a lista IMOVEIS em site/index.html")
     return m.group(1)
@@ -109,7 +110,7 @@ def subir_tus(base, cab, destino, conteudo: bytes):
     import base64
     nome = destino.rsplit("/", 1)[-1]
     meta = "filename " + base64.b64encode(nome.encode()).decode()
-    url = f"{base}/api/tus/public_html/{destino}"
+    url = f"{base}/api/tus/public_html/{destino}?override=true"   # sem o parâmetro, arquivo existente (index.html) dá 409
     cab1 = dict(cab, **{"Tus-Resumable": "1.0.0", "Upload-Length": str(len(conteudo)), "Upload-Metadata": meta, "Override": "true"})
     req("POST", url, cab1, ok=(201, 200, 204))
     cab2 = dict(cab, **{"Tus-Resumable": "1.0.0", "Upload-Offset": "0", "Content-Type": "application/offset+octet-stream"})
