@@ -69,7 +69,12 @@
         var m = li.querySelector('[data-motivo]');
         if (m) m.hidden = j.status !== 'perdido';
         if (j.status === 'perdido') abrir(li, true);
-        if (j.antes !== j.status) { conta(j.antes, -1); conta(j.status, 1); }
+        if (j.antes !== j.status) {
+          conta(j.antes, -1); conta(j.status, 1);
+          var aberto = function (x) { return x === 'novo' || x === 'andamento'; };
+          if (aberto(j.antes) && !aberto(j.status)) conta('abertos', -1);
+          if (!aberto(j.antes) && aberto(j.status)) conta('abertos', 1);
+        }
       }
       if (acao === 'lead_atribuir') {
         var sub = li.querySelector('[data-cor]');
