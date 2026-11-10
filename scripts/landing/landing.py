@@ -11,7 +11,7 @@ Só biblioteca padrão + ffmpeg/ffprobe (Homebrew) + o script de IPTU do reposit
 
 Detalhes e fluxo por lote: scripts/landing/README.md
 """
-import argparse, html, json, math, os, re, shutil, struct, subprocess, sys, unicodedata, urllib.request, zlib
+import argparse, html, json, math, os, re, shutil, struct, subprocess, sys, time, unicodedata, urllib.request, zlib
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
@@ -29,7 +29,7 @@ FFPROBE = shutil.which("ffprobe") or "/opt/homebrew/bin/ffprobe"
 
 
 # ---------- utilidades ----------
-def get(url, binario=False, tent=3):
+def get(url, binario=False, tent=3, pausa=0):
     for i in range(tent):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "pt-BR"})
@@ -39,10 +39,12 @@ def get(url, binario=False, tent=3):
         except Exception as e:
             if i == tent - 1:
                 raise
+            if pausa:
+                time.sleep(pausa * (i + 1))   # recuo crescente: o CDN responde 503 sob rajada
     return None
 
 
-def baixar_foto(url, destino, tamanhos=("3240x2160", "1440x960")):
+def baixar_foto(url, destino, tamanhos=("3240x2160", "1440x960"), tent=3, pausa=0):
     """Baixa a foto para um arquivo temporário e só então troca pelo destino. Uma falha (ex.: 503 do CDN) tenta o
     próximo tamanho e nunca deixa arquivo vazio ou parcial no cache. Um arquivo vazio de rodada anterior é refeito."""
     if os.path.exists(destino) and os.path.getsize(destino) > 0:
@@ -50,7 +52,7 @@ def baixar_foto(url, destino, tamanhos=("3240x2160", "1440x960")):
     tmp, ultimo = destino + ".tmp", None
     for t in tamanhos:
         try:
-            dados = get(IMG.format(t, url), True)
+            dados = get(IMG.format(t, url), True, tent, pausa)
             if not dados:
                 raise ValueError("resposta vazia")
             with open(tmp, "wb") as fh:
@@ -194,12 +196,27 @@ def folhas_de_contato(f, d):
     mini = os.path.join(d, "mini"); os.makedirs(mini, exist_ok=True)
     tiles = os.path.join(d, "_tiles"); shutil.rmtree(tiles, ignore_errors=True); os.makedirs(tiles)
 
+    falhas = []
+
     def baixar(x):
         p = os.path.join(mini, f"{x['i']:03d}.jpg")
-        if not os.path.exists(p):
-            baixar_foto(x["url"], p, ("480x320",))
-    with ThreadPoolExecutor(8) as ex:
+        marca = p[:-4] + ".cinza"
+        if os.path.exists(p) and os.path.getsize(p) > 0 and not os.path.exists(marca):
+            return
+        if os.path.exists(marca):
+            os.remove(marca); os.path.exists(p) and os.remove(p)
+        try:   # 480x320; se o CDN insistir em 503, o 1152x768 (reduzido depois, nos tiles)
+            baixar_foto(x["url"], p, ("480x320", "1152x768"), tent=5, pausa=1.5)
+        except Exception as e:
+            falhas.append((x["i"], str(e)[-120:]))
+            run([FFMPEG, "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=480x320", "-frames:v", "1", p])   # quadro cinza
+    with ThreadPoolExecutor(3) as ex:
         list(ex.map(baixar, f["fotos"]))
+    if falhas:
+        print(f"AVISO: {len(falhas)} miniatura(s) não baixaram e viraram quadro cinza (foto: " + ", ".join(str(i) for i, _ in sorted(falhas)) + "). Rode o prep de novo: ele tenta só essas outra vez.")
+        # o cinza fica em mini/; marcado para o próximo prep refazer
+        for i, _ in falhas:
+            open(os.path.join(mini, f"{i:03d}.cinza"), "w").close()
     for x in f["fotos"]:
         b = os.path.join(tiles, f"b{x['i']}.png"); open(b, "wb").write(digito_png(str(x["i"])))
         run([FFMPEG, "-v", "error", "-y", "-i", os.path.join(mini, f"{x['i']:03d}.jpg"), "-i", b, "-filter_complex",
@@ -256,7 +273,12 @@ def cmd_prep(a):
     f = extrair_ficha(a.alvo)
     d = pasta_trab(f["codigo"]); os.makedirs(d, exist_ok=True)
     bairro, log = bairro_postal(f)
+    if a.numero:
+        f["numero"] = str(a.numero)   # o anúncio costuma vir sem o número da rua; o intake sempre o traz
     iptu = consulta_iptu(f, a.apto)
+    if not f["numero"]:
+        print("AVISO: o anúncio não traz o número da rua; passe --numero N (e --apto N) para o IPTU achar a unidade.")
+    iptu["apto"] = str(a.apto) if a.apto else None
     if not a.apto:
         print('AVISO: sem --apto o IPTU é comparado com unidades parecidas do prédio, não com a do anúncio; passe --apto N se souber o número.')
     f["bairro_postal"], f["iptu_checagem"] = bairro, iptu
@@ -433,6 +455,22 @@ def pendencias(j):
     return achou
 
 
+# palavras que só se leem na foto (o anúncio não as confirma); regra 14a da skill
+PALAVRAS_DE_FOTO = [r"envidra\w+", r"cooktop", r"cuba esculpida", r"saída para (a )?varanda", r"saida para (a )?varanda",
+                    r"ar[- ]condicionado", r"coifa", r"nichos?", r"painel de madeira", r"lareira", r"pé[- ]direito duplo"]
+
+
+def palavras_de_foto(j):
+    """Lista curta de termos nos campos d dos cômodos e hero_alt que só a foto sustenta. Só avisa."""
+    achou = []
+    campos = [("hero_alt", j.get("hero_alt") or "")] + [(f"comodos[{c['id']}].d", c.get("d") or "") for c in j.get("comodos", [])]
+    for caminho, txt in campos:
+        for pad in PALAVRAS_DE_FOTO:
+            m = re.search(pad, txt, re.I)
+            if m: achou.append((caminho, m.group(0)))
+    return achou
+
+
 def cmd_build(a):
     d, j, f = carregar(a.codigo)
     p = pendencias(j)
@@ -480,12 +518,26 @@ def cmd_check(a):
             elif sub == "video" and os.path.getsize(p) > VIDEO_MAX: erros.append(f"{p} passa de 1,5 MB")
     ix = open(os.path.join(dest, "index.html"), encoding="utf-8").read() if os.path.exists(os.path.join(dest, "index.html")) else ""
     sem_com = re.sub(r"/\*.*?\*/", "", re.sub(r"<!--.*?-->", "", ix, flags=re.S), flags=re.S)
-    for ruim in ("TROCAR", "3066087", "indianopolis", "Indianópolis", "Eucaliptos"):
-        if ruim in sem_com and ruim not in (j["bairro"] + j["rua"] + j["codigo"] + j["bairro_slug"]):
+    # só strings que podem vir apenas do modelo (a palavra "Eucaliptos" sozinha pode ser o metrô do próprio imóvel)
+    proprio = j["bairro"] + j["rua"] + j["codigo"] + j["bairro_slug"]
+    for ruim in ("TROCAR", "3066087", "Avenida dos Eucaliptos", "Avenida%20dos%20Eucaliptos", "indianopolis", "Indianópolis"):
+        if ruim in sem_com and ruim not in proprio:
             erros.append(f"sobrou do modelo: {ruim}")
-    iptu = f.get("iptu_checagem", {}).get("status")
-    if iptu not in ("OK",):
-        erros.append(f"IPTU não confirmado (status {iptu}): conferir antes de publicar")
+    if j.get("iptu_10x"):
+        print(f"IPTU confirmado pelo usuário (iptu_10x R$ {brl(j['iptu_10x'])})")
+    else:
+        ic = f.get("iptu_checagem") or {}
+        if not ic:
+            erros.append("ficha.json sem iptu_checagem: rode prep --numero N --apto N (ou ponha iptu_10x no imovel.json)")
+        elif ic.get("status") != "OK":
+            erros.append(f"IPTU não confirmado (status {ic.get('status')}): conferir antes de publicar")
+        elif not f.get("numero"):
+            erros.append("ficha.json sem numero da rua: rode prep --numero N")
+    avisos = palavras_de_foto(j)
+    if avisos:
+        print("AVISO (não bloqueia): palavras que só se leem na foto; a legenda segue a ficha (regra 14a):")
+        for caminho, w in avisos:
+            print(f"  {caminho}: {w}")
     print("CHECK:", "tudo certo" if not erros else "\n  ".join(["PENDÊNCIAS:"] + erros))
     print(f"ver: cd {os.path.dirname(os.path.dirname(dest))} && python3 -m http.server 8000  ->  http://localhost:8000/{j['codigo']}/{j['bairro_slug']}/")
 
@@ -493,7 +545,7 @@ def cmd_check(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="cmd", required=True)
-    p = sp.add_parser("prep"); p.add_argument("alvo"); p.add_argument("--refazer", action="store_true"); p.add_argument("--apto", help="número do apartamento (para o IPTU identificar a unidade certa)")
+    p = sp.add_parser("prep"); p.add_argument("alvo"); p.add_argument("--refazer", action="store_true"); p.add_argument("--apto", help="número do apartamento (para o IPTU identificar a unidade certa)"); p.add_argument("--numero", help="número da rua, quando o anúncio vem sem")
     p = sp.add_parser("build"); p.add_argument("codigo"); p.add_argument("--so", help="ids de cômodo (vírgula) para regerar só esses"); p.add_argument("--saida", help="raiz alternativa no lugar de site/ (testes)"); p.add_argument("--forcar", action="store_true")
     p = sp.add_parser("check"); p.add_argument("codigo"); p.add_argument("--saida")
     a = ap.parse_args()

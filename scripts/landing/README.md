@@ -6,13 +6,15 @@ Rascunhos ficam em `_trabalho/<codigo>/` (fora do git). A landing sai em `site/<
 ## Por imóvel (3 comandos + 1 edição)
 
 ```
-python3 scripts/landing/landing.py prep  <link ou código> [--apto N]   # ficha, IPTU, bairro pelo CEP, folhas de contato, rascunho
+python3 scripts/landing/landing.py prep  <link ou código> [--numero N] [--apto N]   # ficha, IPTU, bairro pelo CEP, folhas de contato, rascunho
 # ← Claude: abre as folhas (_trabalho/<cod>/folha1..N.jpg, fotos numeradas) e edita imovel.json
 python3 scripts/landing/landing.py build <codigo>           # mídia (foto/poster/thumb/vídeo) + index.html + check
 cd site && python3 -m http.server 8000                      # http://localhost:8000/<codigo>/<bairro>/
 ```
 
 **`--apto N`**: passe o número do apartamento sempre que o intake o trouxer. Sem ele o IPTU é comparado com outra unidade do prédio (o `prep` avisa).
+**`--numero N`**: número da rua, quando o anúncio vem sem (o `prep` grava `numero` e `iptu_checagem` no `ficha.json`; o `check` diz qual campo falta).
+Miniaturas das folhas: 3 threads, 5 tentativas com pausa, tamanho de reserva 1152×768; a que falhar vira quadro cinza, é listada e é refeita no próximo `prep`.
 O download das fotos é atômico: se o CDN responder 503, o script tenta o tamanho menor (1440×960) e nunca deixa arquivo vazio no cache.
 
 `build` recusa pasta que já existe e não foi gerada por ele (marca `.gerado-por-landing`), então não sobrescreve
@@ -41,6 +43,9 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 
 ## Conferências antes de mostrar ao usuário
 
+- Faixa de cada pan em tela cheia, antes de renderizar: `python3 scripts/faixas-pan.py landing <codigo>` (cômodos da landing, após o `build` ter baixado as fotos) ou `faixas-pan.py pan <foto> <c0> <c1>` (Reel). Abrir cada arquivo (1920 px de altura), não a miniatura.
+- `check` avisa (sem bloquear) palavras que só se leem na foto em `d`/`hero_alt` (envidraçada, cooktop, cuba esculpida…): usar o vocabulário da ficha.
+- `check` imprime `IPTU confirmado pelo usuário` quando há `iptu_10x` no `imovel.json`.
 - `check` imprime `IPTU não confirmado` se o status não for `OK` → perguntar ao usuário (regra da skill).
 - Se `bairro_postal` ≠ `bairro_quintoandar` em `_conferir`, usar o postal e avisar.
 - Olhar no navegador (390 px e 1440 px), sem erro de console. **Não publicar na Hostinger sem o OK do usuário.**
