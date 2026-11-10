@@ -24,6 +24,7 @@ Antes de ler fotos ou montar qualquer documento, confirme o bairro oficial pela 
 - Fotos oficiais de área comum do condomínio (piscina, lazer) às vezes têm marca d'água de portal — excluir do vídeo, usar só em texto/legenda.
 - Descartar também fotos com pessoa em qualquer tela/quadro (ex: TV ligada mostrando alguém) e cortar fora fotos pessoais presas em geladeira/mural.
 - Nunca afirmar no roteiro ou na copy algo não confirmável pelas fotos/ficha (ex: "marcenaria planejada", "projetado por arquiteto") — só dados factuais da ficha (m², suítes, vagas, banheiros). Itens marcados como NÃO na ficha (ex: varanda gourmet, pet, home office) nunca entram na copy.
+- **Página do condomínio x página de venda (decisão do usuário, 10/11/2026).** Quando as informações do condomínio divergem das da página de venda do apartamento, **a página de venda é a mestre** e vale o que ela diz (ex.: área verde e gás encanado marcados NÃO na venda e SIM no condomínio saem da copy e da landing). A página do condomínio só complementa o que a de venda não traz. Registrar a divergência na tabela da ficha do `Catalogo_Fotos.md`.
 
 ### IPTU e condomínio — regra permanente (atualizada em 26/10/2026)
 O usuário NÃO envia mais IPTU nem condomínio.
