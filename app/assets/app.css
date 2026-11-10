@@ -216,3 +216,12 @@ input[type=file].campo{padding:9px 10px}
 }
 .brand .t strong{white-space:nowrap}
 @media (max-width:479px){ .who span{display:none} }
+
+/* ===== Imóvel por link ou código; filtros por corretor e status ===== */
+.form .grade .larga{grid-column:1 / -1}
+.dica{margin:6px 0 0;font-size:.84rem;color:var(--muted)}
+.dica.ok{color:var(--s-ok-fg);background:var(--s-ok-bg);border-radius:var(--r-s);padding:7px 11px}
+.dica.erro{color:var(--s-perd-fg);background:var(--s-perd-bg);border-radius:var(--r-s);padding:7px 11px}
+.busca,.busca.dupla{grid-template-columns:minmax(0,1fr)}
+.busca.dupla select{grid-column:auto;grid-row:auto}
+@media (min-width:640px){ .busca{grid-template-columns:minmax(0,260px)} .busca.dupla{grid-template-columns:minmax(0,260px) minmax(0,220px)} }

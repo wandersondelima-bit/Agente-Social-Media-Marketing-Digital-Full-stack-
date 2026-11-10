@@ -90,6 +90,28 @@
     if (c) c.textContent = e.target.value.length + ' de ' + e.target.maxLength + ' caracteres';
   });
 
+  /* Imóvel de referência: mostra na hora qual imóvel o link ou o código colado representa. */
+  var campoIm = document.querySelector('[data-imoveis]');
+  if (campoIm) {
+    var dica = document.getElementById('n-im-dica');
+    var padrao = dica.textContent;
+    var mapa = {};
+    try { mapa = JSON.parse(campoIm.dataset.imoveis) || {}; } catch (err) {}
+    var conferir = function () {
+      var v = campoIm.value.trim(), m, cod = '', eLink = false;
+      if ((m = v.match(/marceloosawaimoveis\.com\.br\/(\d{5,9})/i))) { cod = m[1]; eLink = true; }
+      else if ((m = v.match(/^(?:c[oó]d(?:igo)?\.?\s*)?(\d{5,9})$/i))) cod = m[1];
+      dica.className = 'dica';
+      if (!v) dica.textContent = padrao;
+      else if (cod && mapa[cod]) { dica.textContent = 'Imóvel reconhecido: ' + mapa[cod] + ' (cód. ' + cod + ')'; dica.classList.add('ok'); }
+      else if (cod && eLink) dica.textContent = 'Link do site aceito (cód. ' + cod + '). O imóvel ainda não está na página inicial.';
+      else if (cod) { dica.textContent = 'Não achei o código ' + cod + ' entre os imóveis do site. Confira o número ou cole o link.'; dica.classList.add('erro'); }
+      else dica.textContent = 'Será salvo como texto livre, sem link para o site.';
+    };
+    campoIm.addEventListener('input', conferir);
+    conferir();
+  }
+
   /* Exclusões pedem um segundo toque no mesmo botão. */
   document.addEventListener('submit', function (e) {
     var f = e.target;
