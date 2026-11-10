@@ -32,6 +32,9 @@ O usuário NÃO envia mais IPTU nem condomínio.
 - **Condomínio:** usar o valor da página do QuintoAndar, sem confirmação.
 - O antigo template "Confirma para mim o IPTU?" está desativado.
 
+### QPreço — análise do QuintoAndar (pedido do usuário, 10/11/2026)
+O anúncio traz o bloco QPreço: faixa estimada, posição do preço, média dos negociados e dos disponíveis, e o condomínio comparado com o dos imóveis similares. Em todo imóvel, ler o bloco (na página ou no print que o usuário mandar) e registrar na seção "QPreço" do `Catalogo_Fotos.md`: a faixa, onde o preço cai (dentro, abaixo ou acima), as médias e o condomínio contra os similares. O `landing.py prep` ainda não captura esses dados. A copy usa o resultado na "Linha de vantagem do QPreço" (seção Copywriting), quando houver vantagem a dizer.
+
 ## Geração de vídeo (Higgsfield / Kling 3.0 turbo)
 
 - Modelo: `kling3_0_turbo`, foto real como `start_image`, 9:16 nativo, áudio desligado na narração (a locução é sempre feita depois no CapCut, nunca no Higgsfield/Kling).
@@ -238,6 +241,7 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
   - Frase guarda-chuva ("lazer completo", "vista panorâmica"): só quando cada comodidade esperada consta como SIM na ficha; se alguma for NÃO, listar as comodidades SIM em vez da frase.
   - "Portaria 24h", "piscina aquecida", "varanda gourmet" e afins só se o termo estiver na ficha. Distâncias: "perto de" quando não foram medidas; número só se medido no mapa.
 - No bloco de comparação de preço, nunca citar valores de m² ou média da região — argumentar de forma qualitativa ("preço competitivo para o padrão da região").
+- **Linha de vantagem do QPreço (pedido do usuário em 10/11/2026; formato usado no 3042998, ainda sem confirmação dele sobre o resultado).** Uma linha `✅ Vantagem na análise QPreço do QuintoAndar: …`, logo depois do bloco Venda, Condomínio e IPTU, só quando o QPreço sustenta uma vantagem: preço dentro ou abaixo da faixa estimada, ou condomínio abaixo da média dos similares. Escrita de forma qualitativa e atribuída ao QPreço, sem valores de média nem de m², e sem "da região" quando a captura diz só "similares". Com o preço **acima** da faixa, nunca falar em preço competitivo: usar o condomínio, se ele sustentar a linha, ou nenhuma linha. Uma frase só na legenda, sem acrescentar "menos custo fixo" ou "lazer de clube" (o revisor viu o primeiro como custo total e o segundo como guarda-chuva). Pedir ao `revisor-ficha-copy` que confira a linha contra a seção QPreço do Catálogo.
 - CTA de captação (regra a partir de 04/11/2026, decisão do usuário): todo Reel novo sai com a landing page, então o CTA do Instagram é o de comentário com a palavra da automação Zernio (abaixo). O CTA de WhatsApp vale para o TikTok e para o Reel sem landing page. Em qualquer CTA: uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
   - Instagram, Reel COM landing page e automação Zernio (padrão a partir do 3066087; a palavra vem do Checklist da seção "Automação Comentário → Direct → Landing"). Antes do `🔗 QuintoAndar #[CODIGO]`:
     ```
