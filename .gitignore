@@ -1,3 +1,5 @@
 .DS_Store
 _trabalho/
 .gerado-por-landing
+app/inc/config.php
+app/inc/_dados/

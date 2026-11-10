@@ -1,0 +1,15 @@
+# CRM de leads: tudo passa pelo index.php. Nada aqui deve aparecer no Google nem ficar em cache.
+DirectoryIndex index.php
+Options -Indexes
+ErrorDocument 404 default
+
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow, noarchive"
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# A prévia de aprovação e arquivos de apoio não são públicos
+RedirectMatch 404 ^/app/(_previa|inc)(/|$)
+<FilesMatch "\.(md|sql|sqlite|log|ini|example)$">
+  Require all denied
+</FilesMatch>
