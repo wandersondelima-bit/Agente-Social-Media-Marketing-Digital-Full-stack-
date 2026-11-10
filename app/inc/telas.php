@@ -136,12 +136,11 @@ function tela_leads(array $u): void
 {
     $adm = $u['papel'] === 'admin';
     $f = (string)($_GET['f'] ?? 'todos');
-    $busca = trim((string)($_GET['q'] ?? ''));
     $fc = $adm ? (int)($_GET['c'] ?? 0) : 0;
     $validos = array_merge(['todos'], array_keys(STATUS), $adm ? ['distribuir', 'excluidos'] : []);
     if (!in_array($f, $validos, true)) $f = 'todos';
     $lixeira = $f === 'excluidos';
-    $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'todos' ? '' : $f, 'q' => $busca, 'c' => $fc ?: '']));
+    $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'todos' ? '' : $f, 'c' => $fc ?: '']));
 
     // Escopo: o corretor só enxerga os leads atribuídos a ele.
     $onde = ['l.excluido_em IS ' . ($lixeira ? 'NOT NULL' : 'NULL')];
@@ -156,18 +155,18 @@ function tela_leads(array $u): void
     if (isset(STATUS[$f])) { $onde[] = 'l.status = ?'; $p[] = $f; }
     if ($f === 'distribuir') $onde[] = 'l.corretor_id IS NULL';
     if ($fc) { $onde[] = 'l.corretor_id = ?'; $p[] = $fc; }
-    if ($busca !== '') {
-        $d = so_digitos($busca);
-        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($busca)) . '%';
-        if ($d !== '') { $onde[] = "(LOWER(l.nome) LIKE ? ESCAPE '\\' OR l.telefone LIKE ?)"; $p[] = $like; $p[] = "%$d%"; }
-        else { $onde[] = "LOWER(l.nome) LIKE ? ESCAPE '\\'"; $p[] = $like; }
-    }
     $leads = q('SELECT l.*, u.nome AS corretor FROM leads l LEFT JOIN usuarios u ON u.id = l.corretor_id WHERE ' . implode(' AND ', $onde) . ' ORDER BY l.entrada DESC, l.id DESC LIMIT 500', $p)->fetchAll();
 
     $cors = [];
-    if ($adm) foreach (corretores() as $c) $cors[(int)$c['id']] = $c['nome'];
-    $chip = function (string $k, string $t, ?int $n, string $ponto = '') use ($f, $busca, $fc): string {
-        $href = url('leads', array_filter(['f' => $k === 'todos' ? '' : $k, 'q' => $busca, 'c' => $fc ?: '']));
+    $cors_filtro = [];   // no filtro entram também os desativados, que ainda têm leads
+    if ($adm) {
+        foreach (corretores(false) as $c) {
+            if ((int)$c['ativo']) $cors[(int)$c['id']] = $c['nome'];
+            $cors_filtro[(int)$c['id']] = $c['nome'] . ((int)$c['ativo'] ? '' : ' (desativado)');
+        }
+    }
+    $chip = function (string $k, string $t, ?int $n, string $ponto = '') use ($f, $fc): string {
+        $href = url('leads', array_filter(['f' => $k === 'todos' ? '' : $k, 'c' => $fc ?: '']));
         return '<a class="chip" href="' . e($href) . '"' . ($f === $k ? ' aria-current="true"' : '') . '>' . ($ponto ? '<span class="ponto ' . $ponto . '"></span>' : '')
             . $t . ($n !== null ? ' <b class="num" data-n="' . $k . '">' . $n . '</b>' : '') . '</a>';
     };
@@ -179,17 +178,16 @@ function tela_leads(array $u): void
         . $chip('concluido', 'Concluído', $cont['concluido'], 'concluido') . $chip('perdido', 'Perdido', $cont['perdido'], 'perdido')
         . ($adm ? $chip('excluidos', 'Excluídos', null) : '') . '</div>'
         . '<form class="busca' . ($adm ? ' dupla' : '') . '" method="get" action="' . e(base()) . '/"><input type="hidden" name="r" value="leads">'
-        . ($f !== 'todos' ? '<input type="hidden" name="f" value="' . e($f) . '">' : '')
-        . '<input class="campo" type="search" name="q" value="' . e($busca) . '" placeholder="Buscar por nome ou telefone" aria-label="Buscar por nome ou telefone">'
-        . ($adm ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors, $fc ?: '', 'Todos os corretores') . '</select>' : '')
-        . '<button class="btn btn-ghost" type="submit">Buscar</button></form>'
+        . ($adm ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors_filtro, $fc ?: '', 'Todos os corretores') . '</select>' : '')
+        . '<select class="campo" name="f" aria-label="Filtrar por status" data-envia>' . opcoes(STATUS + ($adm ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'todos' ? '' : $f, 'Todos os status') . '</select>'
+        . '<noscript><button class="btn btn-ghost" type="submit">Filtrar</button></noscript></form>'
         . '<ul class="lista"><li class="cab" aria-hidden="true"><span>Entrada</span><span>Nome</span><span>Status</span></li>';
     if (!$leads) {
-        $vazio = $busca !== '' || $f !== 'todos' || $fc ? 'Nenhum lead neste filtro.' : ($adm ? 'Ainda não há leads. Use Novo lead ou Importar para começar.' : 'Você ainda não tem leads atribuídos.');
+        $vazio = $f !== 'todos' || $fc ? 'Nenhum lead neste filtro.' : ($adm ? 'Ainda não há leads. Use Novo lead ou Importar para começar.' : 'Você ainda não tem leads atribuídos.');
         $h .= '<li class="vazio">' . $vazio . '</li>';
     }
     foreach ($leads as $l) $h .= linha_lead($l, $adm, $cors, $lixeira);
-    $h .= '</ul>' . (count($leads) === 500 ? '<p class="muted nota-lista">Mostrando os 500 mais recentes. Use a busca ou os filtros para ver os demais.</p>' : '')
+    $h .= '</ul>' . (count($leads) === 500 ? '<p class="muted nota-lista">Mostrando os 500 mais recentes. Use os filtros para ver os demais.</p>' : '')
         . ($adm && !$lixeira ? '<p class="nota-lista"><a href="' . e(url('exportar')) . '">Baixar todos os leads em CSV</a></p>' : '') . '</div></main>';
     pagina($adm ? 'Leads' : 'Meus leads', $h);
 }
@@ -198,16 +196,17 @@ function tela_lead_form(array $u): void
 {
     $id = (int)($_GET['id'] ?? 0);
     $l = $id ? lead_permitido($id) : ['entrada' => date('Y-m-d'), 'nome' => '', 'telefone' => '', 'imovel_codigo' => '', 'imovel_titulo' => '', 'origem' => ORIGENS[0], 'corretor_id' => ''];
-    $l['imovel_texto'] = $l['imovel_codigo'] ? '' : (string)($l['imovel_titulo'] ?? '');
+    $l['imovel_ref'] = $l['imovel_codigo'] ? (string)$l['imovel_codigo'] : (string)($l['imovel_titulo'] ?? '');
     $dup = $_SESSION['form_dup'] ?? null;
     $erros = $_SESSION['form_erros'] ?? [];
     if (isset($_SESSION['form_lead'])) {
-        foreach (['entrada', 'nome', 'telefone', 'imovel_codigo', 'imovel_texto', 'origem', 'corretor_id'] as $c) $l[$c] = (string)($_SESSION['form_lead'][$c] ?? '');
+        foreach (['entrada', 'nome', 'telefone', 'imovel_ref', 'origem', 'corretor_id'] as $c) $l[$c] = (string)($_SESSION['form_lead'][$c] ?? '');
     }
     unset($_SESSION['form_dup'], $_SESSION['form_erros'], $_SESSION['form_lead']);
-    $im = [];
-    foreach (imoveis_site() as $c => $x) $im[$c] = $x['bairro'] . ' · ' . mb_strimwidth($x['titulo'], 0, 70, '…') . ' (cód. ' . $c . ')';
-    if (!empty($l['imovel_codigo']) && !isset($im[$l['imovel_codigo']])) $im[$l['imovel_codigo']] = ($l['imovel_titulo'] ?? 'Imóvel') . ' (cód. ' . $l['imovel_codigo'] . ', fora do site)';
+    // Lista compacta para o JavaScript confirmar na hora qual imóvel foi reconhecido (código => bairro · título).
+    $mapa = [];
+    foreach (imoveis_site() as $c => $x) $mapa[(string)$c] = $x['bairro'] . ' · ' . $x['titulo'];
+    if (!empty($l['imovel_codigo']) && !isset($mapa[(string)$l['imovel_codigo']])) $mapa[(string)$l['imovel_codigo']] = ($l['imovel_titulo'] ?? 'Imóvel') . ' (fora do site)';
     $cors = [];
     foreach (corretores() as $c) $cors[(int)$c['id']] = $c['nome'];
     $h = topo($u, 'leads') . '<main><div class="wrap"><div class="head"><div><h1>' . ($id ? 'Editar lead' : 'Novo lead') . '</h1></div></div>'
@@ -217,12 +216,13 @@ function tela_lead_form(array $u): void
     $h .= '<div class="grade">'
         . '<div><label for="n-nome">Nome</label><input class="campo" id="n-nome" name="nome" maxlength="160" value="' . e($l['nome']) . '" required></div>'
         . '<div><label for="n-tel">WhatsApp</label><input class="campo" id="n-tel" name="telefone" inputmode="tel" placeholder="DDD + número" value="' . e($l['telefone']) . '" required></div>'
-        . '<div><label for="n-im">Imóvel do site</label><select class="campo" id="n-im" name="imovel_codigo">' . opcoes($im, $l['imovel_codigo'], 'Nenhum da lista') . '</select></div>'
-        . '<div><label for="n-imt">Outro imóvel ou região</label><input class="campo" id="n-imt" name="imovel_texto" maxlength="255" placeholder="Use só se não estiver na lista" value="' . e($l['imovel_texto']) . '"></div>'
+        . '<div class="larga"><label for="n-im">Imóvel de referência</label>'
+        . '<input class="campo" id="n-im" name="imovel_ref" maxlength="255" autocomplete="off" spellcheck="false" placeholder="Cole o link da página do imóvel ou digite o código" value="' . e($l['imovel_ref']) . '" data-imoveis="' . e(json_encode($mapa, JSON_UNESCAPED_UNICODE)) . '">'
+        . '<p class="dica" id="n-im-dica" aria-live="polite">Aceita o link do site, o código (ex.: 2741071) ou um texto livre, como o nome de um bairro.</p></div>'
         . '<div><label for="n-or">Origem</label><select class="campo" id="n-or" name="origem">' . opcoes(ORIGENS, $l['origem']) . '</select></div>'
         . '<div><label for="n-cor">Corretor</label><select class="campo" id="n-cor" name="corretor_id">' . opcoes($cors, $l['corretor_id'], 'A distribuir') . '</select></div>'
         . '<div><label for="n-dt">Data de entrada</label><input class="campo" id="n-dt" name="entrada" type="date" value="' . e($l['entrada']) . '"></div>'
-        . '</div><p class="nota">A lista de imóveis vem dos imóveis publicados no site.</p>'
+        . '</div>'
         . '<div class="acoes"><button class="btn btn-primary" type="submit">Salvar lead</button><a class="btn btn-ghost" href="' . e(voltar_lista()) . '">Cancelar</a></div></form></div></main>';
     pagina($id ? 'Editar lead' : 'Novo lead', $h);
 }

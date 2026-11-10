@@ -127,15 +127,28 @@ function acao_lead_salvar(): void
     $erros = [];
     if ($nome === '' || mb_strlen($nome) > 160) $erros[] = 'Informe o nome (até 160 caracteres).';
     if ($tel === null) $erros[] = 'Informe o WhatsApp com DDD (10 ou 11 dígitos).';
-    $cod = (string)($_POST['imovel_codigo'] ?? '');
+    // Imóvel: um campo só. Aceita o link da página do site, o código do imóvel ou um texto livre (região, outro imóvel).
+    $ref = mb_substr(trim((string)($_POST['imovel_ref'] ?? '')), 0, 255);
     $site = imoveis_site();
+    $cod = '';
+    $link = null;
+    if (preg_match('~marceloosawaimoveis\.com\.br/(\d{5,9})(/[a-z0-9-]+)?~i', $ref, $m)) {
+        $cod = $m[1];
+        $link = SITE_URL . '/' . $m[1] . (isset($m[2]) ? strtolower($m[2]) . '/' : '/');
+    } elseif (preg_match('/^(?:c[oó]d(?:igo)?\.?\s*)?(\d{5,9})$/iu', $ref, $m)) {
+        $cod = $m[1];
+    }
     if ($cod !== '' && isset($site[$cod])) {
         $im = [$cod, $site[$cod]['titulo'], $site[$cod]['url']];
     } elseif ($cod !== '' && $atual && $cod === (string)$atual['imovel_codigo']) {
         $im = [$atual['imovel_codigo'], $atual['imovel_titulo'], $atual['imovel_url']];   // imóvel que já saiu do site
+    } elseif ($cod !== '' && $link !== null) {
+        $im = [$cod, "Imóvel $cod", $link];                                              // link do site ainda fora da página inicial
+    } elseif ($cod !== '') {
+        $im = [null, null, null];
+        $erros[] = "Não achei o código $cod entre os imóveis do site. Confira o número ou cole o link da página do imóvel.";
     } else {
-        $txt = mb_substr(trim((string)($_POST['imovel_texto'] ?? '')), 0, 255);
-        $im = [null, $txt !== '' ? $txt : null, null];
+        $im = [null, $ref !== '' ? $ref : null, null];
     }
     if (!$erros && !isset($_POST['confirmar'])) {
         $dup = um('SELECT id, nome FROM leads WHERE telefone = ? AND excluido_em IS NULL AND id <> ?', [$tel, $id]);
