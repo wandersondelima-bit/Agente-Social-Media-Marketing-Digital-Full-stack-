@@ -190,6 +190,19 @@ function acao_lead_restaurar(): void
     aviso('Lead restaurado');
     redirecionar(voltar_lista());
 }
+/* Exclusão definitiva: só para lead que já está em Excluídos. Apaga o lead e o histórico dele; não tem volta. */
+function acao_lead_apagar(): void
+{
+    exigir_admin();
+    $l = lead_permitido((int)($_POST['id'] ?? 0), true);
+    if ($l['excluido_em'] === null) falha(422, 'Só é possível apagar de vez um lead que já está em Excluídos.');
+    db()->beginTransaction();
+    q('DELETE FROM lead_eventos WHERE lead_id = ?', [$l['id']]);
+    q('DELETE FROM leads WHERE id = ? AND excluido_em IS NOT NULL', [$l['id']]);
+    db()->commit();
+    aviso('Lead apagado definitivamente.');
+    redirecionar(voltar_lista());
+}
 
 /* ---------- Usuários: só admin ---------- */
 function usuario_alvo(): array
