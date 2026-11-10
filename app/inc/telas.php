@@ -135,12 +135,12 @@ function linha_lead(array $l, bool $adm, array $cors, bool $lixeira): string
 function tela_leads(array $u): void
 {
     $adm = $u['papel'] === 'admin';
-    $f = (string)($_GET['f'] ?? 'todos');
+    $f = (string)($_GET['f'] ?? 'abertos');   // a tela abre só com o que ainda está em atendimento
     $fc = $adm ? (int)($_GET['c'] ?? 0) : 0;
-    $validos = array_merge(['todos'], array_keys(STATUS), $adm ? ['distribuir', 'excluidos'] : []);
-    if (!in_array($f, $validos, true)) $f = 'todos';
+    $validos = array_merge(['abertos', 'todos'], array_keys(STATUS), $adm ? ['distribuir', 'excluidos'] : []);
+    if (!in_array($f, $validos, true)) $f = 'abertos';
     $lixeira = $f === 'excluidos';
-    $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'todos' ? '' : $f, 'c' => $fc ?: '']));
+    $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'abertos' ? '' : $f, 'c' => $fc ?: '']));
 
     // Escopo: o corretor só enxerga os leads atribuídos a ele.
     $onde = ['l.excluido_em IS ' . ($lixeira ? 'NOT NULL' : 'NULL')];
@@ -148,11 +148,13 @@ function tela_leads(array $u): void
     if (!$adm) { $onde[] = 'l.corretor_id = ?'; $p[] = (int)$u['id']; }
     $escopo = implode(' AND ', $onde);
     $pe = $p;
-    $cont = ['todos' => 0, 'distribuir' => 0] + array_fill_keys(array_keys(STATUS), 0);
+    $cont = ['abertos' => 0, 'todos' => 0, 'distribuir' => 0] + array_fill_keys(array_keys(STATUS), 0);
     foreach (q("SELECT l.status, COUNT(*) AS n, SUM(CASE WHEN l.corretor_id IS NULL THEN 1 ELSE 0 END) AS sem FROM leads l WHERE " . ($adm ? 'l.excluido_em IS NULL' : $escopo) . " GROUP BY l.status", $adm ? [] : $pe) as $r) {
         $cont[$r['status']] = (int)$r['n']; $cont['todos'] += (int)$r['n']; $cont['distribuir'] += (int)$r['sem'];
     }
+    $cont['abertos'] = $cont['novo'] + $cont['andamento'];
     if (isset(STATUS[$f])) { $onde[] = 'l.status = ?'; $p[] = $f; }
+    if ($f === 'abertos') $onde[] = "l.status IN ('novo', 'andamento')";
     if ($f === 'distribuir') $onde[] = 'l.corretor_id IS NULL';
     if ($fc) { $onde[] = 'l.corretor_id = ?'; $p[] = $fc; }
     $leads = q('SELECT l.*, u.nome AS corretor FROM leads l LEFT JOIN usuarios u ON u.id = l.corretor_id WHERE ' . implode(' AND ', $onde) . ' ORDER BY l.entrada DESC, l.id DESC LIMIT 500', $p)->fetchAll();
@@ -166,24 +168,25 @@ function tela_leads(array $u): void
         }
     }
     $chip = function (string $k, string $t, ?int $n, string $ponto = '') use ($f, $fc): string {
-        $href = url('leads', array_filter(['f' => $k === 'todos' ? '' : $k, 'c' => $fc ?: '']));
+        $href = url('leads', array_filter(['f' => $k === 'abertos' ? '' : $k, 'c' => $fc ?: '']));
         return '<a class="chip" href="' . e($href) . '"' . ($f === $k ? ' aria-current="true"' : '') . '>' . ($ponto ? '<span class="ponto ' . $ponto . '"></span>' : '')
             . $t . ($n !== null ? ' <b class="num" data-n="' . $k . '">' . $n . '</b>' : '') . '</a>';
     };
     $h = topo($u, 'leads') . '<main><div class="wrap"><div class="head"><div><h1>' . ($adm ? 'Leads' : 'Meus leads') . '</h1><p class="muted">'
-        . ($adm ? 'Todos os leads da equipe. Os sem corretor ficam em A distribuir.' : 'Toque em um nome para ver o contato e as observações.') . '</p></div>'
+        . ($adm ? 'A tela abre com os leads em aberto. Concluídos e perdidos ficam nos filtros.' : 'Seus leads em aberto. Toque em um nome para ver o contato e as observações.') . '</p></div>'
         . ($adm ? '<a class="btn btn-primary" href="' . e(url('lead_form')) . '">Novo lead</a>' : '') . '</div>'
-        . '<div class="filtros">' . $chip('todos', 'Todos', $cont['todos']) . ($adm ? $chip('distribuir', 'A distribuir', $cont['distribuir']) : '')
+        . '<div class="filtros">' . $chip('abertos', 'Em aberto', $cont['abertos']) . $chip('todos', 'Todos', $cont['todos']) . ($adm ? $chip('distribuir', 'A distribuir', $cont['distribuir']) : '')
         . $chip('novo', 'Novo', $cont['novo'], 'novo') . $chip('andamento', 'Em andamento', $cont['andamento'], 'andamento')
         . $chip('concluido', 'Concluído', $cont['concluido'], 'concluido') . $chip('perdido', 'Perdido', $cont['perdido'], 'perdido')
         . ($adm ? $chip('excluidos', 'Excluídos', null) : '') . '</div>'
         . '<form class="busca' . ($adm ? ' dupla' : '') . '" method="get" action="' . e(base()) . '/"><input type="hidden" name="r" value="leads">'
         . ($adm ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors_filtro, $fc ?: '', 'Todos os corretores') . '</select>' : '')
-        . '<select class="campo" name="f" aria-label="Filtrar por status" data-envia>' . opcoes(STATUS + ($adm ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'todos' ? '' : $f, 'Todos os status') . '</select>'
+        . '<select class="campo" name="f" aria-label="Filtrar por status" data-envia>' . opcoes(['todos' => 'Todos os status'] + STATUS + ($adm ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'abertos' ? '' : $f, 'Em aberto (Novo e Em andamento)') . '</select>'
         . '<noscript><button class="btn btn-ghost" type="submit">Filtrar</button></noscript></form>'
         . '<ul class="lista"><li class="cab" aria-hidden="true"><span>Entrada</span><span>Nome</span><span>Status</span></li>';
     if (!$leads) {
-        $vazio = $f !== 'todos' || $fc ? 'Nenhum lead neste filtro.' : ($adm ? 'Ainda não há leads. Use Novo lead ou Importar para começar.' : 'Você ainda não tem leads atribuídos.');
+        if ($f === 'abertos' && !$fc) $vazio = $cont['todos'] ? 'Nenhum lead em aberto. Os concluídos e perdidos estão nos filtros acima.' : ($adm ? 'Ainda não há leads. Use Novo lead ou Importar para começar.' : 'Você ainda não tem leads atribuídos.');
+        else $vazio = 'Nenhum lead neste filtro.';
         $h .= '<li class="vazio">' . $vazio . '</li>';
     }
     foreach ($leads as $l) $h .= linha_lead($l, $adm, $cors, $lixeira);
