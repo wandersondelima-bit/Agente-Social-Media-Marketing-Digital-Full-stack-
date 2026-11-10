@@ -30,7 +30,7 @@ if ($post) {
     $acoes = [
         'entrar' => false, 'sair' => false,                      // false: não exige login
         'lead_status' => true, 'lead_motivo' => true, 'lead_obs' => true,
-        'lead_atribuir' => true, 'lead_salvar' => true, 'lead_excluir' => true, 'lead_restaurar' => true,
+        'lead_atribuir' => true, 'lead_salvar' => true, 'lead_excluir' => true, 'lead_restaurar' => true, 'lead_apagar' => true,
         'usuario_criar' => true, 'usuario_senha' => true, 'usuario_ativo' => true, 'usuario_excluir' => true,
         'importar' => true,
     ];

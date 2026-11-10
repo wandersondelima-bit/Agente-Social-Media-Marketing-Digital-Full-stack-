@@ -109,7 +109,10 @@ function linha_lead(array $l, bool $adm, array $cors, bool $lixeira): string
         . '<div class="acoes"><a class="btn btn-gold" href="https://wa.me/55' . e($l['telefone']) . '" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Abrir WhatsApp</a></div>';
     if ($lixeira) {
         $h .= ($l['observacoes'] !== '' ? '<p class="obs-lida">' . nl2br(e($l['observacoes'])) . '</p>' : '')
-            . '<form method="post" action="' . e(url('lead_restaurar')) . '" class="acoes">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '"><button class="btn btn-primary btn-small" type="submit">Restaurar lead</button></form>';
+            . '<form method="post" action="' . e(url('lead_restaurar')) . '" class="acoes">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '"><button class="btn btn-primary btn-small" type="submit">Restaurar lead</button></form>'
+            . '<form method="post" action="' . e(url('lead_apagar')) . '" class="acoes confirma">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">'
+            . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar: apagar para sempre">Excluir definitivamente</button></form>'
+            . '<p class="dica">Excluir definitivamente apaga o lead e o histórico dele do banco. Não dá para desfazer.</p>';
         return $h . '</div></li>';
     }
     $h .= '<div class="motivo" data-motivo' . ($l['status'] === 'perdido' ? '' : ' hidden') . '><label for="mot-' . $id . '">Motivo da perda</label>'
