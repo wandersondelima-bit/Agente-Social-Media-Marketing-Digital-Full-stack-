@@ -1,0 +1,397 @@
+<title>Prévia CRM de Leads</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+<style>
+/* Layout: cabeçalho grafite com a marca (igual ao site), conteúdo claro em coluna única de leitura rápida;
+   cada lead é uma linha (data, nome, status) que se abre no lugar. O status usa um anel colorido, eco do monograma. */
+:root{
+  /* marca: os mesmos valores do site */
+  --g1:#141719; --g2:#1F2327; --g3:#2A2F34;
+  --on:#F3F3F0; --on-muted:rgba(243,243,240,.68); --on-line:rgba(243,243,240,.16);
+  --gold:#CDAD6E; --gold-deep:#B18F4E; --on-gold:#17140D;
+  /* superfície de trabalho (tema claro) */
+  --bg:#EFECE4; --card:#F9F8F5; --field:#FFFFFF; --ink:#15181B; --muted:#646A6E; --line:#E2E1DC; --soft:#EFECE4;
+  --accent:#8A6B2E; --primary:#15181B; --on-primary:#F9F8F5;
+  /* status: semânticos, separados do acento */
+  --s-novo:#7C8388;  --s-novo-bg:#E9E9E6;  --s-novo-fg:#3D4347;
+  --s-and:#D49B12;   --s-and-bg:#FBF0CF;   --s-and-fg:#6B4A00;
+  --s-ok:#2E9A5F;    --s-ok-bg:#DDF1E5;    --s-ok-fg:#14532F;
+  --s-perd:#C8493F;  --s-perd-bg:#F8DFDC;  --s-perd-fg:#7A211A;
+  --font:'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --r-s:10px; --r-m:16px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141719; --card:#1F2327; --field:#161A1D; --ink:#F3F3F0; --muted:#A7ABAD; --line:#343A40; --soft:#2A2F34;
+  --accent:#CDAD6E; --primary:#CDAD6E; --on-primary:#17140D;
+  --s-novo:#9BA1A6; --s-novo-bg:#2C3136; --s-novo-fg:#D9DBDC;
+  --s-and:#E0B13A;  --s-and-bg:#3B3214;  --s-and-fg:#F4DC96;
+  --s-ok:#4DB87D;   --s-ok-bg:#16352A;   --s-ok-fg:#A9E4C3;
+  --s-perd:#E26A60; --s-perd-bg:#402320; --s-perd-fg:#F5B9B3;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#141719; --card:#1F2327; --field:#161A1D; --ink:#F3F3F0; --muted:#A7ABAD; --line:#343A40; --soft:#2A2F34;
+  --accent:#CDAD6E; --primary:#CDAD6E; --on-primary:#17140D;
+  --s-novo:#9BA1A6; --s-novo-bg:#2C3136; --s-novo-fg:#D9DBDC;
+  --s-and:#E0B13A;  --s-and-bg:#3B3214;  --s-and-fg:#F4DC96;
+  --s-ok:#4DB87D;   --s-ok-bg:#16352A;   --s-ok-fg:#A9E4C3;
+  --s-perd:#E26A60; --s-perd-bg:#402320; --s-perd-fg:#F5B9B3;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold-deep);outline-offset:2px}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1{font-weight:400;font-size:1.45rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h2{font-weight:500;font-size:1.05rem;margin:0}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Barra da prévia: não faz parte do aplicativo */
+.previa{background:var(--soft);border-bottom:1px solid var(--line)}
+.previa .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding-block:10px}
+.previa p{margin:0;font-size:.82rem;color:var(--muted)}
+.previa nav{display:flex;flex-wrap:wrap;gap:6px}
+.previa button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font-size:.84rem;cursor:pointer}
+.previa button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+
+/* Cabeçalho do aplicativo: grafite nos dois temas, como no site */
+.top{background:linear-gradient(170deg, var(--g1) 0%, var(--g2) 100%);color:var(--on)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;text-decoration:none;color:var(--on)}
+.brand .mark{width:40px;height:40px;color:var(--gold);flex:none}
+.brand .mark svg{width:100%;height:100%;display:block}
+.brand .t{display:grid;line-height:1.05}
+.brand .t strong{font-weight:500;font-size:1.02rem;letter-spacing:.04em}
+.brand .t span{font-size:.6rem;font-weight:300;color:var(--on-muted);letter-spacing:.32em;text-transform:uppercase;margin-top:5px;padding-left:2px}
+.who{display:flex;align-items:center;gap:12px;font-size:.86rem;min-width:0}
+.who span{color:var(--on-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who button{background:transparent;border:1.5px solid var(--on-line);color:var(--on);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:500}
+.who button:hover{border-color:var(--gold)}
+.menu{background:var(--g2);border-top:1px solid var(--on-line)}
+.menu .wrap{display:flex;gap:4px}
+.menu button{background:none;border:0;border-bottom:2px solid transparent;color:var(--on-muted);padding:11px 12px 9px;cursor:pointer;font-size:.92rem}
+.menu button[aria-current="page"]{color:var(--on);border-bottom-color:var(--gold)}
+
+/* Botões: os do site */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:10px 20px;border-radius:999px;font-weight:600;font-size:.95rem;line-height:1.2;text-decoration:none;cursor:pointer;border:1.5px solid transparent;transition:background-color .2s ease,border-color .2s ease}
+.btn svg{width:20px;height:20px;flex:none}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-gold{background:var(--gold);color:var(--on-gold)}
+.btn-gold:hover{background:var(--gold-deep)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink);font-weight:500}
+.btn-ghost:hover{border-color:var(--gold-deep)}
+.btn-small{min-height:38px;padding:7px 14px;font-size:.86rem}
+.btn-danger{color:var(--s-perd-fg);border-color:var(--s-perd)}
+
+main{padding-block:22px 56px}
+.head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px;margin-bottom:16px}
+.head p{margin:4px 0 0;font-size:.9rem}
+
+/* Filtros */
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font-size:.86rem;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.chip b{font-weight:600}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.busca{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px}
+@media (min-width:640px){ .busca{grid-template-columns:1fr 200px} }
+.campo{width:100%;min-height:46px;padding:10px 13px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--field)}
+.campo:focus{border-color:var(--gold-deep);outline:none;box-shadow:0 0 0 3px var(--soft)}
+
+/* Lista de leads */
+.lista{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.cab,.linha{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:center;padding-inline:14px}
+.cab{font-size:.78rem;color:var(--muted);padding-block:9px;border-bottom:1px solid var(--line)}
+.lead + .lead{border-top:1px solid var(--line)}
+.linha{padding-block:6px}
+.abrir{grid-column:1 / 3;display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;align-items:center;text-align:left;background:none;border:0;padding:9px 0;cursor:pointer;min-width:0}
+.abrir .dt{font-size:.86rem;color:var(--muted)}
+.abrir .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abrir .sub{display:block;font-weight:400;font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.abrir .nm::after{content:"";display:inline-block;width:7px;height:7px;margin-left:9px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s ease}
+.abrir[aria-expanded="true"] .nm::after{transform:rotate(-135deg) translateY(-1px)}
+@media (min-width:640px){ .cab,.linha{grid-template-columns:96px minmax(0,1fr) auto} .abrir{grid-template-columns:96px minmax(0,1fr)} }
+
+/* Status: seletor em forma de pílula, com o anel na cor do status */
+.st{position:relative;display:inline-flex;align-items:center}
+.st::before{content:"";position:absolute;left:11px;width:11px;height:11px;border-radius:50%;border:2.5px solid var(--c);pointer-events:none}
+.st select{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--b);color:var(--f);font-weight:500;font-size:.84rem;padding:8px 28px 8px 30px;cursor:pointer;max-width:150px}
+.st::after{content:"";position:absolute;right:12px;width:6px;height:6px;border-right:1.5px solid var(--f);border-bottom:1.5px solid var(--f);transform:rotate(45deg) translateY(-2px);pointer-events:none}
+.st[data-s="novo"]{--c:var(--s-novo);--b:var(--s-novo-bg);--f:var(--s-novo-fg)}
+.st[data-s="andamento"]{--c:var(--s-and);--b:var(--s-and-bg);--f:var(--s-and-fg)}
+.st[data-s="concluido"]{--c:var(--s-ok);--b:var(--s-ok-bg);--f:var(--s-ok-fg)}
+.st[data-s="perdido"]{--c:var(--s-perd);--b:var(--s-perd-bg);--f:var(--s-perd-fg)}
+.ponto{display:inline-block;width:10px;height:10px;border-radius:50%;border:2.5px solid var(--c);flex:none}
+
+/* Detalhe do lead */
+.det{padding:4px 14px 18px;display:grid;gap:14px;border-top:1px dashed var(--line);background:var(--soft)}
+.dados{display:grid;gap:10px;margin:14px 0 0}
+@media (min-width:640px){ .dados{grid-template-columns:1fr 1fr} }
+.dados div{min-width:0}
+.dados dt{font-size:.78rem;color:var(--muted)}
+.dados dd{margin:1px 0 0;overflow-wrap:anywhere}
+.dados a{color:var(--accent);text-underline-offset:3px}
+.acoes{display:flex;flex-wrap:wrap;gap:8px}
+.obs label,.form label{display:block;font-size:.86rem;font-weight:500;margin-bottom:5px}
+.obs textarea{resize:vertical;min-height:84px}
+.obs .pe{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}
+.obs .conta{font-size:.8rem;color:var(--muted)}
+.motivo{display:grid;gap:5px;max-width:320px}
+
+/* Formulários (novo lead, novo usuário) */
+.form{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:16px;margin-bottom:16px;display:grid;gap:12px}
+.form .grade{display:grid;gap:12px}
+@media (min-width:640px){ .form .grade{grid-template-columns:1fr 1fr} }
+.form .nota{margin:0;font-size:.82rem;color:var(--muted)}
+
+/* Usuários */
+.usuarios{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.usuarios li{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:13px 14px}
+.usuarios li + li{border-top:1px solid var(--line)}
+@media (min-width:640px){ .usuarios li{grid-template-columns:minmax(0,1fr) auto;align-items:center} }
+.usuarios .nm{font-weight:500}
+.usuarios .inf{font-size:.84rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.76rem;border:1px solid var(--line);border-radius:999px;padding:1px 9px;margin-left:6px;color:var(--muted)}
+.tag.adm{border-color:var(--gold-deep);color:var(--accent)}
+.inativo .nm{color:var(--muted);text-decoration:line-through}
+
+/* Login */
+.login{min-height:560px;display:grid;place-items:center;padding-block:36px;background:radial-gradient(ellipse 70% 60% at 50% 30%, rgba(205,173,110,.12), transparent 70%), linear-gradient(170deg, var(--g1) 0%, var(--g2) 55%, var(--g3) 100%);color:var(--on)}
+.login .cx{width:100%;max-width:380px;display:grid;gap:22px}
+.login .brand{justify-content:center}
+.login .brand .mark{width:56px;height:56px}
+.login form{background:rgba(243,243,240,.05);border:1px solid var(--on-line);border-radius:var(--r-m);padding:22px;display:grid;gap:14px}
+.login h1{font-weight:300;text-align:center;font-size:1.3rem}
+.login label{display:block;font-size:.88rem;font-weight:500;margin-bottom:6px}
+.login input{width:100%;min-height:50px;padding:11px 14px;border-radius:var(--r-s);border:1.5px solid var(--on-line);background:rgba(12,14,16,.5);color:var(--on)}
+.login input:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(205,173,110,.18)}
+.login .ajuda{margin:0;font-size:.84rem;color:var(--on-muted);text-align:center}
+
+.vazio{padding:26px 16px;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--g1);color:var(--on);border:1px solid var(--gold-deep);border-radius:999px;padding:10px 18px;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-marca" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="22" stroke-width="1.15"/><circle cx="24" cy="24" r="18.4" stroke-width=".6" opacity=".55"/><path d="M15.5 31.5V16.8l8.5 10.4 8.5-10.4v14.7" stroke-width="1.75"/></g></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.6c0 3.3 2.9 6.2 6.2 6.2l1.1-1.5-2-1.1-.9.8c-.9-.4-1.9-1.400-2.300-2.300l.8-.9-1.100-2z" stroke-width="1.4"/></g></symbol>
+</svg>
+
+<div class="previa">
+  <div class="wrap">
+    <p>Prévia para aprovação. Os dados são exemplos fictícios e nada é gravado.</p>
+    <nav aria-label="Telas da prévia">
+      <button type="button" data-tela="login">Login</button>
+      <button type="button" data-tela="corretor">Corretor</button>
+      <button type="button" data-tela="admin">Admin: leads</button>
+      <button type="button" data-tela="usuarios">Admin: usuários</button>
+    </nav>
+  </div>
+</div>
+
+<div id="app"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const STATUS = {novo:'Novo', andamento:'Em andamento', concluido:'Concluído', perdido:'Perdido'};
+const MOTIVOS = ['Sem retorno','Comprou outro imóvel','Fora do orçamento','Desistiu','Outro'];
+const ORIGENS = ['WhatsApp Business','Direct do Instagram','Formulário do site','Outro'];
+const CORRETORES = ['Ana Ribeiro','Bruno Tavares','Carla Mendes'];
+const IMOVEIS = [
+  {c:'2741071', n:'Rua Andréa Paulinetti, Jardim das Acácias', u:'https://marceloosawaimoveis.com.br/2741071/jardim-das-acacias/'},
+  {c:'2669878', n:'Indianópolis', u:'https://marceloosawaimoveis.com.br/'},
+  {c:'3116143', n:'Alto de Pinheiros', u:'https://marceloosawaimoveis.com.br/'}
+];
+let LEADS = [
+  {id:1, d:'10/11/2026', nome:'Exemplo Um', tel:'11900000001', im:0, origem:'Formulário do site', st:'novo', cor:'', obs:''},
+  {id:2, d:'10/11/2026', nome:'Exemplo Dois', tel:'11900000002', im:1, origem:'WhatsApp Business', st:'novo', cor:'', obs:''},
+  {id:3, d:'09/11/2026', nome:'Exemplo Três', tel:'11900000003', im:0, origem:'Direct do Instagram', st:'novo', cor:'Ana Ribeiro', obs:''},
+  {id:4, d:'08/11/2026', nome:'Exemplo Quatro', tel:'11900000004', im:2, origem:'WhatsApp Business', st:'andamento', cor:'Ana Ribeiro', obs:'Visita marcada para sábado, 10h. Quer saber o valor do condomínio.'},
+  {id:5, d:'06/11/2026', nome:'Exemplo Cinco', tel:'11900000005', im:1, origem:'Formulário do site', st:'andamento', cor:'Bruno Tavares', obs:'Pediu opções com 3 suítes na mesma região.'},
+  {id:6, d:'05/11/2026', nome:'Exemplo Seis', tel:'11900000006', im:0, origem:'Direct do Instagram', st:'concluido', cor:'Ana Ribeiro', obs:'Proposta aceita.'},
+  {id:7, d:'04/11/2026', nome:'Exemplo Sete', tel:'11900000007', im:2, origem:'WhatsApp Business', st:'perdido', cor:'Carla Mendes', obs:'Não respondeu a três tentativas.', motivo:'Sem retorno'}
+];
+let USUARIOS = [
+  {nome:'Wanderson Lima', login:'wanderson', papel:'admin', ativo:true, acesso:'hoje, 09:12'},
+  {nome:'Marcelo Osawa', login:'marcelo', papel:'admin', ativo:true, acesso:'ontem, 18:40'},
+  {nome:'Ana Ribeiro', login:'ana', papel:'corretor', ativo:true, acesso:'hoje, 08:55'},
+  {nome:'Bruno Tavares', login:'bruno', papel:'corretor', ativo:true, acesso:'07/11/2026'},
+  {nome:'Carla Mendes', login:'carla', papel:'corretor', ativo:false, acesso:'28/10/2026'}
+];
+const estado = {tela:'corretor', aberto:null, filtro:'todos', busca:'', cor:'', novoLead:false, novoUsuario:false};
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fone = t => `(${t.slice(0,2)}) ${t.slice(2,7)}-${t.slice(7)}`;
+const opts = (lista, sel, vazio) => (vazio ? `<option value="">${vazio}</option>` : '') + lista.map(o => `<option${o===sel?' selected':''}>${esc(o)}</option>`).join('');
+
+function aviso(t){ const el=$('#toast'); el.textContent=t; el.hidden=false; clearTimeout(aviso.t); aviso.t=setTimeout(()=>{el.hidden=true}, 2200); }
+
+function topo(nome, papel){
+  const menu = papel==='admin' ? `<div class="menu"><div class="wrap">
+      <button type="button" data-ir="admin"${estado.tela==='admin'?' aria-current="page"':''}>Leads</button>
+      <button type="button" data-ir="usuarios"${estado.tela==='usuarios'?' aria-current="page"':''}>Usuários</button></div></div>` : '';
+  return `<header class="top"><div class="wrap">
+      <a class="brand" href="#" title="Lista de leads"><span class="mark"><svg><use href="#i-marca"/></svg></span><span class="t"><strong>Marcelo Osawa</strong><span>Imóveis</span></span></a>
+      <div class="who"><span>${esc(nome)}</span><button type="button" data-ir="login">Sair</button></div>
+    </div></header>${menu}`;
+}
+
+function linha(l, admin){
+  const ab = estado.aberto===l.id, im = IMOVEIS[l.im];
+  const sub = admin ? `<span class="sub">${l.cor ? esc(l.cor) : 'A distribuir'}</span>` : '';
+  let det = '';
+  if (ab){
+    const zap = `https://wa.me/55${l.tel}`;
+    det = `<div class="det" id="det-${l.id}">
+      <dl class="dados">
+        <div><dt>WhatsApp</dt><dd class="num">${fone(l.tel)}</dd></div>
+        <div><dt>Imóvel de referência</dt><dd><a href="${im.u}" target="_blank" rel="noopener">${esc(im.n)} (cód. ${im.c})</a></dd></div>
+        <div><dt>Origem</dt><dd>${esc(l.origem)}</dd></div>
+        <div><dt>Entrada</dt><dd class="num">${l.d}</dd></div>
+      </dl>
+      <div class="acoes"><a class="btn btn-gold" href="${zap}" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Abrir WhatsApp</a></div>
+      ${l.st==='perdido' ? `<div class="motivo"><label for="mot-${l.id}">Motivo da perda</label><select class="campo" id="mot-${l.id}" data-motivo="${l.id}">${opts(MOTIVOS, l.motivo, 'Escolha o motivo')}</select></div>` : ''}
+      ${admin ? `<div class="motivo"><label for="cor-${l.id}">Corretor responsável</label><select class="campo" id="cor-${l.id}" data-atribuir="${l.id}">${opts(CORRETORES, l.cor, 'A distribuir')}</select></div>` : ''}
+      <div class="obs"><label for="obs-${l.id}">Observações</label>
+        <textarea class="campo" id="obs-${l.id}" maxlength="200" data-obs="${l.id}">${esc(l.obs)}</textarea>
+        <div class="pe"><span class="conta num" id="conta-${l.id}">${l.obs.length} de 200 caracteres</span><button type="button" class="btn btn-primary btn-small" data-salvar="${l.id}">Salvar observações</button></div>
+      </div>
+      ${admin ? `<div class="acoes"><button type="button" class="btn btn-ghost btn-small" data-editar="${l.id}">Editar dados</button><button type="button" class="btn btn-ghost btn-small btn-danger" data-excluir="${l.id}">Excluir lead</button></div>` : ''}
+    </div>`;
+  }
+  return `<li class="lead"><div class="linha">
+      <button type="button" class="abrir" aria-expanded="${ab}" aria-controls="det-${l.id}" data-abrir="${l.id}">
+        <span class="dt num">${l.d.slice(0,5)}</span><span class="nm">${esc(l.nome)}${sub}</span></button>
+      <span class="st" data-s="${l.st}"><select aria-label="Status de ${esc(l.nome)}" data-status="${l.id}">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${k===l.st?' selected':''}>${v}</option>`).join('')}</select></span>
+    </div>${det}</li>`;
+}
+
+function lista(leads, admin){
+  const conta = s => leads.filter(l => l.st===s).length;
+  let v = leads.filter(l => estado.filtro==='todos' ? true : estado.filtro==='distribuir' ? !l.cor : l.st===estado.filtro);
+  if (estado.busca) v = v.filter(l => (l.nome + l.tel).toLowerCase().includes(estado.busca.toLowerCase()));
+  if (admin && estado.cor) v = v.filter(l => l.cor===estado.cor);
+  const chip = (k, t, n, s) => `<button type="button" class="chip" data-filtro="${k}" aria-pressed="${estado.filtro===k}">${s?`<span class="ponto" style="--c:var(--s-${s})"></span>`:''}${t} <b class="num">${n}</b></button>`;
+  return `<div class="filtros">
+      ${chip('todos','Todos',leads.length)}
+      ${admin ? chip('distribuir','A distribuir',leads.filter(l=>!l.cor).length) : ''}
+      ${chip('novo','Novo',conta('novo'),'novo')}${chip('andamento','Em andamento',conta('andamento'),'and')}${chip('concluido','Concluído',conta('concluido'),'ok')}${chip('perdido','Perdido',conta('perdido'),'perd')}
+    </div>
+    <div class="busca"><input class="campo" id="busca" type="search" placeholder="Buscar por nome ou telefone" value="${esc(estado.busca)}" aria-label="Buscar por nome ou telefone">
+      ${admin ? `<select class="campo" id="fcor" aria-label="Filtrar por corretor">${opts(CORRETORES, estado.cor, 'Todos os corretores')}</select>` : ''}</div>
+    <ul class="lista"><li class="cab" aria-hidden="true"><span>Entrada</span><span>Nome</span><span>Status</span></li>
+      ${v.length ? v.map(l => linha(l, admin)).join('') : `<li class="vazio">Nenhum lead neste filtro.</li>`}</ul>`;
+}
+
+function telaCorretor(){
+  const meus = LEADS.filter(l => l.cor==='Ana Ribeiro');
+  return topo('Ana Ribeiro','corretor') + `<main><div class="wrap">
+    <div class="head"><div><h1>Meus leads</h1><p class="muted">Toque em um nome para ver o contato e as observações.</p></div></div>
+    ${lista(meus, false)}</div></main>`;
+}
+
+function formLead(){
+  return `<form class="form" id="f-lead" novalidate><h2>Novo lead</h2><div class="grade">
+      <div><label for="n-nome">Nome</label><input class="campo" id="n-nome" required></div>
+      <div><label for="n-tel">WhatsApp</label><input class="campo" id="n-tel" inputmode="tel" placeholder="DDD + número" required></div>
+      <div><label for="n-im">Imóvel de referência</label><select class="campo" id="n-im">${IMOVEIS.map((i,k)=>`<option value="${k}">${esc(i.n)} (cód. ${i.c})</option>`).join('')}</select></div>
+      <div><label for="n-or">Origem</label><select class="campo" id="n-or">${opts(ORIGENS)}</select></div>
+      <div><label for="n-cor">Corretor</label><select class="campo" id="n-cor">${opts(CORRETORES, '', 'A distribuir')}</select></div>
+    </div>
+    <p class="nota">A lista de imóveis vem dos imóveis publicados no site.</p>
+    <div class="acoes"><button class="btn btn-primary" type="submit">Salvar lead</button><button class="btn btn-ghost" type="button" data-fechar="novoLead">Cancelar</button></div></form>`;
+}
+
+function telaAdmin(){
+  return topo('Wanderson Lima','admin') + `<main><div class="wrap">
+    <div class="head"><div><h1>Leads</h1><p class="muted">Todos os leads da equipe. Os sem corretor ficam em A distribuir.</p></div>
+      <button type="button" class="btn btn-primary" data-abrirform="novoLead">Novo lead</button></div>
+    ${estado.novoLead ? formLead() : ''}${lista(LEADS, true)}</div></main>`;
+}
+
+function telaUsuarios(){
+  const form = estado.novoUsuario ? `<form class="form" id="f-user" novalidate><h2>Novo usuário</h2><div class="grade">
+      <div><label for="u-nome">Nome</label><input class="campo" id="u-nome" required></div>
+      <div><label for="u-login">Login</label><input class="campo" id="u-login" autocomplete="off" required></div>
+      <div><label for="u-senha">Senha inicial</label><input class="campo" id="u-senha" type="text" autocomplete="off" required></div>
+      <div><label for="u-papel">Perfil</label><select class="campo" id="u-papel"><option>Corretor</option><option>Admin</option></select></div>
+    </div><p class="nota">Só o admin define e redefine senhas. Passe o login e a senha ao corretor.</p>
+    <div class="acoes"><button class="btn btn-primary" type="submit">Criar usuário</button><button class="btn btn-ghost" type="button" data-fechar="novoUsuario">Cancelar</button></div></form>` : '';
+  return topo('Wanderson Lima','admin') + `<main><div class="wrap">
+    <div class="head"><div><h1>Usuários</h1><p class="muted">Quem pode entrar no sistema e o que cada um vê.</p></div>
+      <button type="button" class="btn btn-primary" data-abrirform="novoUsuario">Novo usuário</button></div>
+    ${form}<ul class="usuarios">${USUARIOS.map((u,i) => `<li class="${u.ativo?'':'inativo'}">
+      <div><span class="nm">${esc(u.nome)}</span><span class="tag${u.papel==='admin'?' adm':''}">${u.papel==='admin'?'Admin':'Corretor'}</span>${u.ativo?'':'<span class="tag">Desativado</span>'}
+        <div class="inf">Login: ${esc(u.login)} · Último acesso: ${u.acesso}${u.papel==='corretor' ? ` · ${LEADS.filter(l=>l.cor===u.nome).length} leads` : ''}</div></div>
+      <div class="acoes"><button type="button" class="btn btn-ghost btn-small" data-senha="${i}">Redefinir senha</button>
+        <button type="button" class="btn btn-ghost btn-small" data-ativo="${i}">${u.ativo?'Desativar':'Reativar'}</button>
+        ${u.papel==='corretor' ? `<button type="button" class="btn btn-ghost btn-small btn-danger" data-rmuser="${i}">Excluir</button>` : ''}</div></li>`).join('')}</ul>
+    </div></main>`;
+}
+
+function telaLogin(){
+  return `<div class="login"><div class="wrap"><div class="cx" style="margin:0 auto">
+    <a class="brand" href="#"><span class="mark"><svg><use href="#i-marca"/></svg></span><span class="t"><strong>Marcelo Osawa</strong><span>Imóveis</span></span></a>
+    <form id="f-login" novalidate><h1>Gestão de leads</h1>
+      <div><label for="l-user">Login</label><input id="l-user" autocomplete="username"></div>
+      <div><label for="l-pass">Senha</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+      <button class="btn btn-gold" type="submit">Entrar</button>
+      <p class="ajuda">Esqueceu a senha? Peça uma nova ao administrador.</p></form>
+  </div></div></div>`;
+}
+
+function render(){
+  const telas = {login:telaLogin, corretor:telaCorretor, admin:telaAdmin, usuarios:telaUsuarios};
+  $('#app').innerHTML = telas[estado.tela]();
+  document.querySelectorAll('.previa [data-tela]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tela===estado.tela));
+}
+function ir(t){ Object.assign(estado, {tela:t, aberto:null, filtro:'todos', busca:'', cor:'', novoLead:false, novoUsuario:false}); render(); }
+const lead = id => LEADS.find(l => l.id===Number(id));
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-tela]'); if (!t) return;
+  const d = t.dataset;
+  if (d.tela) return ir(d.tela);
+  if (d.ir) return ir(d.ir);
+  if (d.abrir){ estado.aberto = estado.aberto===Number(d.abrir) ? null : Number(d.abrir); return render(); }
+  if (d.filtro){ estado.filtro = d.filtro; estado.aberto = null; return render(); }
+  if (d.salvar){ lead(d.salvar).obs = $(`#obs-${d.salvar}`).value; return aviso('Observações salvas'); }
+  if (d.abrirform){ estado[d.abrirform] = true; return render(); }
+  if (d.fechar){ estado[d.fechar] = false; return render(); }
+  if (d.editar) return aviso('Na versão final, abre nome, telefone, imóvel e origem para edição');
+  if (d.excluir){ LEADS = LEADS.filter(l => l.id!==Number(d.excluir)); estado.aberto = null; render(); return aviso('Lead excluído'); }
+  if (d.senha) return aviso(`Na versão final, você digita a nova senha de ${USUARIOS[d.senha].nome}`);
+  if (d.ativo){ const u = USUARIOS[d.ativo]; u.ativo = !u.ativo; render(); return aviso(u.ativo ? 'Usuário reativado' : 'Usuário desativado'); }
+  if (d.rmuser){ const u = USUARIOS[d.rmuser]; LEADS.forEach(l => { if (l.cor===u.nome) l.cor=''; }); USUARIOS.splice(d.rmuser,1); render(); return aviso('Usuário excluído. Os leads dele voltaram para A distribuir'); }
+});
+document.addEventListener('change', e => {
+  const d = e.target.dataset;
+  if (d.status){ const l = lead(d.status); l.st = e.target.value; if (l.st==='perdido') estado.aberto = l.id; render(); return aviso(l.st==='perdido' ? 'Escolha o motivo da perda' : `Status: ${STATUS[l.st]}`); }
+  if (d.motivo){ lead(d.motivo).motivo = e.target.value; return aviso('Motivo salvo'); }
+  if (d.atribuir){ lead(d.atribuir).cor = e.target.value; render(); return aviso(e.target.value ? `Lead atribuído a ${e.target.value}` : 'Lead voltou para A distribuir'); }
+  if (e.target.id==='fcor'){ estado.cor = e.target.value; render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.dataset.obs) $(`#conta-${e.target.dataset.obs}`).textContent = `${e.target.value.length} de 200 caracteres`;
+  if (e.target.id==='busca'){ estado.busca = e.target.value; render(); const b=$('#busca'); b.focus(); b.setSelectionRange(b.value.length, b.value.length); }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id==='f-login') return ir('corretor');
+  if (e.target.id==='f-lead'){
+    const nome=$('#n-nome').value.trim(), tel=$('#n-tel').value.replace(/\D/g,'');
+    if (!nome || tel.length<10) return aviso('Preencha o nome e o WhatsApp com DDD');
+    LEADS.unshift({id:Date.now(), d:'10/11/2026', nome, tel, im:Number($('#n-im').value), origem:$('#n-or').value, st:'novo', cor:$('#n-cor').value, obs:''});
+    estado.novoLead=false; render(); return aviso('Lead salvo');
+  }
+  if (e.target.id==='f-user'){
+    const nome=$('#u-nome').value.trim(), login=$('#u-login').value.trim();
+    if (!nome || !login) return aviso('Preencha o nome e o login');
+    USUARIOS.push({nome, login, papel:$('#u-papel').value==='Admin'?'admin':'corretor', ativo:true, acesso:'nunca'});
+    estado.novoUsuario=false; render(); return aviso('Usuário criado');
+  }
+});
+render();
+</script>
