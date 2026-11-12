@@ -139,6 +139,13 @@ Objetivo: o tour mais realista possível com as fotos disponíveis, sem inventar
 - Pan e truck se somam: nunca trocar um pelo outro por padrão. Um Reel bom alterna pan amplo, truck e hero shot.
 - Enquanto houver créditos no Higgsfield, o Kling continua permitido nos ganchos. Critério para trocá-lo: o parallax empatar ou ganhar no mesmo checklist de frames.
 
+### Reel de referência: 2772043 (Rua Cacilda Becker, Jardim das Acácias), 12/11/2026
+O usuário o chamou de o melhor roteiro CapCut e o melhor vídeo até agora; usar como modelo de ritmo e de mistura de técnicas quando ele pedir "todos os recursos". Reel de 31,4 s, 7 cenas:
+- C01 gancho Kling (F04); C02, C04, C05 e C08 pans digitais amplos em fotos 4:3 (base 2560x1920, curso limitado, `faixas-pan.py` a 1920 px antes de renderizar); C03 travessia Flow entre duas fotos (F06→F08, só os 3,4 s úteis); C07 foto viva Flow na piscina.
+- A vista viva do Flow trocou a textura do céu e foi reprovada pelo inspetor: a cena virou pan digital (C08). Truck parallax reprovado por distorção de cadeira. Quando o Flow estragar o fundo, trocar por pan, não insistir.
+- Fotos 4:3: baixar `/img/2880x2160/` (o `3240x2160` recorta teto e piso) e semear o cache da landing.
+- Passou pelo `inspetor-clipes` e pelo `revisor-ficha-copy` antes da entrega. Pasta e documentos do imóvel servem de molde.
+
 ### Parallax 2.5D (sem IA generativa)
 Um mapa de profundidade da própria foto move uma câmera virtual alguns centímetros dentro do cômodo: o primeiro plano se desloca mais que o fundo. Só reaproveita pixels da foto, por isso não aparece móvel, viga ou janela inventada. Saída: 1080×1920, 30 fps, sem áudio.
 
@@ -334,7 +341,7 @@ Playbook atualizado em 04/11/2026; modelo cartão **validado** com conta que nã
 
 ### Checklist por imóvel
 1. Landing no ar e conferida (preço igual ao da legenda), com `og:image`, `og:title` e `og:description` preenchidos: o cartão usa os três.
-2. Escolher a palavra: bairro ou rua, única entre os imóveis ativos. `{PALAVRA}` com acento e `{PALAVRA_SEM_ACENTO}`. Evitar palavra comum que aparece em comentário solto (ex.: "vista" dispara em "que vista linda").
+2. Escolher a palavra: bairro ou rua, única entre os imóveis ativos. `{PALAVRA}` com acento e `{PALAVRA_SEM_ACENTO}`. Evitar palavra comum que aparece em comentário solto (ex.: "vista" dispara em "que vista linda"). Ao entregar o pacote, propor a palavra ao usuário (ele pode trocar: no 2772043 recusou CACILDA e BROOK e escolheu BECKER); nome de rua é o padrão, o do condomínio é alternativa.
 3. Publicar o Reel com o CTA de comentário (seção Copywriting) e fixar o comentário.
 4. Rodar o prompt abaixo na Zernio (cria e ativa) e conferir o ID do post antes de criar.
 5. Com a automação ativa, testar com **uma conta que não segue o perfil**: o cartão chegou (foto, título, botão), o botão abre a landing certa com UTM, a resposta pública saiu, a mensagem caiu na aba "Pedidos" e não houve disparo repetido.
