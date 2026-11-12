@@ -9,6 +9,7 @@ const STATUS = ['novo' => 'Novo', 'andamento' => 'Em andamento', 'concluido' => 
 const MOTIVOS = ['Sem retorno', 'Comprou outro imóvel', 'Fora do orçamento', 'Desistiu', 'Outro'];
 const ORIGENS = ['WhatsApp Business', 'Direct do Instagram', 'Formulário do site', 'Outro'];
 const OBS_MAX = 200;
+const SENHA_MIN = 6;              // tamanho mínimo da senha (decisão do administrador em 11/11/2026)
 const SESSAO_OCIOSA = 43200;      // 12 horas sem uso encerram a sessão
 const LOGIN_JANELA = 900;         // 15 minutos
 const LOGIN_MAX = 8;              // tentativas erradas na janela, por login
