@@ -2,7 +2,7 @@
 /* Ações (pedidos POST). Cada uma confere a permissão antes de tocar no banco. */
 declare(strict_types=1);
 
-function senha_valida(string $s): bool { return mb_strlen($s) >= 8 && mb_strlen($s) <= 100; }
+function senha_valida(string $s): bool { return mb_strlen($s) >= SENHA_MIN && mb_strlen($s) <= 100; }
 function login_valido(string $s): bool { return (bool)preg_match('/^[a-z0-9._-]{3,60}$/', $s); }
 
 /* ---------- Instalação: só funciona enquanto não existe nenhum usuário, e exige a chave do arquivo de configuração ---------- */
@@ -14,7 +14,7 @@ function acao_instalar(): void
     $nome = trim((string)($_POST['nome'] ?? ''));
     $login = mb_strtolower(trim((string)($_POST['login'] ?? '')));
     $senha = (string)($_POST['senha'] ?? '');
-    if ($nome === '' || !login_valido($login) || !senha_valida($senha)) falha(422, 'Preencha o nome, um login (letras minúsculas, números, ponto ou hífen) e uma senha de pelo menos 8 caracteres.');
+    if ($nome === '' || !login_valido($login) || !senha_valida($senha)) falha(422, 'Preencha o nome, um login (letras minúsculas, números, ponto ou hífen) e uma senha de pelo menos ' . SENHA_MIN . ' caracteres.');
     require_once __DIR__ . '/schema.php';
     criar_tabelas();
     q("INSERT INTO usuarios (nome, login, senha_hash, papel, ativo, criado_em) VALUES (?,?,?,'admin',1,?)",
@@ -221,7 +221,7 @@ function acao_usuario_criar(): void
     $erro = '';
     if ($nome === '' || mb_strlen($nome) > 120) $erro = 'Informe o nome.';
     elseif (!login_valido($login)) $erro = 'O login usa de 3 a 60 letras minúsculas, números, ponto, hífen ou sublinhado.';
-    elseif (!senha_valida($senha)) $erro = 'A senha precisa de pelo menos 8 caracteres.';
+    elseif (!senha_valida($senha)) $erro = 'A senha precisa de pelo menos ' . SENHA_MIN . ' caracteres.';
     elseif (um('SELECT id FROM usuarios WHERE login = ?', [$login])) $erro = 'Já existe um usuário com esse login.';
     if ($erro !== '') { aviso($erro, 'erro'); redirecionar(url('usuarios')); }
     q('INSERT INTO usuarios (nome, login, senha_hash, papel, ativo, criado_em) VALUES (?,?,?,?,1,?)',
@@ -234,7 +234,7 @@ function acao_usuario_senha(): void
     exigir_admin();
     $u = usuario_alvo();
     $senha = (string)($_POST['senha'] ?? '');
-    if (!senha_valida($senha)) { aviso('A senha precisa de pelo menos 8 caracteres.', 'erro'); redirecionar(url('usuarios')); }
+    if (!senha_valida($senha)) { aviso('A senha precisa de pelo menos ' . SENHA_MIN . ' caracteres.', 'erro'); redirecionar(url('usuarios')); }
     q('UPDATE usuarios SET senha_hash = ? WHERE id = ?', [password_hash($senha, PASSWORD_DEFAULT), $u['id']]);
     aviso('Senha de ' . $u['nome'] . ' redefinida.');
     redirecionar(url('usuarios'));

@@ -69,7 +69,7 @@ function tela_instalar(): void
         . '<div><label for="i-chave">Chave de instalação</label><input id="i-chave" name="chave" type="password" autocomplete="off" required></div>'
         . '<div><label for="i-nome">Nome do primeiro administrador</label><input id="i-nome" name="nome" required></div>'
         . '<div><label for="i-login">Login</label><input id="i-login" name="login" autocapitalize="none" spellcheck="false" required></div>'
-        . '<div><label for="i-senha">Senha (8 caracteres ou mais)</label><input id="i-senha" name="senha" type="password" autocomplete="new-password" required></div>'
+        . '<div><label for="i-senha">Senha (' . SENHA_MIN . ' caracteres ou mais)</label><input id="i-senha" name="senha" type="password" autocomplete="new-password" required></div>'
         . '<button class="btn btn-gold" type="submit">Instalar</button>'
         . '<p class="ajuda">A chave está no arquivo de configuração do servidor.</p></form></div></div></div>';
     pagina('Instalação', $corpo, 'p-login');
@@ -240,7 +240,7 @@ function tela_usuarios(array $eu): void
         . '<details class="form"><summary>Novo usuário</summary><form method="post" action="' . e(url('usuario_criar')) . '" autocomplete="off">' . campo_csrf() . '<div class="grade">'
         . '<div><label for="u-nome">Nome</label><input class="campo" id="u-nome" name="nome" maxlength="120" required></div>'
         . '<div><label for="u-login">Login</label><input class="campo" id="u-login" name="login" autocapitalize="none" spellcheck="false" required></div>'
-        . '<div><label for="u-senha">Senha inicial (8 caracteres ou mais)</label><input class="campo" id="u-senha" name="senha" type="text" minlength="8" autocomplete="off" required></div>'
+        . '<div><label for="u-senha">Senha inicial (' . SENHA_MIN . ' caracteres ou mais)</label><input class="campo" id="u-senha" name="senha" type="text" minlength="' . SENHA_MIN . '" autocomplete="off" required></div>'
         . '<div><label for="u-papel">Perfil</label><select class="campo" id="u-papel" name="papel"><option value="corretor">Corretor</option><option value="admin">Admin</option></select></div>'
         . '</div><p class="nota">Só o admin define e redefine senhas. Passe o login e a senha ao corretor.</p>'
         . '<div class="acoes"><button class="btn btn-primary" type="submit">Criar usuário</button></div></form></details><ul class="usuarios">';
@@ -253,7 +253,7 @@ function tela_usuarios(array $eu): void
             . '<div class="inf">Login: ' . e($x['login']) . ' · Último acesso: ' . ($x['ultimo_acesso'] ? e(date('d/m/Y H:i', strtotime($x['ultimo_acesso']))) : 'nunca')
             . ($x['papel'] === 'corretor' ? ' · ' . (int)$x['n'] . ' leads' : '') . '</div></div><div class="acoes">'
             . '<details class="senha"><summary class="btn btn-ghost btn-small">Redefinir senha</summary><form method="post" action="' . e(url('usuario_senha')) . '" autocomplete="off">' . $oculto
-            . '<label for="s-' . $id . '">Nova senha de ' . e($x['nome']) . '</label><input class="campo" id="s-' . $id . '" name="senha" type="text" minlength="8" autocomplete="off" required>'
+            . '<label for="s-' . $id . '">Nova senha de ' . e($x['nome']) . '</label><input class="campo" id="s-' . $id . '" name="senha" type="text" minlength="' . SENHA_MIN . '" autocomplete="off" required>'
             . '<button class="btn btn-primary btn-small" type="submit">Salvar senha</button></form></details>';
         if (!$eu_mesmo) {
             $h .= '<form method="post" action="' . e(url('usuario_ativo')) . '">' . $oculto . '<button class="btn btn-ghost btn-small" type="submit">' . ((int)$x['ativo'] ? 'Desativar' : 'Reativar') . '</button></form>'
