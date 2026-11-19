@@ -225,3 +225,32 @@ input[type=file].campo{padding:9px 10px}
 .busca,.busca.dupla{grid-template-columns:minmax(0,1fr)}
 .busca.dupla select{grid-column:auto;grid-row:auto}
 @media (min-width:640px){ .busca{grid-template-columns:minmax(0,260px)} .busca.dupla{grid-template-columns:minmax(0,260px) minmax(0,220px)} }
+
+/* ===== Filtro da lista: caixas largas o bastante para o texto (19/11/2026) ===== */
+.busca select{text-overflow:ellipsis;white-space:nowrap}
+@media (min-width:640px){ .busca{grid-template-columns:minmax(0,280px)} .busca.dupla{grid-template-columns:minmax(0,280px) minmax(0,280px)} }
+
+/* ===== Gerente (somente leitura) ===== */
+.obs .rotulo{display:block;font-size:.86rem;font-weight:500;margin-bottom:5px}
+.obs-lida{white-space:pre-line}
+
+/* ===== Aba Exportar ===== */
+.exportar .datas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.exportar .datas label,.exportar .grade label{display:block;font-size:.86rem;font-weight:500;margin-bottom:5px}
+.marcas{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px}
+.marcas legend{font-size:.86rem;font-weight:500;margin-bottom:8px;padding:0;width:100%}
+.marca{display:inline-flex;align-items:center;gap:8px;font-size:.94rem;cursor:pointer;min-height:32px}
+.marca input{width:18px;height:18px;accent-color:var(--gold-deep);margin:0}
+.contagem{margin:0;font-size:.94rem;color:var(--muted)}
+.contagem b{color:var(--ink);font-size:1.15rem;font-weight:600}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.resumo h2{font-size:1rem}
+.tabela{overflow-x:auto;margin:0 -2px}
+.tabela table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:520px}
+.tabela th{text-align:left;font-weight:500;color:var(--muted);font-size:.8rem;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tabela td{padding:9px 10px;border-bottom:1px solid var(--line)}
+.tabela td.num,.tabela th:not(:first-child){text-align:right}
+.tabela tr:last-child td{border-bottom:0}
+@media (max-width:639px){ .exportar .datas{grid-template-columns:1fr} }
+.form .marca{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:.94rem;font-weight:400}
+.form .marca .ponto{margin-left:2px}

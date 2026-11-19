@@ -217,7 +217,8 @@ function acao_usuario_criar(): void
     $nome = trim((string)($_POST['nome'] ?? ''));
     $login = mb_strtolower(trim((string)($_POST['login'] ?? '')));
     $senha = (string)($_POST['senha'] ?? '');
-    $papel = ($_POST['papel'] ?? '') === 'admin' ? 'admin' : 'corretor';
+    $papel = (string)($_POST['papel'] ?? '');
+    if (!isset(PAPEIS[$papel])) $papel = 'corretor';
     $erro = '';
     if ($nome === '' || mb_strlen($nome) > 120) $erro = 'Informe o nome.';
     elseif (!login_valido($login)) $erro = 'O login usa de 3 a 60 letras minúsculas, números, ponto, hífen ou sublinhado.';
@@ -348,20 +349,4 @@ function acao_importar(): void
     redirecionar(url('importar'));
 }
 
-/* ---------- Exportação (CSV com todos os leads não excluídos) ---------- */
-function exportar_csv(): void
-{
-    exigir_admin();
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="leads-' . date('Y-m-d') . '.csv"');
-    $o = fopen('php://output', 'w');
-    fwrite($o, "\xEF\xBB\xBF");
-    $seguro = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v;   // impede fórmula ao abrir na planilha
-    fputcsv($o, ['Recebido em', 'Status', 'Motivo da perda', 'Corretor', 'Nome', 'WhatsApp', 'Código do imóvel', 'Imóvel', 'Link do imóvel', 'Origem', 'Observações'], ',', '"', '');
-    $rs = q('SELECT l.*, u.nome AS corretor FROM leads l LEFT JOIN usuarios u ON u.id = l.corretor_id WHERE l.excluido_em IS NULL ORDER BY l.entrada DESC, l.id DESC');
-    foreach ($rs as $l) {
-        fputcsv($o, array_map($seguro, [data_br($l['entrada']), STATUS[$l['status']] ?? $l['status'], $l['motivo_perda'], $l['corretor'], $l['nome'],
-            telefone_fmt($l['telefone']), $l['imovel_codigo'], $l['imovel_titulo'], $l['imovel_url'], $l['origem'], $l['observacoes']]), ',', '"', '');
-    }
-    exit;
-}
+/* A exportação fica em inc/exportar.php (aba Exportar). */

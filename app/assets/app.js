@@ -117,6 +117,20 @@
     conferir();
   }
 
+  /* Aba Exportar: datas só aparecem em "Escolher datas"; mudar um filtro atualiza a contagem. */
+  var per = document.querySelector('[data-periodo]');
+  if (per) {
+    var datas = document.querySelector('[data-datas]');
+    var formX = per.form, btConta = formX.querySelector('button[value="exportar"]');
+    var verDatas = function () { datas.hidden = per.value !== 'datas'; };
+    per.addEventListener('change', verDatas);
+    verDatas();
+    formX.addEventListener('change', function (e) {
+      if (e.target.type === 'date' || (e.target === per && per.value === 'datas')) return;
+      if (formX.requestSubmit) formX.requestSubmit(btConta); else btConta.click();
+    });
+  }
+
   /* Exclusões pedem um segundo toque no mesmo botão. */
   document.addEventListener('submit', function (e) {
     var f = e.target;
