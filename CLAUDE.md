@@ -4,6 +4,10 @@ Todas as regras do trabalho (Reel, roteiro, copy, IPTU, landing page, página in
 Hostinger, imóvel vendido) ficam numa fonte única: `skills/reels-imoveis-alto-padrao/SKILL.md`, neste
 repositório. É o único arquivo que se edita.
 
+Exceção: o CRM de leads (`app/`, servido em marceloosawaimoveis.com.br/app) é outro sistema e tem a
+própria skill, `skills/publicar-crm/SKILL.md` (link simbólico em `~/.claude/skills/publicar-crm`). Toda
+mudança no CRM é publicada pelo comando `/publicar-crm`, que usa `scripts/crm/publicar.sh` e `scripts/crm/testes.sh`.
+
 Onde a skill é lida:
 - **Claude Code no Mac:** `~/.claude/skills/reels-imoveis-alto-padrao` é um link simbólico para a pasta
   `skills/reels-imoveis-alto-padrao/` deste repositório. Não existe segunda cópia no disco.
