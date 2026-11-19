@@ -69,6 +69,10 @@ switch ($rota) {
         require __DIR__ . '/inc/exportar.php';
         exportar_arquivo(exigir_visao_geral());
         break;
+    case 'registros':
+        require __DIR__ . '/inc/registros.php';
+        tela_registros(exigir_admin());   // só os administradores: o gerente e o corretor recebem 403
+        break;
     default:
         exigir_login();
         falha(404, 'Página não encontrada.');

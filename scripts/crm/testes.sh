@@ -52,6 +52,19 @@ ck "instalar de novo é recusado" "$(post x instalar -d chave=chave-local-de-tes
 post adm entrar -d login=adm -d senha=errada1 >/dev/null; get adm "r=leads" >/dev/null; hasnt "senha errada não entra" 'Novo lead'
 ck "login do admin" "$(post adm entrar -d login=adm -d senha=$PA)" 303
 get adm "r=leads" >/dev/null; has "admin vê Novo lead" 'Novo lead'; has "admin tem a aba Exportar" 'r=exportar'; hasnt "link antigo de CSV saiu da lista" 'Baixar todos os leads em CSV'
+has "admin tem a aba Registros" 'r=registros'
+
+echo "== registro de acessos"
+ck "entrada do admin registrada" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='entrou' AND login='adm'")" 1
+ck "senha errada registrada com o motivo" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='senha_errada' AND login='adm'")" 1
+ck "IP registrado" "$(sql "SELECT ip FROM log_acessos WHERE resultado='entrou' LIMIT 1")" 127.0.0.1
+post x entrar --data-urlencode 'login=<script>naoexiste</script>' -d senha=qualquer1 >/dev/null
+ck "login inexistente registrado" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='login_inexistente'")" 1
+sql "INSERT INTO log_acessos (quando, login, resultado) VALUES ('2020-01-01 00:00:00', 'antigo', 'entrou')"
+sql "INSERT INTO log_exportacoes (quando, login, filtro) VALUES ('2020-01-01 00:00:00', 'antigo', 'x')"
+post z entrar -A 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' -d login=adm -d senha=$PA >/dev/null
+ck "aparelho registrado em palavras" "$(sql "SELECT aparelho FROM log_acessos ORDER BY id DESC LIMIT 1")" 'iPhone · Safari'
+ck "registros com mais de 12 meses são apagados" "$(sql "SELECT (SELECT count(*) FROM log_acessos WHERE login='antigo') + (SELECT count(*) FROM log_exportacoes WHERE login='antigo')")" 0
 
 echo "== usuários"
 post adm usuario_criar --data-urlencode 'nome=Ana Teste' -d login=ana -d senha=$PC -d papel=corretor >/dev/null
@@ -80,7 +93,8 @@ L1=$(sql "SELECT id FROM leads WHERE nome='Lead Da Ana'"); L2=$(sql "SELECT id F
 
 echo "== corretor"
 ck "login da corretora" "$(post ana entrar -d login=ana -d senha=$PC)" 303
-get ana "r=leads" >/dev/null; has "vê o próprio lead" 'Lead Da Ana'; hasnt "não vê lead de outro" 'Lead Do Bruno'; hasnt "não vê lead sem dono" 'Lead Sem Dono'; hasnt "não tem Novo lead" 'Novo lead'; hasnt "não tem a aba Exportar" 'r=exportar'
+get ana "r=leads" >/dev/null; has "vê o próprio lead" 'Lead Da Ana'; hasnt "não vê lead de outro" 'Lead Do Bruno'; hasnt "não vê lead sem dono" 'Lead Sem Dono'; hasnt "não tem Novo lead" 'Novo lead'; hasnt "não tem a aba Exportar" 'r=exportar'; hasnt "não tem a aba Registros" 'r=registros'
+ck "não abre Registros" "$(get ana r=registros)" 403
 ck "muda o status do próprio lead" "$(postj ana lead_status -d id=$L1 -d valor=andamento)" 200
 ck "não muda lead de outro" "$(postj ana lead_status -d id=$L2 -d valor=perdido)" 404
 ck "não grava obs em lead sem dono" "$(postj ana lead_obs -d id=$L3 -d valor=oi)" 404
@@ -109,8 +123,9 @@ get ger "r=leads&f=todos" >/dev/null
 has "vê lead da Ana" 'Lead Da Ana'; has "vê lead do Bruno" 'Lead Do Bruno'; has "vê lead sem dono" 'Lead Sem Dono'
 hasnt "não tem seletor de status nem de corretor" 'data-acao='; hasnt "não tem Novo lead" 'Novo lead'; hasnt "não tem botão de WhatsApp" 'Abrir WhatsApp'
 hasnt "não tem Salvar observações" 'Salvar observações'; hasnt "não tem Editar dados" 'Editar dados'; hasnt "não tem Excluir lead" 'Excluir lead'
-has "cabeçalho indica Gerente" '· Gerente'; has "menu tem Exportar" 'r=exportar'; hasnt "menu não tem Usuários" 'r=usuarios'; hasnt "menu não tem Importar" 'r=importar'
+has "cabeçalho indica Gerente" '· Gerente'; has "menu tem Exportar" 'r=exportar'; hasnt "menu não tem Usuários" 'r=usuarios'; hasnt "menu não tem Importar" 'r=importar'; hasnt "menu não tem Registros" 'r=registros'
 has "vê o motivo da perda" 'Sem retorno'; has "vê as observações em texto" 'obs-lida'
+ck "gerente não abre Registros" "$(get ger r=registros)" 403
 for a in lead_status lead_motivo lead_obs lead_atribuir; do ck "gerente não executa $a" "$(postj ger $a -d id=$L1 -d valor=novo)" 403; done
 for a in lead_salvar lead_excluir lead_restaurar lead_apagar usuario_criar usuario_senha usuario_ativo usuario_excluir importar; do ck "gerente não executa $a" "$(post ger $a -d id=$L1 -d nome=X -d login=xyz -d senha=$PG -d telefone=11911111111)" 403; done
 ck "status continua o da corretora" "$(sql "SELECT status FROM leads WHERE id=$L1")" perdido
@@ -140,6 +155,24 @@ head -c 300 "$J/arq" | grep -q 'Recebido em' && ok "csv tem cabeçalho" || nok "
 grep -q "'=HYPERLINK" "$J/arq" && ok "csv neutraliza fórmula" || nok "csv deixou fórmula passar"
 ck "csv tem cabeçalho + 5 linhas" "$(python3 -c "import csv,sys; print(len(list(csv.reader(open(sys.argv[1], encoding='utf-8-sig')))))" "$J/arq")" 6
 
+echo "== registro de exportações"
+ck "cada planilha baixada gera um registro; ver a contagem não (gerente 1 + admin 6)" "$(sql 'SELECT count(*) FROM log_exportacoes')" 7
+ck "o registro tem só quem, quando e o filtro" "$(sql "SELECT group_concat(name, ',') FROM pragma_table_info('log_exportacoes')")" 'id,quando,usuario_id,login,filtro'
+ck "filtro só Perdido, em palavras" "$(sql "SELECT filtro FROM log_exportacoes WHERE filtro LIKE '%Status: Perdido %'")" 'Período: Todo o período · Status: Perdido · Corretor: todos · Origem: todas · Excluídos: não'
+ck "filtro A distribuir em aberto" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Status: Novo, Em andamento · Corretor: A distribuir%'")" 1
+ck "filtro por corretor guarda o nome" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Corretor: Bruno Teste%'")" 1
+ck "filtro Este mês guarda as datas" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE 'Período: Este mês (01/%'")" 1
+ck "exportação do gerente fica no nome dele" "$(sql "SELECT count(*) FROM log_exportacoes x JOIN usuarios u ON u.id = x.usuario_id WHERE u.login = 'gerente.teste'")" 1
+ck "nenhum dado de lead no registro" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Lead%' OR filtro LIKE '%9000%' OR filtro LIKE '%HYPERLINK%'")" 0
+
+echo "== aba Registros (admin)"
+ck "admin abre Registros" "$(get adm r=registros)" 200
+has "mostra as entradas" '>Entrou<'; has "mostra a senha errada" '>Senha errada<'; has "mostra o aparelho" 'iPhone · Safari'
+hasnt "login digitado é neutralizado" '<script>naoexiste'
+get adm "r=registros&res=recusadas" >/dev/null; hasnt "filtro Só tentativas recusadas esconde as entradas" '>Entrou<'; has "e mostra as recusadas" 'Login não existe'
+get adm "r=registros&t=exportacoes" >/dev/null; has "aba Exportações mostra o filtro usado" 'Status: Perdido'; has "aba Exportações mostra quem baixou" 'Gerente Teste'
+ck "sem login, Registros manda para o login" "$(get sem r=registros)" 303
+
 echo "== exclusão e usuários"
 ck "admin exclui o lead sem dono" "$(post adm lead_excluir -d id=$L3)" 303
 get ger "r=leads&f=excluidos" >/dev/null; has "gerente vê a lixeira" 'Lead Sem Dono'; hasnt "gerente não tem Restaurar" 'Restaurar lead'
@@ -148,6 +181,8 @@ ck "exclusão definitiva pelo admin" "$(post adm lead_apagar -d id=$L3)" 303
 ck "lead apagado sumiu do banco" "$(sql "SELECT count(*) FROM leads WHERE id=$L3")" 0
 post adm usuario_ativo -d id=$ANA >/dev/null
 ck "corretora desativada perde o acesso na hora" "$(get ana r=leads)" 303
+post ana2 entrar -d login=ana -d senha=$PC >/dev/null
+ck "tentativa de usuário desativado registrada" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='desativado' AND login='ana'")" 1
 ck "admin não desativa a si mesmo" "$(post adm usuario_ativo -d id=1)" 303; ck "admin continua ativo" "$(sql 'SELECT ativo FROM usuarios WHERE id=1')" 1
 post adm usuario_excluir -d id=$BRU >/dev/null
 ck "lead do corretor excluído volta para A distribuir" "$(sql "SELECT IFNULL(corretor_id,'nulo') FROM leads WHERE id=$L2")" nulo
@@ -165,8 +200,18 @@ perl -pi -e "s/visto\|i:\d+;/visto|i:$(( $(date +%s) - 23*3600 ));/" "$F"; ck "2
 perl -pi -e "s/visto\|i:\d+;/visto|i:$(( $(date +%s) - 25*3600 ));/" "$F"; ck "25 h sem uso pede login" "$(get adm r=leads)" 303
 for i in 1 2 3 4 5 6 7 8 9; do post y entrar -d login=adm -d senha=errada$i >/dev/null; done
 get y r=login >/dev/null; has "bloqueia depois de 8 senhas erradas" 'Muitas tentativas'
+post y entrar -d login=adm -d senha=errada10 >/dev/null
+ck "bloqueio registrado uma vez só" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='bloqueado'")" 1
+post ger sair >/dev/null
+ck "saída registrada" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='saiu' AND login='gerente.teste'")" 1
 curl -s -D "$J/h" -o /dev/null "$B/?r=login"; grep -qi 'x-robots-tag: noindex' "$J/h" && ok "página fora do Google" || nok "sem noindex"
 grep -qi "content-security-policy" "$J/h" && ok "política de segurança de conteúdo" || nok "sem CSP"
+
+echo "== migração de um banco sem as tabelas de registro"
+sql "DROP TABLE log_acessos; DROP TABLE log_exportacoes"
+MIG='require "app/inc/bootstrap.php"; require "app/inc/schema.php"; echo implode("; ", migrar()) ?: "nada a fazer";'
+ck "migrar() cria as tabelas que faltam" "$(php -r "$MIG")" 'tabela nova: log_acessos; tabela nova: log_exportacoes'
+ck "migrar() de novo não faz nada" "$(php -r "$MIG")" 'nada a fazer'
 
 echo; echo "passaram: $OK · falharam: $FALHA"
 [ "$FALHA" -eq 0 ]

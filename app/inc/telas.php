@@ -33,7 +33,7 @@ function topo(array $u, string $atual): string
 {
     $menu = '';
     if (ve_tudo($u)) {
-        $itens = $u['papel'] === 'admin' ? ['leads' => 'Leads', 'usuarios' => 'Usuários', 'importar' => 'Importar', 'exportar' => 'Exportar'] : ['leads' => 'Leads', 'exportar' => 'Exportar'];
+        $itens = $u['papel'] === 'admin' ? ['leads' => 'Leads', 'usuarios' => 'Usuários', 'importar' => 'Importar', 'exportar' => 'Exportar', 'registros' => 'Registros'] : ['leads' => 'Leads', 'exportar' => 'Exportar'];
         $menu = '<nav class="menu" aria-label="Seções"><div class="wrap">';
         foreach ($itens as $r => $t) $menu .= '<a href="' . e(url($r)) . '"' . ($r === $atual ? ' aria-current="page"' : '') . '>' . $t . '</a>';
         $menu .= '</div></nav>';
