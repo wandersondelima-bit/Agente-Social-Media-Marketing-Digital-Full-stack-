@@ -32,14 +32,14 @@ function pagina(string $titulo, string $corpo, string $classe = ''): void
 function topo(array $u, string $atual): string
 {
     $menu = '';
-    if ($u['papel'] === 'admin') {
-        $itens = ['leads' => 'Leads', 'usuarios' => 'Usuários', 'importar' => 'Importar'];
+    if (ve_tudo($u)) {
+        $itens = $u['papel'] === 'admin' ? ['leads' => 'Leads', 'usuarios' => 'Usuários', 'importar' => 'Importar', 'exportar' => 'Exportar'] : ['leads' => 'Leads', 'exportar' => 'Exportar'];
         $menu = '<nav class="menu" aria-label="Seções"><div class="wrap">';
         foreach ($itens as $r => $t) $menu .= '<a href="' . e(url($r)) . '"' . ($r === $atual ? ' aria-current="page"' : '') . '>' . $t . '</a>';
         $menu .= '</div></nav>';
     }
     return '<header class="top"><div class="wrap"><a class="brand" href="' . e(url('leads')) . '" title="Lista de leads">' . MARCA . '</a>'
-        . '<form class="who" method="post" action="' . e(url('sair')) . '">' . campo_csrf() . '<span>' . e($u['nome']) . '</span><button type="submit">Sair</button></form>'
+        . '<form class="who" method="post" action="' . e(url('sair')) . '">' . campo_csrf() . '<span>' . e($u['nome']) . (so_leitura($u) ? ' · Gerente' : '') . '</span><button type="submit">Sair</button></form>'
         . '</div></header>' . $menu;
 }
 
@@ -86,14 +86,18 @@ function opcoes(array $lista, $sel, ?string $vazio = null): string
     return $h;
 }
 
-function linha_lead(array $l, bool $adm, array $cors, bool $lixeira): string
+function linha_lead(array $l, string $modo, array $cors, bool $lixeira): string
 {
     $id = (int)$l['id'];
-    $sub = $adm ? '<span class="sub" data-cor>' . e($l['corretor'] ?? '' ?: 'A distribuir') . '</span>' : '';
+    $adm = $modo === 'admin';
+    $leitura = $modo === 'gerente' || $lixeira;      // gerente nunca altera; na lixeira ninguém altera o lead
+    $geral = $modo !== 'corretor';
+    $cor_nome = (string)($l['corretor'] ?? '') !== '' ? (string)$l['corretor'] : 'A distribuir';
+    $sub = $geral ? '<span class="sub" data-cor>' . e($cor_nome) . '</span>' : '';
     $h = '<li class="lead" data-id="' . $id . '"><div class="linha">'
         . '<button type="button" class="abrir" aria-expanded="false" aria-controls="det-' . $id . '">'
         . '<span class="dt num">' . e(substr(data_br($l['entrada']), 0, 5)) . '</span><span class="nm"><span class="n1">' . e($l['nome']) . '</span>' . $sub . '</span></button>';
-    if ($lixeira) {
+    if ($leitura) {
         $h .= '<span class="st fixo" data-s="' . e($l['status']) . '"><span>' . e(STATUS[$l['status']] ?? '') . '</span></span>';
     } else {
         $h .= '<span class="st" data-s="' . e($l['status']) . '"><select aria-label="Status de ' . e($l['nome']) . '" data-acao="lead_status">' . opcoes(STATUS, $l['status']) . '</select></span>';
@@ -105,14 +109,25 @@ function linha_lead(array $l, bool $adm, array $cors, bool $lixeira): string
     if ($l['imovel_url']) $h .= '<a href="' . e($l['imovel_url']) . '" target="_blank" rel="noopener">' . e($rot) . '</a>';
     else $h .= $rot !== '' ? e($rot) : '<span class="muted">Não informado</span>';
     $h .= '</dd></div><div><dt>Origem</dt><dd>' . e($l['origem']) . ($l['interesse'] ? ' · ' . e($l['interesse']) : '') . '</dd></div>'
-        . '<div><dt>Entrada</dt><dd class="num">' . e(data_br($l['entrada'])) . '</dd></div></dl>'
-        . '<div class="acoes"><a class="btn btn-gold" href="https://wa.me/55' . e($l['telefone']) . '" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Abrir WhatsApp</a></div>';
-    if ($lixeira) {
-        $h .= ($l['observacoes'] !== '' ? '<p class="obs-lida">' . nl2br(e($l['observacoes'])) . '</p>' : '')
-            . '<form method="post" action="' . e(url('lead_restaurar')) . '" class="acoes">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '"><button class="btn btn-primary btn-small" type="submit">Restaurar lead</button></form>'
-            . '<form method="post" action="' . e(url('lead_apagar')) . '" class="acoes confirma">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">'
-            . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar: apagar para sempre">Excluir definitivamente</button></form>'
-            . '<p class="dica">Excluir definitivamente apaga o lead e o histórico dele do banco. Não dá para desfazer.</p>';
+        . '<div><dt>Entrada</dt><dd class="num">' . e(data_br($l['entrada'])) . '</dd></div>';
+    if ($geral && $leitura) {
+        $h .= '<div><dt>Corretor</dt><dd>' . e($cor_nome) . '</dd></div>'
+            . '<div><dt>Última atualização</dt><dd class="num">' . e(data_br($l['atualizado_em'])) . '</dd></div>';
+        if ($l['status'] === 'perdido') $h .= '<div><dt>Motivo da perda</dt><dd>' . ($l['motivo_perda'] ? e($l['motivo_perda']) : '<span class="muted">Não informado</span>') . '</dd></div>';
+    }
+    $h .= '</dl>';
+    if ($modo !== 'gerente') {
+        $h .= '<div class="acoes"><a class="btn btn-gold" href="https://wa.me/55' . e($l['telefone']) . '" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Abrir WhatsApp</a></div>';
+    }
+    if ($leitura) {
+        $h .= '<div class="obs"><span class="rotulo">Observações</span>'
+            . ($l['observacoes'] !== '' ? '<p class="obs-lida">' . nl2br(e($l['observacoes'])) . '</p>' : '<p class="obs-lida muted">Sem observações.</p>') . '</div>';
+        if ($lixeira && $adm) {
+            $h .= '<form method="post" action="' . e(url('lead_restaurar')) . '" class="acoes">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '"><button class="btn btn-primary btn-small" type="submit">Restaurar lead</button></form>'
+                . '<form method="post" action="' . e(url('lead_apagar')) . '" class="acoes confirma">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">'
+                . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar: apagar para sempre">Excluir definitivamente</button></form>'
+                . '<p class="dica">Excluir definitivamente apaga o lead e o histórico dele do banco. Não dá para desfazer.</p>';
+        }
         return $h . '</div></li>';
     }
     $h .= '<div class="motivo" data-motivo' . ($l['status'] === 'perdido' ? '' : ' hidden') . '><label for="mot-' . $id . '">Motivo da perda</label>'
@@ -138,9 +153,11 @@ function linha_lead(array $l, bool $adm, array $cors, bool $lixeira): string
 function tela_leads(array $u): void
 {
     $adm = $u['papel'] === 'admin';
+    $geral = ve_tudo($u);                      // admin e gerente enxergam todos os leads
+    $modo = $adm ? 'admin' : ($geral ? 'gerente' : 'corretor');
     $f = (string)($_GET['f'] ?? 'abertos');   // a tela abre só com o que ainda está em atendimento
-    $fc = $adm ? (int)($_GET['c'] ?? 0) : 0;
-    $validos = array_merge(['abertos', 'todos'], array_keys(STATUS), $adm ? ['distribuir', 'excluidos'] : []);
+    $fc = $geral ? (int)($_GET['c'] ?? 0) : 0;
+    $validos = array_merge(['abertos', 'todos'], array_keys(STATUS), $geral ? ['distribuir', 'excluidos'] : []);
     if (!in_array($f, $validos, true)) $f = 'abertos';
     $lixeira = $f === 'excluidos';
     $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'abertos' ? '' : $f, 'c' => $fc ?: '']));
@@ -148,11 +165,11 @@ function tela_leads(array $u): void
     // Escopo: o corretor só enxerga os leads atribuídos a ele.
     $onde = ['l.excluido_em IS ' . ($lixeira ? 'NOT NULL' : 'NULL')];
     $p = [];
-    if (!$adm) { $onde[] = 'l.corretor_id = ?'; $p[] = (int)$u['id']; }
+    if (!$geral) { $onde[] = 'l.corretor_id = ?'; $p[] = (int)$u['id']; }
     $escopo = implode(' AND ', $onde);
     $pe = $p;
     $cont = ['abertos' => 0, 'todos' => 0, 'distribuir' => 0] + array_fill_keys(array_keys(STATUS), 0);
-    foreach (q("SELECT l.status, COUNT(*) AS n, SUM(CASE WHEN l.corretor_id IS NULL THEN 1 ELSE 0 END) AS sem FROM leads l WHERE " . ($adm ? 'l.excluido_em IS NULL' : $escopo) . " GROUP BY l.status", $adm ? [] : $pe) as $r) {
+    foreach (q("SELECT l.status, COUNT(*) AS n, SUM(CASE WHEN l.corretor_id IS NULL THEN 1 ELSE 0 END) AS sem FROM leads l WHERE " . ($geral ? 'l.excluido_em IS NULL' : $escopo) . " GROUP BY l.status", $geral ? [] : $pe) as $r) {
         $cont[$r['status']] = (int)$r['n']; $cont['todos'] += (int)$r['n']; $cont['distribuir'] += (int)$r['sem'];
     }
     $cont['abertos'] = $cont['novo'] + $cont['andamento'];
@@ -164,7 +181,7 @@ function tela_leads(array $u): void
 
     $cors = [];
     $cors_filtro = [];   // no filtro entram também os desativados, que ainda têm leads
-    if ($adm) {
+    if ($geral) {
         foreach (corretores(false) as $c) {
             if ((int)$c['ativo']) $cors[(int)$c['id']] = $c['nome'];
             $cors_filtro[(int)$c['id']] = $c['nome'] . ((int)$c['ativo'] ? '' : ' (desativado)');
@@ -175,16 +192,18 @@ function tela_leads(array $u): void
         return '<a class="chip" href="' . e($href) . '"' . ($f === $k ? ' aria-current="true"' : '') . '>' . ($ponto ? '<span class="ponto ' . $ponto . '"></span>' : '')
             . $t . ($n !== null ? ' <b class="num" data-n="' . $k . '">' . $n . '</b>' : '') . '</a>';
     };
-    $h = topo($u, 'leads') . '<main><div class="wrap"><div class="head"><div><h1>' . ($adm ? 'Leads' : 'Meus leads') . '</h1><p class="muted">'
-        . ($adm ? 'A tela abre com os leads em aberto. Concluídos e perdidos ficam nos filtros.' : 'Seus leads em aberto. Toque em um nome para ver o contato e as observações.') . '</p></div>'
+    $h = topo($u, 'leads') . '<main><div class="wrap"><div class="head"><div><h1>' . ($geral ? 'Leads' : 'Meus leads') . '</h1><p class="muted">'
+        . ($adm ? 'A tela abre com os leads em aberto. Concluídos e perdidos ficam nos filtros.'
+            : ($geral ? 'Visão de acompanhamento de todos os leads da equipe, só para leitura. Concluídos e perdidos ficam nos filtros.'
+                : 'Seus leads em aberto. Toque em um nome para ver o contato e as observações.')) . '</p></div>'
         . ($adm ? '<a class="btn btn-primary" href="' . e(url('lead_form')) . '">Novo lead</a>' : '') . '</div>'
-        . '<div class="filtros">' . $chip('abertos', 'Em aberto', $cont['abertos']) . $chip('todos', 'Todos', $cont['todos']) . ($adm ? $chip('distribuir', 'A distribuir', $cont['distribuir']) : '')
+        . '<div class="filtros">' . $chip('abertos', 'Em aberto', $cont['abertos']) . $chip('todos', 'Todos', $cont['todos']) . ($geral ? $chip('distribuir', 'A distribuir', $cont['distribuir']) : '')
         . $chip('novo', 'Novo', $cont['novo'], 'novo') . $chip('andamento', 'Em andamento', $cont['andamento'], 'andamento')
         . $chip('concluido', 'Concluído', $cont['concluido'], 'concluido') . $chip('perdido', 'Perdido', $cont['perdido'], 'perdido')
-        . ($adm ? $chip('excluidos', 'Excluídos', null) : '') . '</div>'
-        . '<form class="busca' . ($adm ? ' dupla' : '') . '" method="get" action="' . e(base()) . '/"><input type="hidden" name="r" value="leads">'
-        . ($adm ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors_filtro, $fc ?: '', 'Todos os corretores') . '</select>' : '')
-        . '<select class="campo" name="f" aria-label="Filtrar por status" data-envia>' . opcoes(['todos' => 'Todos os status'] + STATUS + ($adm ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'abertos' ? '' : $f, 'Em aberto (Novo e Em andamento)') . '</select>'
+        . ($geral ? $chip('excluidos', 'Excluídos', null) : '') . '</div>'
+        . '<form class="busca' . ($geral ? ' dupla' : '') . '" method="get" action="' . e(base()) . '/"><input type="hidden" name="r" value="leads">'
+        . ($geral ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors_filtro, $fc ?: '', 'Todos os corretores') . '</select>' : '')
+        . '<select class="campo" name="f" aria-label="Filtrar por status" title="Em aberto = Novo e Em andamento" data-envia>' . opcoes(['todos' => 'Todos os status'] + STATUS + ($geral ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'abertos' ? '' : $f, 'Em aberto') . '</select>'
         . '<noscript><button class="btn btn-ghost" type="submit">Filtrar</button></noscript></form>'
         . '<ul class="lista"><li class="cab" aria-hidden="true"><span>Entrada</span><span>Nome</span><span>Status</span></li>';
     if (!$leads) {
@@ -192,10 +211,10 @@ function tela_leads(array $u): void
         else $vazio = 'Nenhum lead neste filtro.';
         $h .= '<li class="vazio">' . $vazio . '</li>';
     }
-    foreach ($leads as $l) $h .= linha_lead($l, $adm, $cors, $lixeira);
+    foreach ($leads as $l) $h .= linha_lead($l, $modo, $cors, $lixeira);
     $h .= '</ul>' . (count($leads) === 500 ? '<p class="muted nota-lista">Mostrando os 500 mais recentes. Use os filtros para ver os demais.</p>' : '')
-        . ($adm && !$lixeira ? '<p class="nota-lista"><a href="' . e(url('exportar')) . '">Baixar todos os leads em CSV</a></p>' : '') . '</div></main>';
-    pagina($adm ? 'Leads' : 'Meus leads', $h);
+        . '</div></main>';
+    pagina($geral ? 'Leads' : 'Meus leads', $h);
 }
 
 function tela_lead_form(array $u): void
@@ -241,15 +260,15 @@ function tela_usuarios(array $eu): void
         . '<div><label for="u-nome">Nome</label><input class="campo" id="u-nome" name="nome" maxlength="120" required></div>'
         . '<div><label for="u-login">Login</label><input class="campo" id="u-login" name="login" autocapitalize="none" spellcheck="false" required></div>'
         . '<div><label for="u-senha">Senha inicial (' . SENHA_MIN . ' caracteres ou mais)</label><input class="campo" id="u-senha" name="senha" type="text" minlength="' . SENHA_MIN . '" autocomplete="off" required></div>'
-        . '<div><label for="u-papel">Perfil</label><select class="campo" id="u-papel" name="papel"><option value="corretor">Corretor</option><option value="admin">Admin</option></select></div>'
-        . '</div><p class="nota">Só o admin define e redefine senhas. Passe o login e a senha ao corretor.</p>'
+        . '<div><label for="u-papel">Perfil</label><select class="campo" id="u-papel" name="papel"><option value="corretor">Corretor: só os leads dele</option><option value="gerente">Gerente: vê todos, não altera</option><option value="admin">Admin: vê e altera tudo</option></select></div>'
+        . '</div><p class="nota">Só o admin define e redefine senhas. Passe o login e a senha à pessoa.</p>'
         . '<div class="acoes"><button class="btn btn-primary" type="submit">Criar usuário</button></div></form></details><ul class="usuarios">';
     foreach ($us as $x) {
         $id = (int)$x['id'];
         $eu_mesmo = $id === (int)$eu['id'];
         $oculto = campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">';
-        $h .= '<li class="' . ((int)$x['ativo'] ? '' : 'inativo') . '"><div><span class="nm">' . e($x['nome']) . '</span><span class="tag' . ($x['papel'] === 'admin' ? ' adm' : '') . '">'
-            . ($x['papel'] === 'admin' ? 'Admin' : 'Corretor') . '</span>' . ((int)$x['ativo'] ? '' : '<span class="tag">' . ($x['senha_hash'] === '' ? 'Sem senha' : 'Desativado') . '</span>')
+        $h .= '<li class="' . ((int)$x['ativo'] ? '' : 'inativo') . '"><div><span class="nm">' . e($x['nome']) . '</span><span class="tag' . ($x['papel'] === 'corretor' ? '' : ' adm') . '">'
+            . e(PAPEIS[$x['papel']] ?? $x['papel']) . '</span>' . ((int)$x['ativo'] ? '' : '<span class="tag">' . ($x['senha_hash'] === '' ? 'Sem senha' : 'Desativado') . '</span>')
             . '<div class="inf">Login: ' . e($x['login']) . ' · Último acesso: ' . ($x['ultimo_acesso'] ? e(date('d/m/Y H:i', strtotime($x['ultimo_acesso']))) : 'nunca')
             . ($x['papel'] === 'corretor' ? ' · ' . (int)$x['n'] . ' leads' : '') . '</div></div><div class="acoes">'
             . '<details class="senha"><summary class="btn btn-ghost btn-small">Redefinir senha</summary><form method="post" action="' . e(url('usuario_senha')) . '" autocomplete="off">' . $oculto
@@ -261,7 +280,7 @@ function tela_usuarios(array $eu): void
         }
         $h .= '</div></li>';
     }
-    $h .= '</ul><p class="muted nota-lista">Desativar impede o acesso e mantém os leads com a pessoa. Excluir devolve os leads dela para A distribuir.</p></div></main>';
+    $h .= '</ul><p class="muted nota-lista">Desativar impede o acesso e mantém os leads com a pessoa. Excluir devolve os leads dela para A distribuir. O gerente vê todos os leads e não altera nada.</p></div></main>';
     pagina('Usuários', $h);
 }
 

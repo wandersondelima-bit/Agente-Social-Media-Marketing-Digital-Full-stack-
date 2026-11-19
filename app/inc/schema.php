@@ -32,7 +32,7 @@ function criar_tabelas(): void
             status VARCHAR(12) NOT NULL DEFAULT 'novo',
             motivo_perda VARCHAR(40) NULL,
             corretor_id INT NULL,
-            observacoes VARCHAR(200) NOT NULL DEFAULT '',
+            observacoes VARCHAR(300) NOT NULL DEFAULT '',
             criado_em DATETIME NOT NULL,
             atualizado_em DATETIME NOT NULL,
             excluido_em DATETIME NULL
@@ -61,4 +61,17 @@ function criar_tabelas(): void
         'CREATE INDEX ix_tentativas ON tentativas_login (quando)',
     ];
     foreach ($indices as $sql) { try { db()->exec($sql); } catch (Throwable $t) { /* índice já existe */ } }
+}
+
+/* Ajustes em bancos já instalados. Idempotente: pode rodar quantas vezes for preciso. */
+function migrar(): array
+{
+    $feito = [];
+    if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') return $feito;   // SQLite não limita o tamanho do texto
+    $tam = (int)valor("SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'leads' AND COLUMN_NAME = 'observacoes'");
+    if ($tam > 0 && $tam < OBS_MAX) {
+        db()->exec("ALTER TABLE leads MODIFY observacoes VARCHAR(" . OBS_MAX . ") NOT NULL DEFAULT ''");
+        $feito[] = "observacoes: $tam -> " . OBS_MAX;
+    }
+    return $feito;
 }

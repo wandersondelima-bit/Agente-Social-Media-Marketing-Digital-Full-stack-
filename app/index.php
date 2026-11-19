@@ -35,7 +35,11 @@ if ($post) {
         'importar' => true,
     ];
     if (!isset($acoes[$rota])) falha(404, 'Página não encontrada.');
-    if ($acoes[$rota]) exigir_login();
+    if ($acoes[$rota]) {
+        $u = exigir_login();
+        // Barreira central: o gerente acompanha, não altera. Nenhuma ação de gravação passa daqui.
+        if (so_leitura($u)) falha(403, 'Seu perfil é de acompanhamento: você vê os leads, mas não pode alterar.');
+    }
     ('acao_' . $rota)();
     exit;
 }
@@ -58,8 +62,12 @@ switch ($rota) {
         tela_importar(exigir_admin());
         break;
     case 'exportar':
-        require __DIR__ . '/inc/acoes.php';
-        exportar_csv();
+        require __DIR__ . '/inc/exportar.php';
+        tela_exportar(exigir_visao_geral());
+        break;
+    case 'exportar_arquivo':
+        require __DIR__ . '/inc/exportar.php';
+        exportar_arquivo(exigir_visao_geral());
         break;
     default:
         exigir_login();

@@ -8,7 +8,8 @@ mb_internal_encoding('UTF-8');
 const STATUS = ['novo' => 'Novo', 'andamento' => 'Em andamento', 'concluido' => 'Concluído', 'perdido' => 'Perdido'];
 const MOTIVOS = ['Sem retorno', 'Comprou outro imóvel', 'Fora do orçamento', 'Desistiu', 'Outro'];
 const ORIGENS = ['WhatsApp Business', 'Direct do Instagram', 'Formulário do site', 'Outro'];
-const OBS_MAX = 200;
+const OBS_MAX = 300;               // observações do lead (era 200; pedido de 19/11/2026)
+const PAPEIS = ['admin' => 'Admin', 'gerente' => 'Gerente', 'corretor' => 'Corretor'];   // gerente: vê tudo, não altera nada
 const SENHA_MIN = 6;              // tamanho mínimo da senha (decisão do administrador em 11/11/2026)
 const SESSAO_OCIOSA = 86400;      // 24 horas sem uso encerram a sessão (era 12; pedido de 12/11/2026)
 const LOGIN_JANELA = 900;         // 15 minutos
@@ -135,6 +136,15 @@ function usuario(): ?array
     return $u;
 }
 function admin(): bool { $u = usuario(); return $u !== null && $u['papel'] === 'admin'; }
+/* Admin e gerente enxergam todos os leads; só o admin altera. O gerente é perfil de acompanhamento. */
+function ve_tudo(array $u): bool { return in_array($u['papel'], ['admin', 'gerente'], true); }
+function so_leitura(array $u): bool { return $u['papel'] === 'gerente'; }
+function exigir_visao_geral(): array
+{
+    $u = exigir_login();
+    if (!ve_tudo($u)) falha(403, 'Esta área é do administrador e do gerente.');
+    return $u;
+}
 function exigir_login(): array
 {
     $u = usuario();
