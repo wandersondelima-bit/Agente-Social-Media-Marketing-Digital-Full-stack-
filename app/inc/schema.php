@@ -51,6 +51,24 @@ function criar_tabelas(): void
             ip VARCHAR(45) NOT NULL,
             quando DATETIME NOT NULL
         )$fim",
+        // Registro de acessos: cada entrada, saída e tentativa recusada. Só o admin vê (aba Registros).
+        "CREATE TABLE IF NOT EXISTS log_acessos (
+            id $pk,
+            quando DATETIME NOT NULL,
+            usuario_id INT NULL,
+            login VARCHAR(60) NOT NULL DEFAULT '',
+            resultado VARCHAR(20) NOT NULL,
+            ip VARCHAR(45) NOT NULL DEFAULT '',
+            aparelho VARCHAR(60) NOT NULL DEFAULT ''
+        )$fim",
+        // Registro de exportações: quem, quando e o filtro usado. Nenhum dado dos leads exportados entra aqui.
+        "CREATE TABLE IF NOT EXISTS log_exportacoes (
+            id $pk,
+            quando DATETIME NOT NULL,
+            usuario_id INT NULL,
+            login VARCHAR(60) NOT NULL DEFAULT '',
+            filtro VARCHAR(500) NOT NULL
+        )$fim",
     ];
     foreach ($tabelas as $sql) db()->exec($sql);
     $indices = [
@@ -59,14 +77,28 @@ function criar_tabelas(): void
         'CREATE INDEX ix_leads_telefone ON leads (telefone)',
         'CREATE INDEX ix_eventos_lead ON lead_eventos (lead_id)',
         'CREATE INDEX ix_tentativas ON tentativas_login (quando)',
+        'CREATE INDEX ix_log_acessos ON log_acessos (quando)',
+        'CREATE INDEX ix_log_exportacoes ON log_exportacoes (quando)',
     ];
     foreach ($indices as $sql) { try { db()->exec($sql); } catch (Throwable $t) { /* índice já existe */ } }
+}
+
+function tabelas_existentes(): array
+{
+    $sql = db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql'
+        ? 'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()'
+        : "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
+    return q($sql)->fetchAll(PDO::FETCH_COLUMN);
 }
 
 /* Ajustes em bancos já instalados. Idempotente: pode rodar quantas vezes for preciso. */
 function migrar(): array
 {
     $feito = [];
+    // Tabelas novas (CREATE TABLE IF NOT EXISTS): toda tabela acrescentada em criar_tabelas() nasce aqui.
+    $antes = tabelas_existentes();
+    criar_tabelas();
+    foreach (array_diff(tabelas_existentes(), $antes) as $t) $feito[] = "tabela nova: $t";
     if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') return $feito;   // SQLite não limita o tamanho do texto
     $tam = (int)valor("SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'leads' AND COLUMN_NAME = 'observacoes'");
     if ($tam > 0 && $tam < OBS_MAX) {

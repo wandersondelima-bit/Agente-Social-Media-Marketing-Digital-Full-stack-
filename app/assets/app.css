@@ -254,3 +254,40 @@ input[type=file].campo{padding:9px 10px}
 @media (max-width:639px){ .exportar .datas{grid-template-columns:1fr} }
 .form .marca{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:.94rem;font-weight:400}
 .form .marca .ponto{margin-left:2px}
+
+/* ===== Registros de acesso e de exportação (só admin, 19/11/2026) ===== */
+.menu .wrap{overflow-x:auto;scrollbar-width:none}
+.menu .wrap::-webkit-scrollbar{display:none}
+.menu a{white-space:nowrap}
+.resumo-reg{margin:0 2px 12px;font-size:.88rem}
+.resumo-reg b{color:var(--ink);font-weight:600}
+.tabela.registros th:not(:first-child),.tabela.registros td{text-align:left}
+.tabela.registros td{vertical-align:top}
+.tabela.registros td:first-child{white-space:nowrap}
+.tabela.registros td.filtro{font-size:.84rem;line-height:1.5;min-width:260px}
+.res{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:500;white-space:nowrap}
+.res.ok{background:var(--s-ok-bg);color:var(--s-ok-fg)}
+.res.neutro{background:var(--s-novo-bg);color:var(--s-novo-fg)}
+.res.erro{background:var(--s-perd-bg);color:var(--s-perd-fg)}
+/* Menu do admin (5 abas) cabe no celular sem cortar; em telas muito estreitas, rola de lado. */
+@media (max-width:479px){ .menu .wrap{gap:0} .menu a{padding:11px 7px 9px;font-size:.84rem} }
+/* No celular, cada registro vira um bloco: data e resultado em cima, usuário, depois IP e aparelho. */
+@media (max-width:639px){
+  .tabela.registros{overflow:visible;margin:0}
+  .tabela.registros table{min-width:0}
+  .tabela.registros thead{display:none}
+  .tabela.registros tbody{display:block}
+  .tabela.registros tr{display:grid;gap:3px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .tabela.registros tr:last-child{border-bottom:0}
+  .tabela.registros .t-acessos tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"qd rs" "us us" "ip ap"}
+  .tabela.registros .t-exp tr{grid-template-columns:minmax(0,1fr);grid-template-areas:"qd" "us" "filtro"}
+  .tabela.registros td{display:block;padding:0;border:0;min-width:0}
+  .tabela.registros td.qd{grid-area:qd;font-size:.82rem;color:var(--muted)}
+  .tabela.registros td.us{grid-area:us;font-weight:500}
+  .tabela.registros td.rs{grid-area:rs;align-self:start;justify-self:end}
+  .tabela.registros td.ip{grid-area:ip;font-size:.8rem;color:var(--muted)}
+  .tabela.registros td.ip::before{content:"IP "}
+  .tabela.registros td.ap{grid-area:ap;font-size:.8rem;color:var(--muted);text-align:right}
+  .tabela.registros td.filtro{grid-area:filtro;min-width:0;margin-top:4px}
+  .tabela.registros td.vazio{grid-column:1 / -1}
+}

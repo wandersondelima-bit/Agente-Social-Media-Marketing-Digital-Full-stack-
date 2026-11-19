@@ -34,6 +34,10 @@ function acao_entrar(): void
     $por_login = (int)valor('SELECT COUNT(*) FROM tentativas_login WHERE quando > ? AND login = ?', [$desde, mb_substr($login, 0, 60)]);
     $por_ip = (int)valor('SELECT COUNT(*) FROM tentativas_login WHERE quando > ? AND ip = ?', [$desde, ip()]);
     if ($por_login >= LOGIN_MAX || $por_ip >= LOGIN_MAX_IP) {
+        // Um registro de bloqueio por login e IP a cada janela: um robô insistindo não enche o registro.
+        if (!(int)valor("SELECT COUNT(*) FROM log_acessos WHERE resultado = 'bloqueado' AND login = ? AND ip = ? AND quando > ?", [mb_substr($login, 0, 60), ip(), $desde])) {
+            registrar_acesso('bloqueado', $login);
+        }
         aviso('Muitas tentativas erradas. Aguarde 15 minutos e tente de novo.', 'erro');
         redirecionar(url('login'));
     }
@@ -47,6 +51,8 @@ function acao_entrar(): void
     }
     if (!$ok) {
         q('INSERT INTO tentativas_login (login, ip, quando) VALUES (?,?,?)', [mb_substr($login, 0, 60), ip(), agora()]);
+        // Na tela a mensagem é a mesma para tudo; no registro do admin fica o motivo.
+        registrar_acesso(!$u ? 'login_inexistente' : ((int)$u['ativo'] !== 1 ? 'desativado' : 'senha_errada'), $login, $u ? (int)$u['id'] : null);
         aviso('Login ou senha incorretos.', 'erro');
         redirecionar(url('login'));
     }
@@ -55,6 +61,8 @@ function acao_entrar(): void
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
     q('UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?', [agora(), $u['id']]);
     q('DELETE FROM tentativas_login WHERE login = ?', [$login]);
+    registrar_acesso('entrou', (string)$u['login'], (int)$u['id']);
+    limpar_registros();
     if (password_needs_rehash($u['senha_hash'], PASSWORD_DEFAULT)) {
         q('UPDATE usuarios SET senha_hash = ? WHERE id = ?', [password_hash($senha, PASSWORD_DEFAULT), $u['id']]);
     }
@@ -62,6 +70,8 @@ function acao_entrar(): void
 }
 function acao_sair(): void
 {
+    $u = usuario();
+    if ($u) registrar_acesso('saiu', (string)$u['login'], (int)$u['id']);
     encerrar_sessao();
     redirecionar(url('login'));
 }

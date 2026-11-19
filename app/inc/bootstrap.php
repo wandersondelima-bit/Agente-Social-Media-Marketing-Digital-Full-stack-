@@ -15,6 +15,9 @@ const SESSAO_OCIOSA = 86400;      // 24 horas sem uso encerram a sessão (era 12
 const LOGIN_JANELA = 900;         // 15 minutos
 const LOGIN_MAX = 8;              // tentativas erradas na janela, por login
 const LOGIN_MAX_IP = 30;          // tentativas erradas na janela, por IP
+const LOG_MESES = 12;             // registros de acesso e de exportação ficam guardados por 12 meses
+const RESULTADOS_ACESSO = ['entrou' => 'Entrou', 'saiu' => 'Saiu', 'senha_errada' => 'Senha errada', 'login_inexistente' => 'Login não existe',
+    'desativado' => 'Usuário desativado', 'bloqueado' => 'Bloqueado por tentativas'];
 const SITE_URL = 'https://marceloosawaimoveis.com.br';
 
 /* ---------- Configuração: fora da pasta pública quando existir, senão em inc/config.php (protegido pelo .htaccess) ---------- */
@@ -245,6 +248,37 @@ function evento(int $lead_id, string $acao, string $detalhe = ''): void
     q('INSERT INTO lead_eventos (lead_id, usuario_id, acao, detalhe, quando) VALUES (?,?,?,?,?)',
         [$lead_id, $u ? (int)$u['id'] : null, $acao, mb_substr($detalhe, 0, 250), agora()]);
 }
+/* ---------- Registros (aba Registros, só do admin) ---------- */
+function registrar_acesso(string $resultado, string $login, ?int $usuario_id = null): void
+{
+    q('INSERT INTO log_acessos (quando, usuario_id, login, resultado, ip, aparelho) VALUES (?,?,?,?,?,?)',
+        [agora(), $usuario_id, mb_substr($login, 0, 60), $resultado, ip(), aparelho()]);
+}
+/* Sistema e navegador em poucas palavras ("iPhone · Safari"), a partir do cabeçalho do navegador. */
+function aparelho(): string
+{
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if ($ua === '') return 'desconhecido';
+    $so = match (true) {
+        str_contains($ua, 'iPhone') => 'iPhone', str_contains($ua, 'iPad') => 'iPad', str_contains($ua, 'Android') => 'Android',
+        str_contains($ua, 'Windows') => 'Windows', str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS X') => 'Mac',
+        str_contains($ua, 'CrOS') => 'Chromebook', str_contains($ua, 'Linux') => 'Linux', default => '',
+    };
+    $nav = match (true) {
+        str_contains($ua, 'Instagram') => 'Instagram', str_contains($ua, 'Edg') => 'Edge', str_contains($ua, 'OPR/') => 'Opera',
+        str_contains($ua, 'SamsungBrowser') => 'Samsung Internet', str_contains($ua, 'CriOS') || str_contains($ua, 'Chrome/') => 'Chrome',
+        str_contains($ua, 'FxiOS') || str_contains($ua, 'Firefox/') => 'Firefox', str_contains($ua, 'Safari/') => 'Safari', default => '',
+    };
+    $r = $so . ($so !== '' && $nav !== '' ? ' · ' : '') . $nav;
+    return $r !== '' ? $r : 'outro';
+}
+function limpar_registros(): void
+{
+    $limite = date('Y-m-d H:i:s', strtotime('-' . LOG_MESES . ' months'));
+    q('DELETE FROM log_acessos WHERE quando < ?', [$limite]);
+    q('DELETE FROM log_exportacoes WHERE quando < ?', [$limite]);
+}
+
 function corretores(bool $so_ativos = true): array
 {
     return q("SELECT id, nome, ativo FROM usuarios WHERE papel = 'corretor'" . ($so_ativos ? ' AND ativo = 1' : '') . ' ORDER BY nome')->fetchAll();

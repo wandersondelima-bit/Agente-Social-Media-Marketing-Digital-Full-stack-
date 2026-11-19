@@ -150,9 +150,33 @@ const COLUNAS_EXPORT = [['Recebido em', 12], ['Mês de entrada', 18], ['Status',
     ['Código do imóvel', 12], ['Imóvel', 40], ['Link do imóvel', 44], ['Interesse', 12], ['Origem', 20], ['utm_source', 14], ['utm_medium', 14], ['utm_campaign', 18],
     ['utm_content', 18], ['Observações', 60], ['Última atualização', 14], ['Dias desde a entrada', 10], ['Excluído em', 12]];
 
+/* O filtro em palavras, completo (inclusive o que ficou em "todos"), para o registro de exportações. */
+function filtro_em_texto(array $v): string
+{
+    $nomes = ['tudo' => 'Todo o período', 'mes_atual' => 'Este mês', 'mes_passado' => 'Mês passado', '30d' => 'Últimos 30 dias', 'datas' => 'Datas escolhidas'];
+    $de = $v['de'] ? data_br($v['de']) : '';
+    $ate = $v['ate'] ? data_br($v['ate']) : '';
+    if ($de === '' && $ate === '') $per = 'Todo o período';
+    else {
+        $per = $nomes[$v['periodo']] ?? (str_starts_with($v['periodo'], 'm:') ? nome_mes(substr($v['periodo'], 2)) : 'Datas escolhidas');
+        $per .= ' (' . ($de !== '' && $ate !== '' ? "$de a $ate" : ($de !== '' ? "de $de em diante" : "até $ate")) . ')';
+    }
+    $sts = count($v['s']) === count(STATUS) ? 'todos' : ($v['s'] ? implode(', ', array_map(fn($k) => STATUS[$k], $v['s'])) : 'nenhum');
+    if ($v['c'] === 'sem') $cor = 'A distribuir';
+    elseif ($v['c'] !== '') $cor = (string)(valor('SELECT nome FROM usuarios WHERE id = ?', [(int)$v['c']]) ?: 'nº ' . (int)$v['c']);
+    else $cor = 'todos';
+    return mb_substr("Período: $per · Status: $sts · Corretor: $cor · Origem: " . ($v['o'] !== '' ? $v['o'] : 'todas') . ' · Excluídos: ' . ($v['x'] ? 'incluídos' : 'não'), 0, 500);
+}
+/* Registro da exportação: quem pediu, quando e o filtro usado. Somente isso: nada dos leads exportados é guardado. */
+function registrar_exportacao(array $u, array $flt): void
+{
+    q('INSERT INTO log_exportacoes (quando, usuario_id, login, filtro) VALUES (?,?,?,?)', [agora(), (int)$u['id'], (string)$u['login'], filtro_em_texto($flt['v'])]);
+}
+
 function exportar_arquivo(array $u): void
 {
     $flt = filtros_exportacao($_GET);
+    registrar_exportacao($u, $flt);
     $linhas = linhas_exportacao($flt);
     $nome = 'leads-' . $flt['sufixo'];
     if (($_GET['fmt'] ?? 'xlsx') === 'csv') {

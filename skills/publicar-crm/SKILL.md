@@ -32,7 +32,7 @@ esta skill diz em que ordem chamar e o que fazer quando ele para.
 3. **Publicar.** Mesmas variáveis, com `publicar`. O comando, nesta ordem: roda os testes (para se
    algum falhar), checa a sintaxe do PHP, envia `schema.php` e `bootstrap.php`, roda `migrar()`, envia o
    resto, confere byte a byte cada arquivo enviado e faz a conferência do sistema no ar (login, pastas
-   protegidas, telas do admin e do gerente, aba Exportar). Só contagens saem do diagnóstico, e o arquivo
+   protegidas, telas do admin e do gerente, abas Exportar e Registros). Só contagens saem do diagnóstico, e o arquivo
    de diagnóstico é apagado no fim.
 4. **PR e merge, sem perguntar** (decisão do usuário em 10/11/2026). Escreva a mensagem do commit (título
    na primeira linha, a linha de coautoria no fim) e o corpo do PR (com a linha "Generated with Claude

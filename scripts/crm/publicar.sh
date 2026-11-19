@@ -153,6 +153,7 @@ cmd_publicar(){
 /* Conferência pós-publicação. Só contagens: nenhum nome, telefone ou login sai daqui. */
 require __DIR__ . '/inc/bootstrap.php'; require __DIR__ . '/inc/telas.php';
 if (is_file(__DIR__ . '/inc/exportar.php')) require __DIR__ . '/inc/exportar.php';
+if (is_file(__DIR__ . '/inc/registros.php')) require __DIR__ . '/inc/registros.php';
 header('Content-Type: text/plain; charset=utf-8');
 iniciar_sessao();
 echo 'banco: ok · leads ativos: ', valor('SELECT COUNT(*) FROM leads WHERE excluido_em IS NULL'), ' · usuários ativos por perfil: ',
@@ -163,6 +164,8 @@ if ($adm) { $h = $tela($adm, ['f' => 'todos']); echo 'tela do admin: ', substr_c
 $ger = um("SELECT id, nome, login, papel, ativo FROM usuarios WHERE papel = 'gerente' ORDER BY id LIMIT 1");
 if ($ger) { $h = $tela($ger, ['f' => 'todos']); echo 'tela do gerente: ', substr_count($h, 'class="lead"'), ' leads · controles de alteração: ', substr_count($h, 'data-acao=') + substr_count($h, 'Salvar observações'), "\n"; }
 if ($adm && function_exists('tela_exportar')) { $_GET = []; ob_start(); tela_exportar($adm); $h = ob_get_clean(); echo 'aba Exportar: ', strpos($h, 'com estes filtros') !== false ? 'ok' : 'FALHOU', "\n"; }
+if ($adm && function_exists('tela_registros')) { $_GET = []; ob_start(); tela_registros($adm); $h = ob_get_clean();
+    echo 'aba Registros: ', strpos($h, '<h1>Registros</h1>') !== false ? 'ok' : 'FALHOU', ' · registros de acesso: ', valor('SELECT COUNT(*) FROM log_acessos'), ' · de exportação: ', valor('SELECT COUNT(*) FROM log_exportacoes'), "\n"; }
 PHP
     diagnostico "$TMP/fumaca.php"
     grep -q '^banco: ok' "$TMP/diag.out" || { echo "FALHOU: o sistema não respondeu ao diagnóstico."; exit 6; }
