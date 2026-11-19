@@ -180,14 +180,7 @@ function exportar_arquivo(array $u): void
     $linhas = linhas_exportacao($flt);
     $nome = 'leads-' . $flt['sufixo'];
     if (($_GET['fmt'] ?? 'xlsx') === 'csv') {
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $nome . '.csv"');
-        $o = fopen('php://output', 'w');
-        fwrite($o, "\xEF\xBB\xBF");
-        $seguro = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v;   // impede fórmula ao abrir na planilha
-        fputcsv($o, array_column(COLUNAS_EXPORT, 0), ',', '"', '');
-        foreach ($linhas as $l) fputcsv($o, array_map(fn($c) => $seguro($c[0] === 'd' ? data_br($c[1]) : $c[1]), $l), ',', '"', '');
-        exit;
+        enviar_csv($nome, array_column(COLUNAS_EXPORT, 0), array_map(fn($l) => array_map(fn($c) => $c[0] === 'd' ? data_br($c[1]) : $c[1], $l), $linhas));
     }
     $arq = xlsx_montar($linhas);
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

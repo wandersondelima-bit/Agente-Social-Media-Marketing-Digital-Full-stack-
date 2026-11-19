@@ -73,6 +73,10 @@ switch ($rota) {
         require __DIR__ . '/inc/registros.php';
         tela_registros(exigir_admin());   // só os administradores: o gerente e o corretor recebem 403
         break;
+    case 'registros_arquivo':
+        require __DIR__ . '/inc/registros.php';
+        registros_arquivo(exigir_admin());
+        break;
     default:
         exigir_login();
         falha(404, 'Página não encontrada.');

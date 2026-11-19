@@ -291,3 +291,6 @@ input[type=file].campo{padding:9px 10px}
   .tabela.registros td.filtro{grid-area:filtro;min-width:0;margin-top:4px}
   .tabela.registros td.vazio{grid-column:1 / -1}
 }
+/* Resumo dos registros com o botão de baixar a planilha CSV ao lado */
+.barra-reg{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 2px 12px}
+.barra-reg .resumo-reg{margin:0}

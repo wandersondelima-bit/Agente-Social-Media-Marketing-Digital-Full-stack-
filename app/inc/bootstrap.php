@@ -272,6 +272,19 @@ function aparelho(): string
     $r = $so . ($so !== '' && $nav !== '' ? ' · ' : '') . $nav;
     return $r !== '' ? $r : 'outro';
 }
+/* Planilha CSV: UTF-8 com BOM (o Excel reconhece os acentos), vírgula, e nenhuma célula começa como fórmula. */
+function enviar_csv(string $nome, array $cabecalho, iterable $linhas): void
+{
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $nome . '.csv"');
+    $o = fopen('php://output', 'w');
+    fwrite($o, "\xEF\xBB\xBF");
+    $seguro = fn($v) => preg_match('/^[=+\-@\t\r]/', (string)$v) ? "'" . $v : (string)$v;   // impede fórmula ao abrir na planilha
+    fputcsv($o, $cabecalho, ',', '"', '');
+    foreach ($linhas as $l) fputcsv($o, array_map($seguro, $l), ',', '"', '');
+    fclose($o);
+    exit;
+}
 function limpar_registros(): void
 {
     $limite = date('Y-m-d H:i:s', strtotime('-' . LOG_MESES . ' months'));
