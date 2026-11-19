@@ -173,6 +173,28 @@ get adm "r=registros&res=recusadas" >/dev/null; hasnt "filtro Só tentativas rec
 get adm "r=registros&t=exportacoes" >/dev/null; has "aba Exportações mostra o filtro usado" 'Status: Perdido'; has "aba Exportações mostra quem baixou" 'Gerente Teste'
 ck "sem login, Registros manda para o login" "$(get sem r=registros)" 303
 
+echo "== planilha CSV dos registros (só admin)"
+csvn(){ python3 -c "import csv,sys; print(len(list(csv.reader(open(sys.argv[1], encoding='utf-8-sig')))))" "$1"; }
+csvcol(){ python3 -c "import csv,sys; r=list(csv.reader(open(sys.argv[1], encoding='utf-8-sig'))); print(sum(1 for x in r[1:] if x[int(sys.argv[2])]==sys.argv[3]))" "$@"; }
+post x entrar --data-urlencode 'login=@soma(1)' -d senha=qualquer1 >/dev/null
+get adm "r=registros" >/dev/null; has "tela tem o botão de baixar CSV com a contagem" 'Baixar planilha CSV · [0-9]* registros'
+NAC=$(sql 'SELECT count(*) FROM log_acessos'); NEX=$(sql 'SELECT count(*) FROM log_exportacoes')
+ck "admin baixa o CSV de acessos" "$(baixar adm 'r=registros_arquivo')" 200
+ck "CSV de acessos tem cabeçalho + todos os registros" "$(csvn "$J/arq")" $((NAC+1))
+head -1 "$J/arq" | grep -q 'Data,Hora,Usuário,Login,Resultado,IP,Aparelho' && ok "CSV de acessos tem as colunas certas" || nok "CSV de acessos com colunas erradas"
+grep -q "'@soma(1)" "$J/arq" && ok "CSV de acessos neutraliza fórmula no login digitado" || nok "CSV de acessos deixou fórmula passar"
+baixar adm 'r=registros_arquivo&res=recusadas' >/dev/null; ck "CSV com filtro Só tentativas recusadas não traz entradas" "$(csvcol "$J/arq" 4 Entrou)" 0
+ck "CSV de exportações" "$(baixar adm 'r=registros_arquivo&t=exportacoes')" 200
+head -1 "$J/arq" | grep -q 'Data,Hora,Usuário,Login,Período,Status,Corretor,Origem,Excluídos' && ok "CSV de exportações separa o filtro em colunas" || nok "CSV de exportações com colunas erradas"
+ck "CSV de exportações tem cabeçalho + todos os registros" "$(csvn "$J/arq")" $((NEX+1))
+ck "coluna Status traz o filtro só Perdido" "$(csvcol "$J/arq" 5 Perdido)" 1
+GER=$(sql "SELECT id FROM usuarios WHERE login='gerente.teste'")
+baixar adm "r=registros_arquivo&t=exportacoes&u=$GER" >/dev/null; ck "CSV filtrado pelo gerente" "$(csvn "$J/arq")" 2
+ck "baixar os registros não entra no registro de exportações de leads" "$(sql 'SELECT count(*) FROM log_exportacoes')" "$NEX"
+ck "gerente não baixa os registros" "$(get ger r=registros_arquivo)" 403
+ck "corretor não baixa os registros" "$(get ana r=registros_arquivo)" 403
+ck "sem login, o CSV dos registros manda para o login" "$(get sem r=registros_arquivo)" 303
+
 echo "== exclusão e usuários"
 ck "admin exclui o lead sem dono" "$(post adm lead_excluir -d id=$L3)" 303
 get ger "r=leads&f=excluidos" >/dev/null; has "gerente vê a lixeira" 'Lead Sem Dono'; hasnt "gerente não tem Restaurar" 'Restaurar lead'
