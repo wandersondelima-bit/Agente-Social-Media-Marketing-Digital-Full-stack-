@@ -266,7 +266,7 @@ Estrutura da legenda: abertura com 🔑 (chave; padrão desde 20/11/2026, no lug
     ```
     📋 Quer a ficha completa deste apartamento?
     💬 Comente {PALAVRA_SEM_ACENTO} e receba no seu direct o tour completo com todos os detalhes.
-    📲 Prefere agendar direto sua visita exclusiva? Toque no botão do WhatsApp do perfil.
+    📲 Prefere agendar direto sua visita exclusiva? Toque em Contato no perfil e escolha WhatsApp.
     ```
     Comentário fixado no Reel:
     ```
@@ -287,7 +287,7 @@ Estrutura da legenda: abertura com 🔑 (chave; padrão desde 20/11/2026, no lug
 - **Última frase (decisão do usuário em 20/11/2026, com o WhatsApp Business ligado à conta e o Meta Ads convertendo no WhatsApp):** "Agende sua visita exclusiva pelo WhatsApp." no vídeo do perfil e do TikTok (mesmo áudio). Numa segunda exportação, só para o anúncio: "Agende sua visita exclusiva pelo botão do WhatsApp." Reservar pelo menos 3,5 s no último bloco de narração.
   - O card 6 acompanha: "Agende Sua Visita Exclusiva pelo WhatsApp". No anúncio, ele leva 👇 apontando para o botão e fica sempre fora dos 420 px da base, onde o botão cobre o vídeo.
   - O Roteiro ganha a seção "Versão do anúncio" com a tabela das duas versões. Só o último bloco de narração e o card 6 mudam entre as duas exportações (`[CODIGO]_[Bairro]_Video.mp4` e `[CODIGO]_[Bairro]_Video_Anuncio.mp4`). Modelo: Roteiro do 2729404.
-  - Pré-requisito: o botão do WhatsApp no perfil do Instagram e o link do WhatsApp na bio do TikTok. Sem eles, legenda e narração apontam para nada; conferir antes de publicar.
+  - Pré-requisito: o WhatsApp no botão **Contato** do perfil do Instagram (conferido em 20/11/2026: a Meta não permite um botão "WhatsApp" próprio no banner, mas Contato → WhatsApp abre a conversa; o anúncio impulsionado tem o botão dele) e o link do WhatsApp na bio do TikTok. Por isso a legenda orgânica diz "Toque em Contato no perfil e escolha WhatsApp".
   - Substitui "Envie seu WhatsApp por mensagem e agende sua visita reservada." (do 2167152 ao 2659814), que pedia o número do cliente por mensagem.
 - Sem vácuo: todo intervalo com texto na tela precisa de narração cobrindo o mesmo trecho.
 
