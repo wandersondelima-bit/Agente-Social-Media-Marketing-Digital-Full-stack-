@@ -236,7 +236,7 @@ Teste de validação (primeiro imóvel em que for usado com duas fotos): o 22555
 Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial → texto de conexão emocional → **💰 Venda:** logo após a introdução → lista de detalhes com emoji próprio em CADA item (inclusive amenidades do condomínio, um por linha, sem separador) → bloco de lazer/condomínio → repetir preço de venda + condomínio + IPTU no bloco final → CTA de WhatsApp → código QuintoAndar (`🔗 QuintoAndar #[CODIGO]`) → hashtags.
 
 **Regras permanentes de legenda:**
-- Tom acolhedor e humanizado, mas vocabulário elevado ("endereço", "visita reservada", "ficha completa") para público de R$ 1-5M — evitar gírias/coloquialismos.
+- Tom acolhedor e humanizado, mas vocabulário elevado ("endereço", "visita reservada", "visita exclusiva", "ficha completa") para público de R$ 1-5M — evitar gírias/coloquialismos.
 - Emojis estratégicos em toda seção temática (🚨 abertura, 💰 preço, 🛏️ quartos, 🚿 banheiros, 🧖 amenidades etc.) — aumenta escaneabilidade no mobile.
 - Sempre citar o nome da rua (sem número) em algum ponto do texto.
 - Sempre destacar vagas de garagem e deixar claro quando os quartos são suítes.
@@ -250,12 +250,12 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
   - "Portaria 24h", "piscina aquecida", "varanda gourmet" e afins só se o termo estiver na ficha. Distâncias: "perto de" quando não foram medidas; número só se medido no mapa.
 - No bloco de comparação de preço, nunca citar valores de m² ou média da região — argumentar de forma qualitativa ("preço competitivo para o padrão da região").
 - **Linha de vantagem do QPreço (pedido do usuário em 10/11/2026; formato usado no 3042998, ainda sem confirmação dele sobre o resultado).** Uma linha `✅ Vantagem na análise QPreço do QuintoAndar: …`, logo depois do bloco Venda, Condomínio e IPTU, só quando o QPreço sustenta uma vantagem: preço dentro ou abaixo da faixa estimada, ou condomínio abaixo da média dos similares. Escrita de forma qualitativa e atribuída ao QPreço, sem valores de média nem de m², e sem "da região" quando a captura diz só "similares". Com o preço **acima** da faixa, nunca falar em preço competitivo: usar o condomínio, se ele sustentar a linha, ou nenhuma linha. Uma frase só na legenda, sem acrescentar "menos custo fixo" ou "lazer de clube" (o revisor viu o primeiro como custo total e o segundo como guarda-chuva). Pedir ao `revisor-ficha-copy` que confira a linha contra a seção QPreço do Catálogo.
-- CTA de captação (regra a partir de 04/11/2026, decisão do usuário): todo Reel novo sai com a landing page, então o CTA do Instagram é o de comentário com a palavra da automação Zernio (abaixo). O CTA de WhatsApp vale para o TikTok e para o Reel sem landing page. Em qualquer CTA: uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
+- CTA de captação (regra a partir de 04/11/2026, decisão do usuário): todo Reel novo sai com a landing page, então o CTA do Instagram é o de comentário com a palavra da automação Zernio (abaixo). O CTA de WhatsApp vale para o TikTok e para o Reel sem landing page. **Desde 20/11/2026 o WhatsApp Business está ligado ao Instagram e o Meta Ads converte no WhatsApp** (decisão do usuário): os CTAs levam direto para a conversa no WhatsApp (botão do WhatsApp no perfil, link da bio no TikTok, botão do anúncio) em vez de pedir o número do cliente. Em qualquer CTA: uma ação só, benefício concreto (ficha completa + visita reservada) e fricção mínima ("número com DDD"). Nunca inventar urgência que não existe (ex: "últimas visitas da semana").
   - Instagram, Reel COM landing page e automação Zernio (padrão a partir do 3066087; a palavra vem do Checklist da seção "Automação Comentário → Direct → Landing"). Antes do `🔗 QuintoAndar #[CODIGO]`:
     ```
     📋 Quer a ficha completa deste apartamento?
     💬 Comente {PALAVRA_SEM_ACENTO} e receba no seu direct o tour completo com todos os detalhes.
-    📲 Prefere falar com um corretor? Me chame no direct.
+    📲 Prefere agendar direto sua visita exclusiva? Toque no botão do WhatsApp do perfil.
     ```
     Comentário fixado no Reel:
     ```
@@ -266,14 +266,18 @@ Estrutura da legenda: abertura com emoji de alerta + bairro/metragem/diferencial
     📲 Receba a ficha completa no seu WhatsApp: envie seu número com DDD no direct.
     🗓️ Prefere conhecer pessoalmente? Pelo mesmo direct, reservamos o horário da sua visita.
     ```
-  - TikTok (substitui o antigo "link da bio"; sem automação no TikTok, este CTA não muda):
+  - TikTok (sem automação no TikTok; a partir de 20/11/2026, com o link do WhatsApp na bio):
     ```
-    📩 Envie seu WhatsApp com DDD por mensagem e receba a ficha completa e o agendamento da sua visita reservada.
+    📲 Agende sua visita exclusiva pelo WhatsApp: o link está na bio.
     ```
 
 **Regras permanentes de narração (roteiro CapCut, Bloco 3):**
 - NUNCA valor monetário na narração — preço é só de legenda; narração cria emoção/contexto.
-- Última frase é sempre: "Envie seu WhatsApp por mensagem e agende sua visita reservada." — serve para Instagram e TikTok com o mesmo áudio ("direct" não existe no TikTok). Substitui a antiga "Agende sua visita reservada pelo direct." a partir dos imóveis depois do 2167152. São 9 palavras: reservar pelo menos 3,5 s no último bloco de narração.
+- **Última frase (decisão do usuário em 20/11/2026, com o WhatsApp Business ligado à conta e o Meta Ads convertendo no WhatsApp):** "Agende sua visita exclusiva pelo WhatsApp." no vídeo do perfil e do TikTok (mesmo áudio). Numa segunda exportação, só para o anúncio: "Agende sua visita exclusiva pelo botão do WhatsApp." Reservar pelo menos 3,5 s no último bloco de narração.
+  - O card 6 acompanha: "Agende Sua Visita Exclusiva pelo WhatsApp". No anúncio, ele leva 👇 apontando para o botão e fica sempre fora dos 420 px da base, onde o botão cobre o vídeo.
+  - O Roteiro ganha a seção "Versão do anúncio" com a tabela das duas versões. Só o último bloco de narração e o card 6 mudam entre as duas exportações (`[CODIGO]_[Bairro]_Video.mp4` e `[CODIGO]_[Bairro]_Video_Anuncio.mp4`). Modelo: Roteiro do 2729404.
+  - Pré-requisito: o botão do WhatsApp no perfil do Instagram e o link do WhatsApp na bio do TikTok. Sem eles, legenda e narração apontam para nada; conferir antes de publicar.
+  - Substitui "Envie seu WhatsApp por mensagem e agende sua visita reservada." (do 2167152 ao 2659814), que pedia o número do cliente por mensagem.
 - Sem vácuo: todo intervalo com texto na tela precisa de narração cobrindo o mesmo trecho.
 
 O modelo acima não é regra fixa de formatação — pode ser ajustado visando melhor performance de venda, sempre pensando no comprador de R$ 1-5M em São Paulo capital.
