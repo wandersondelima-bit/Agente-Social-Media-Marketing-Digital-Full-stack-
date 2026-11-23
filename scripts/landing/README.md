@@ -15,7 +15,15 @@ cd site && python3 -m http.server 8000                      # http://localhost:8
 **`--apto N`**: passe o número do apartamento sempre que o intake o trouxer. Sem ele o IPTU é comparado com outra unidade do prédio (o `prep` avisa).
 **`--numero N`**: número da rua, quando o anúncio vem sem (o `prep` grava `numero` e `iptu_checagem` no `ficha.json`; o `check` diz qual campo falta).
 Miniaturas das folhas: 3 threads, 5 tentativas com pausa, tamanho de reserva 1152×768; a que falhar vira quadro cinza, é listada e é refeita no próximo `prep`.
-O download das fotos é atômico: se o CDN responder 503, o script tenta o tamanho menor (1440×960) e nunca deixa arquivo vazio no cache.
+O download das fotos é atômico: se o CDN responder 503, o script tenta o tamanho menor (altura 960, mesma proporção) e nunca deixa arquivo vazio no cache.
+
+**Proporção das fotos.** O servidor de imagens do QuintoAndar devolve o tamanho pedido cortando pelo centro o que sobra
+(altura máxima 2160), e os anúncios vêm em 3:2, 4:3 e 16:9. Antes de baixar cada foto escolhida, o `build` mede a
+proporção real no quadro `/img/xxl/` (1152×768, a foto inteira sobre uma moldura lisa: faixas em cima e embaixo = mais
+larga que 3:2; nas laterais = mais estreita) e pede 3240×2160 (3:2), 2880×2160 (4:3) ou 3840×2160 (16:9); fora dos três,
+a largura exata 2160 × proporção, com aviso. A medida é por foto (um anúncio pode misturar formatos) e só acontece
+quando o original não está no cache `_trabalho/<cod>/orig/NNN.jpg`: com o cache, nada é medido nem baixado de novo.
+`"foto_aspecto": "4:3"` no `imovel.json` (ou num cômodo) pula a medida; se a medida falhar, o `build` para e pede esse campo.
 
 `build` recusa pasta que já existe e não foi gerada por ele (marca `.gerado-por-landing`), então não sobrescreve
 as landings antigas. `--so id1,id2` regera só esses cômodos; `--saida DIR` gera numa raiz de teste.
@@ -27,6 +35,11 @@ as landings antigas. `--so id1,id2` regera só esses cômodos; `--saida DIR` ger
 - `regiao` (local + distância) e `ficha_extra` (ex.: metrô e linha)
 - `comodos`: ordem do tour, `id` (sem acento, vira nome de arquivo), `n` (nome), `d` (frase curta), `foto` (nº da folha), `pan`
   (`in`, `out`, `dir`, `esq`; opcional `c0`/`c1` = posição 0–1 da janela no início/fim). O rascunho traz um cômodo por legenda do anúncio.
+- `foto_crop` (opcional, por cômodo): `[x, y, largura, altura]` em pixels do original `_trabalho/<cod>/orig/NNN.jpg`.
+  A galeria e o visualizador de fotos publicam `img/foto/<id>.jpg` (e a miniatura sai dela) com a **foto inteira**; o
+  `c0`/`c1` só escolhe a janela do vídeo. Se a curadoria só aprovou a faixa do pan (algo indesejado fora dela), recorte
+  aqui: a foto publicada passa a ser só esse retângulo (reduzido a 1600 px de largura; prefira 3:2 e ≥ 1600 px, porque a
+  galeria mostra em 3:2). Sem o campo, a foto inteira, como antes.
 - descarte: foto com pessoa, tela com imagem, foto pessoal, marca d'água de portal, distorção. Simplesmente não entra em `comodos`.
 - `hero`: id do cômodo mais amplo da área social.
 
@@ -37,6 +50,11 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 
 - IPTU confirmado pelo usuário: `"iptu_10x": 1050` no `imovel.json` (vale mais que o do anúncio).
 - Condomínio confirmado/corrigido pelo usuário: `"condominio_valor": 1400` no `imovel.json` (vale mais que o do anúncio).
+- Valor com centavos (número JSON com ponto): `"condominio_valor": 2032.84`, `"iptu_10x": 899.56` saem como
+  R$ 2.032,84 e 10x R$ 899,56. Valor inteiro sai sem centavos, como antes (R$ 1.800).
+- Vagas com observação do proprietário: `"vagas_obs": "fixas"` sai na ficha técnica como nota sob o número
+  (`<dd>2<small>fixas</small></dd>`, o mesmo formato do "por mês" do condomínio e do 2659814 publicado). O destaque
+  ("2 vagas") e o og:title não mudam. Use um texto curto (fixas, demarcadas, cobertas, lado a lado).
 - IPTU `ALERTA`/`NAO_ENCONTRADO` no `check`: perguntar ao usuário. O script já compara só com unidades de mesmo nº de vagas.
 - Ficha técnica: a área sai como "Área" (a ficha do anúncio não diz que é privativa). Se confirmar, `"area_rotulo": "Área privativa"`. O andar só aparece se o anúncio indicar um andar único ou se você informar `"andar_texto": "12º"`; a faixa de andares do anúncio é do prédio e não entra na página.
 - Fotos de condomínio com marca d'água do QuintoAndar (logo "N" translúcido): não usar nos cômodos; só texto.
@@ -44,6 +62,7 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 ## Conferências antes de mostrar ao usuário
 
 - Faixa de cada pan em tela cheia, antes de renderizar: `python3 scripts/faixas-pan.py landing <codigo>` (cômodos da landing, após o `build` ter baixado as fotos) ou `faixas-pan.py pan <foto> <c0> <c1>` (Reel). Abrir cada arquivo (1920 px de altura), não a miniatura.
+- Foto publicada de cada cômodo: abrir `img/foto/<id>.jpg` da landing gerada. É o que a galeria e o modo foto mostram (a foto inteira, ou o `foto_crop`), não só a faixa do pan.
 - `check` avisa (sem bloquear) palavras que só se leem na foto em `d`/`hero_alt` (envidraçada, cooktop, cuba esculpida…): usar o vocabulário da ficha.
 - `check` imprime `IPTU confirmado pelo usuário` quando há `iptu_10x` no `imovel.json`.
 - `check` imprime `IPTU não confirmado` se o status não for `OK` → perguntar ao usuário (regra da skill).
@@ -53,6 +72,7 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 ## Exemplo aprovado
 
 Imóvel 2597070 (cobertura, Vila Sofia): `scripts/landing/exemplo-imovel.json` (cópia do `imovel.json` aprovado) serve de modelo de preenchimento (12 cômodos, hero `sala`).
+O bloco `_campos_opcionais` no fim dele mostra o formato dos campos opcionais (centavos, `vagas_obs`, `foto_aspecto`, `foto_crop`); o build o ignora.
 
 ## Lote de 4–5 imóveis por sessão (Sonnet)
 
