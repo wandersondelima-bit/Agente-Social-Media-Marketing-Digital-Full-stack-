@@ -4,9 +4,9 @@
 # As credenciais do envio valem algumas horas e vêm do conector da Hostinger (operação
 # hosting_files_generate-upload-url, usuário e domínio em .hostinger/site.json). Entram só por
 # variável de ambiente, nunca em arquivo:
-#   CRM_UPLOAD_URL  o "url" devolvido (termina em /api/tus/public_html)
-#   CRM_AUTH        o "auth_key"
-#   CRM_REST        o "rest_auth_key"
+#   HOSTINGER_FILES_URL  o "url" devolvido (termina em /api/tus/public_html)
+#   HOSTINGER_AUTH_KEY   o "auth_key"
+#   HOSTINGER_REST_KEY   o "rest_auth_key"
 #
 # Uso (na raiz do repositório ou de qualquer lugar):
 #   bash scripts/crm/publicar.sh verificar    compara cada arquivo local com a main e com o servidor; não envia nada
@@ -22,6 +22,11 @@
 # descartável; com destino diferente de app, testes, migração e conferência do sistema são pulados.
 
 cd "$(dirname "$0")/../.." || exit 1
+# Nomes únicos das credenciais do File Browser da Hostinger (os mesmos de scripts/remover-imovel.py).
+# Os nomes antigos CRM_UPLOAD_URL, CRM_AUTH e CRM_REST ainda valem como reserva (obs. 0061, 23/11/2026).
+HOSTINGER_FILES_URL=${HOSTINGER_FILES_URL:-${CRM_UPLOAD_URL:-}}
+HOSTINGER_AUTH_KEY=${HOSTINGER_AUTH_KEY:-${CRM_AUTH:-}}
+HOSTINGER_REST_KEY=${HOSTINGER_REST_KEY:-${CRM_REST:-}}
 ORIGEM=${CRM_ORIGEM:-app}
 DESTINO=${CRM_DESTINO:-app}
 SITE="https://marceloosawaimoveis.com.br/$DESTINO"
@@ -29,10 +34,10 @@ TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 REGISTRO="$(git rev-parse --git-dir)/crm-publicado.txt"   # destino → hash do que este Mac publicou por último
 
 credenciais(){
-    if [ -z "${CRM_UPLOAD_URL:-}" ] || [ -z "${CRM_AUTH:-}" ] || [ -z "${CRM_REST:-}" ]; then
-        echo "Faltam CRM_UPLOAD_URL, CRM_AUTH e CRM_REST. Gere com o conector da Hostinger (hosting_files_generate-upload-url)."; exit 1
+    if [ -z "${HOSTINGER_FILES_URL:-}" ] || [ -z "${HOSTINGER_AUTH_KEY:-}" ] || [ -z "${HOSTINGER_REST_KEY:-}" ]; then
+        echo "Faltam HOSTINGER_FILES_URL, HOSTINGER_AUTH_KEY e HOSTINGER_REST_KEY. Gere com o conector da Hostinger (hosting_files_generate-upload-url)."; exit 1
     fi
-    BASE=${CRM_UPLOAD_URL%/api/tus/public_html}
+    BASE=${HOSTINGER_FILES_URL%/api/tus/public_html}
 }
 
 # Arquivos publicáveis: tudo da origem, menos configuração, dados locais, prévia e lixo do macOS.
@@ -44,7 +49,7 @@ hash_local(){ shasum < "$1" | cut -c1-40; }
 hash_main(){ git cat-file -e "origin/main:$1" 2>/dev/null && git show "origin/main:$1" | shasum | cut -c1-40 || echo ausente; }
 hash_servidor(){
     local c
-    c=$(curl -s -o "$TMP/srv" -w '%{http_code}' "$BASE/api/raw/$(destino_de "$1")" -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST")
+    c=$(curl -s -o "$TMP/srv" -w '%{http_code}' "$BASE/api/raw/$(destino_de "$1")" -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY")
     case "$c" in
         200) shasum < "$TMP/srv" | cut -c1-40 ;;
         404) echo ausente ;;
@@ -56,15 +61,15 @@ registrar(){ echo "$1 $2" >> "$REGISTRO"; }
 enviar(){   # $1 arquivo local, $2 caminho no servidor (a partir da raiz do File Browser)
     local size c off
     size=$(stat -f%z "$1")
-    c=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/tus/$2?override=true" -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST" \
+    c=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/tus/$2?override=true" -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY" \
         -H 'Tus-Resumable: 1.0.0' -H "Upload-Length: $size" -H 'Upload-Offset: 0')
-    off=$(curl -s -D - -o /dev/null -X PATCH "$BASE/api/tus/$2?override=true" -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST" \
+    off=$(curl -s -D - -o /dev/null -X PATCH "$BASE/api/tus/$2?override=true" -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY" \
         -H 'Tus-Resumable: 1.0.0' -H 'Content-Type: application/offset+octet-stream' -H 'Upload-Offset: 0' --data-binary "@$1" \
         | tr -d '\r' | awk 'tolower($1)=="upload-offset:"{print $2}')
     [ "$off" = "$size" ] && { echo "enviado   $2 ($size bytes)"; return 0; }
     echo "FALHOU    $2: POST $c, gravou '$off' de $size bytes"; return 1
 }
-apagar_remoto(){ curl -s -o /dev/null -w '%{http_code}' -X DELETE "$BASE/api/resources/$1" -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST"; }
+apagar_remoto(){ curl -s -o /dev/null -w '%{http_code}' -X DELETE "$BASE/api/resources/$1" -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY"; }
 
 # Classifica cada arquivo em: em-dia | enviar | conflito | erro. Grava a lista em $TMP/plano.
 classificar(){

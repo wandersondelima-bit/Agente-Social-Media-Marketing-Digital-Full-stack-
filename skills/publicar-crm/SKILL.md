@@ -27,7 +27,8 @@ esta skill diz em que ordem chamar e o que fazer quando ele para.
    autorização), rode `hosting_files_generate-upload-url` com o `username` e o `domain` de
    `.hostinger/site.json`. Guarde `url`, `auth_key` e `rest_auth_key`; valem algumas horas.
 2. **Verificar.** Na raiz de `site-repo`:
-   `CRM_UPLOAD_URL='<url>' CRM_AUTH='<auth_key>' CRM_REST='<rest_auth_key>' bash scripts/crm/publicar.sh verificar`
+   `HOSTINGER_FILES_URL='<url>' HOSTINGER_AUTH_KEY='<auth_key>' HOSTINGER_REST_KEY='<rest_auth_key>' bash scripts/crm/publicar.sh verificar`
+   (os mesmos nomes de `publicar-landing.sh` e `remover-imovel.py`; os antigos `CRM_UPLOAD_URL`, `CRM_AUTH` e `CRM_REST` ainda funcionam)
    Mostra o que será enviado. Nada é alterado.
 3. **Publicar.** Mesmas variáveis, com `publicar`. O comando, nesta ordem: roda os testes (para se
    algum falhar), checa a sintaxe do PHP, envia `schema.php` e `bootstrap.php`, roda `migrar()`, envia o
