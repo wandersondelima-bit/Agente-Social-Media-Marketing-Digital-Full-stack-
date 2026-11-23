@@ -3,3 +3,4 @@ _trabalho/
 .gerado-por-landing
 app/inc/config.php
 app/inc/_dados/
+__pycache__/

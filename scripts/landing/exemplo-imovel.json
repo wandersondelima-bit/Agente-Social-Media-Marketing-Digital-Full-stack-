@@ -168,5 +168,14 @@
   "mobiliado": true,
   "descricao_anunciante": null
  },
- "iptu_10x": 1050
+ "iptu_10x": 1050,
+ "_campos_opcionais": {
+  "_nota": "Exemplos de campos opcionais; não fazem parte do imóvel aprovado (o build ignora este bloco). Para usar, copie o campo para o topo do imovel.json, ou para dentro do cômodo quando o nome começa com comodos[]. Detalhes em README.md.",
+  "condominio_valor": 2032.84,
+  "iptu_10x": 899.56,
+  "vagas_obs": "fixas",
+  "foto_aspecto": "4:3",
+  "comodos[].foto_crop": [520, 180, 2400, 1600],
+  "comodos[].foto_aspecto": "16:9"
+ }
 }

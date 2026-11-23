@@ -5,8 +5,9 @@ Só biblioteca padrão + ffmpeg/ffprobe (Homebrew) + o script de IPTU do reposit
 
   landing.py prep  <link|codigo>   puxa a ficha, o IPTU e o bairro; baixa miniaturas; gera as folhas de contato
                                    e o rascunho _trabalho/<codigo>/imovel.json (campos "TROCAR" = julgamento)
-  landing.py build <codigo>        lê o imovel.json curado, baixa as fotos escolhidas, gera foto/poster/thumb/vídeo
-                                   (pan digital com ffmpeg) e monta site/<codigo>/<bairro>/index.html
+  landing.py build <codigo>        lê o imovel.json curado, baixa as fotos escolhidas na proporção real (3:2, 4:3 ou 16:9),
+                                   gera foto/poster/thumb/vídeo (pan digital com ffmpeg) e monta
+                                   site/<codigo>/<bairro>/index.html
   landing.py check <codigo>        confere arquivos, tamanhos, TROCAR esquecido e IDs de cômodo
 
 Detalhes e fluxo por lote: scripts/landing/README.md
@@ -24,6 +25,9 @@ IMG = "https://www.quintoandar.com.br/img/{}/{}"
 MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 VIDEO_SEG = 4          # duração de cada clipe
 VIDEO_MAX = 1_500_000  # bytes por clipe
+# O servidor de imagens do QuintoAndar devolve o tamanho pedido cortando pelo centro o que sobra (altura máxima 2160).
+# Os anúncios vêm em 3:2, 4:3 e 16:9: a largura pedida é 2160 × proporção real da foto, senão ela chega cortada.
+ASPECTOS = {"3:2": 3 / 2, "4:3": 4 / 3, "16:9": 16 / 9}
 FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
 FFPROBE = shutil.which("ffprobe") or "/opt/homebrew/bin/ffprobe"
 
@@ -66,6 +70,65 @@ def baixar_foto(url, destino, tamanhos=("3240x2160", "1440x960"), tent=3, pausa=
     raise RuntimeError(f"não consegui baixar {url} em {', '.join(tamanhos)}: {ultimo}")
 
 
+def aspecto_do_texto(v):
+    """foto_aspecto do imovel.json ("3:2", "4:3", "16:9" ou número como 1.333) -> largura/altura."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+        return float(v)
+    m = re.fullmatch(r"\s*(\d+(?:[.,]\d+)?)\s*(?:[:x/]\s*(\d+(?:[.,]\d+)?)\s*)?", str(v))
+    if m:
+        a, b = float(m.group(1).replace(",", ".")), float((m.group(2) or "1").replace(",", "."))
+        if a > 0 and b > 0:
+            return a / b
+    sys.exit(f'foto_aspecto inválido: {v!r} (use "3:2", "4:3", "16:9" ou um número como 1.5)')
+
+
+def medir_aspecto(url):
+    """Proporção real da foto, medida no quadro /img/xxl/ (1152x768), onde o servidor põe a foto inteira sobre uma
+    moldura de cor lisa: faixas em cima e embaixo = foto mais larga que 3:2; nas laterais = mais estreita; sem faixa = 3:2.
+    Só biblioteca padrão: o ffmpeg decodifica em cinza e a moldura é contada linha a linha a partir das bordas."""
+    dados = get(IMG.format("xxl", url), True, 5, 1.5)
+    pr = subprocess.run([FFPROBE, "-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", "-i", "pipe:0"],
+                        input=dados, capture_output=True)
+    w, h = (int(v) for v in pr.stdout.decode().strip().split(",")[:2])
+    g = subprocess.run([FFMPEG, "-v", "error", "-i", "pipe:0", "-f", "rawvideo", "-pix_fmt", "gray", "pipe:1"],
+                       input=dados, capture_output=True).stdout
+    if len(g) != w * h:
+        raise RuntimeError(f"quadro xxl ilegível para medir a proporção de {url}")
+    linha = lambda y: g[y * w:(y + 1) * w]
+    coluna = lambda x: g[x::w]
+    lisa = lambda b: max(b) - min(b) <= 3
+
+    def faixa(linhas, cor):   # linhas da borda para dentro que são só moldura (tolerando o ruído do JPEG na divisa)
+        n = 0
+        for b in linhas:
+            if max(b) - cor > 24 or cor - min(b) > 24:
+                break
+            n += 1
+        return n
+    tb = lr = 0
+    # moldura só conta se as duas bordas opostas forem lisas e da mesma cor; a foto vem centrada, então a faixa é a menor
+    # das duas (uma área escura lisa na borda de um lado da foto não engana a medida)
+    if lisa(linha(0)) and lisa(linha(h - 1)) and abs(g[0] - g[(h - 1) * w]) <= 3:
+        tb = min(faixa(map(linha, range(h)), g[0]), faixa(map(linha, range(h - 1, -1, -1)), g[0]))
+    if lisa(coluna(0)) and lisa(coluna(w - 1)) and abs(g[0] - g[w - 1]) <= 3:
+        lr = min(faixa(map(coluna, range(w)), g[0]), faixa(map(coluna, range(w - 1, -1, -1)), g[0]))
+    if 2 * tb >= h or 2 * lr >= w:
+        raise RuntimeError(f"quadro xxl sem foto para medir a proporção de {url}")
+    return (w - 2 * lr) / (h - 2 * tb)
+
+
+def tamanhos_da_foto(aspecto):
+    """Tamanhos a pedir: o grande (altura 2160) e a reserva para 503 (altura 960), na proporção da foto.
+    3:2 -> 3240x2160 e 1440x960 (os de sempre); 4:3 -> 2880x2160; 16:9 -> 3840x2160. Fora dos três (ex.: foto em
+    pé), a largura exata 2160 × proporção."""
+    nome = min(ASPECTOS, key=lambda k: abs(math.log(aspecto / ASPECTOS[k])))
+    if abs(math.log(aspecto / ASPECTOS[nome])) <= 0.03:
+        a, rot = ASPECTOS[nome], nome
+    else:
+        a, rot = aspecto, f"{aspecto:.3f}".replace(".", ",") + " (fora de 3:2, 4:3 e 16:9)"
+    return (f"{round(2160 * a)}x2160", f"{round(960 * a)}x960"), rot
+
+
 def sem_acento(s):
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
 
@@ -76,6 +139,14 @@ def slug(s):
 
 def brl(v):
     return "{:,.0f}".format(v).replace(",", ".")
+
+
+def brl_valor(v):
+    """Condomínio e IPTU: com centavos só quando o valor guardado tem (2032.84 -> 2.032,84); inteiro sai como antes (1.800)."""
+    c = round(float(v) * 100)
+    if c % 100 == 0:
+        return brl(v)
+    return "{:,.2f}".format(c / 100).replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 def run(cmd, **kw):
@@ -155,6 +226,8 @@ def consulta_iptu(f, apto=None):
            str(f["iptu_anuncio_12x"]), "--area", str(f["area"]), "--bairro", f["bairro_qa"] or "", "--limite", "300", "--json"]
     if apto:
         cmd += ["--apto", str(apto)]   # sem o nº da unidade a checagem compara com outra unidade do prédio
+    if f.get("cep"):
+        cmd += ["--cep", str(f["cep"])]   # nome do anúncio x cadastro abreviado (PRSA, COMEN...): busca por CEP + número
     r = subprocess.run(cmd, capture_output=True, text=True)
     try:
         d = json.loads(r.stdout)
@@ -169,7 +242,7 @@ def consulta_iptu(f, apto=None):
     c = melhor.get("checagem", {})
     return {"status": c.get("status", "?"), "mensagem": c.get("mensagem"), "razao": c.get("razao_anuncio_sobre_teorico"),
             "apto_identificado": bool(d.get("apto_encontrado")), "parcela_teorica_10x": melhor.get("iptu_teorico_parcela_10x"),
-            "sql": melhor.get("sql"), "complemento": melhor.get("complemento")}
+            "sql": melhor.get("sql"), "complemento": melhor.get("complemento"), "encontrado_por": d.get("encontrado_por")}
 
 
 def digito_png(texto, esc=5):
@@ -318,15 +391,36 @@ def pan_filtro(ow, oh, modo, c0=None, c1=None):
             f"scale=720:1280:flags=lanczos,format=yuv420p")
 
 
-def gerar_midia(c, f, dest, d):
+def gerar_midia(c, f, dest, d, aspecto=None):
     x = f["fotos"][c["foto"]]
     orig = os.path.join(d, "orig", f"{c['foto']:03d}.jpg")
     os.makedirs(os.path.dirname(orig), exist_ok=True)
-    baixar_foto(x["url"], orig)
+    if not (os.path.exists(orig) and os.path.getsize(orig) > 0):   # com o original no cache não mede nem baixa de novo
+        # medida por foto: um anúncio mistura formatos (fotos do condomínio, foto em pé); custa 1 quadro xxl por foto escolhida
+        pedido = c.get("foto_aspecto") or aspecto
+        if pedido:
+            a, origem = aspecto_do_texto(pedido), "imovel.json"
+        else:
+            try:
+                a, origem = medir_aspecto(x["url"]), "medido no quadro xxl"
+            except Exception as e:   # sem medida não baixa: pedir 3:2 às cegas é o corte silencioso que isto evita
+                sys.exit(f"foto {c['foto']} ({c['id']}): não consegui medir a proporção no quadro xxl ({str(e)[-160:]}). "
+                         f'Ponha "foto_aspecto": "3:2", "4:3" ou "16:9" no cômodo ou no imovel.json.')
+        tamanhos, rot = tamanhos_da_foto(a)
+        print(f"  foto {c['foto']}: {rot} ({origem}) -> {tamanhos[0]}")
+        baixar_foto(x["url"], orig, tamanhos)
     ow, oh = dims(orig)
     id_ = c["id"]
     foto = os.path.join(dest, "img", "foto", f"{id_}.jpg")
-    run([FFMPEG, "-v", "error", "-y", "-i", orig, "-vf", "scale=1600:-2:flags=lanczos", "-q:v", "4", foto])
+    vf = "scale=1600:-2:flags=lanczos"
+    if c.get("foto_crop"):   # recorte publicado na galeria e no visualizador (e na miniatura), independente de c0/c1
+        cx, cy, cw, ch = (int(v) for v in c["foto_crop"])
+        if cx + cw > ow or cy + ch > oh:
+            sys.exit(f"comodos[{id_}].foto_crop {c['foto_crop']} passa da foto original {ow}x{oh} ({orig})")
+        if cw < 1600:
+            print(f"AVISO: comodos[{id_}].foto_crop tem {cw} px de largura; a foto publicada (1600 px) sai ampliada")
+        vf = f"crop={cw}:{ch}:{cx}:{cy}," + vf
+    run([FFMPEG, "-v", "error", "-y", "-i", orig, "-vf", vf, "-q:v", "4", foto])
     thumb = os.path.join(dest, "img", "thumb", f"{id_}.jpg")
     run([FFMPEG, "-v", "error", "-y", "-i", foto, "-vf", "scale=168:112:force_original_aspect_ratio=increase,crop=168:112", "-q:v", "5", thumb])
     vid = os.path.join(dest, "video", f"{id_}.mp4")
@@ -385,8 +479,8 @@ def render_html(j, f):
     # hero
     dest_hl = [("ruler", f"{area_s} m²"), ("bed", q_txt), ("car", v_txt)] + [(d["icone"], d["texto"]) for d in j["destaques"]]
     hl = "\n".join(f"      <li>{ICONE(i)}{E(t)}</li>" for i, t in dest_hl)
-    cond_s = f"      <span>Condomínio R$ {brl(f['condominio'])}</span>\n" if f.get("condominio") else ""
-    iptu_s = f"      <span>IPTU 10x R$ {brl(f['iptu_10x'])}</span>\n" if f.get("iptu_10x") else ""
+    cond_s = f"      <span>Condomínio R$ {brl_valor(f['condominio'])}</span>\n" if f.get("condominio") else ""
+    iptu_s = f"      <span>IPTU 10x R$ {brl_valor(f['iptu_10x'])}</span>\n" if f.get("iptu_10x") else ""
     bloco = (f'<p class="bairro">{ICONE("pin")}{E(bairro)}</p>\n    <h1>{E(rua)}, {E(j["argumento"])}</h1>\n'
              f'    <ul class="highs" aria-label="Destaques">\n{hl}\n    </ul>\n    <div class="price">\n      <strong>{preco}</strong>\n{cond_s}{iptu_s}'
              f'      <small>Valor anunciado em {MESES[hoje.month - 1]}/{hoje.year}, sujeito a alteração.</small>\n    </div>\n    ')
@@ -401,7 +495,8 @@ def render_html(j, f):
         fatos.append(("Suítes", str(suites), j.get("suites_nota", "")))
     if f.get("banheiros"):
         fatos.append(("Banheiros", str(f["banheiros"]), ""))
-    fatos.append(("Vagas de garagem", str(vagas), ""))
+    # observação do proprietário sobre as vagas (ex.: "fixas"): nota sob o número, como a do condomínio ("por mês")
+    fatos.append(("Vagas de garagem", str(vagas), (j.get("vagas_obs") or "").strip()))
     an = f.get("andar") or {}
     if j.get("andar_texto"):   # andar da unidade, informado por quem conhece (ex.: "12º")
         fatos.append(("Andar", j["andar_texto"], ""))
@@ -409,8 +504,8 @@ def render_html(j, f):
         fatos.append(("Andar", f"{an['min']}º", ""))
     # faixa de andares do anúncio (ex.: 24–27) é do prédio, não da unidade: não entra na página sem "andar_texto"
     fatos += [tuple(x) for x in j.get("ficha_extra", [])]
-    if f.get("condominio"): fatos.append(("Condomínio", f"R$ {brl(f['condominio'])}", "por mês"))
-    if f.get("iptu_10x"): fatos.append(("IPTU", f"10x R$ {brl(f['iptu_10x'])}", ""))
+    if f.get("condominio"): fatos.append(("Condomínio", f"R$ {brl_valor(f['condominio'])}", "por mês"))
+    if f.get("iptu_10x"): fatos.append(("IPTU", f"10x R$ {brl_valor(f['iptu_10x'])}", ""))
     dl = "\n".join(f"        <div><dt>{E(r)}</dt><dd>{E(v)}" + (f"<small>{E(n)}</small>" if n else "") + "</dd></div>" for r, v, n in fatos)
     h = trocar_um(h, r'<dl class="facts">.*?</dl>', f'<dl class="facts">\n{dl}\n      </dl>')
     for hid, chave in (("h-apto", "apartamento"), ("h-cond", "condominio")):
@@ -479,6 +574,15 @@ def cmd_build(a):
     ids = [c["id"] for c in j["comodos"]]
     if len(set(ids)) != len(ids) or j["hero"] not in ids:
         sys.exit("ids de cômodo repetidos ou hero fora da lista de cômodos")
+    for c in j["comodos"]:   # campos opcionais conferidos antes de gerar qualquer coisa
+        fc = c.get("foto_crop")
+        if fc is not None and not (isinstance(fc, list) and len(fc) == 4 and all(isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 for v in fc)
+                                   and fc[2] >= 1 and fc[3] >= 1):
+            sys.exit(f"comodos[{c['id']}].foto_crop deve ser [x, y, largura, altura] em pixels da foto original: {fc!r}")
+        if c.get("foto_aspecto"):
+            aspecto_do_texto(c["foto_aspecto"])
+    if j.get("foto_aspecto"):
+        aspecto_do_texto(j["foto_aspecto"])
     raiz = os.path.abspath(a.saida) if a.saida else SITE
     dest = os.path.join(raiz, j["codigo"], j["bairro_slug"])
     marca = os.path.join(dest, ".gerado-por-landing")
@@ -497,7 +601,7 @@ def cmd_build(a):
         os.makedirs(os.path.join(dest, sub), exist_ok=True)
     only = set(a.so.split(",")) if a.so else None
     with ThreadPoolExecutor(3) as ex:
-        res = list(ex.map(lambda c: (c["id"], gerar_midia(c, f, dest, d)) if (not only or c["id"] in only) else None, j["comodos"]))
+        res = list(ex.map(lambda c: (c["id"], gerar_midia(c, f, dest, d, j.get("foto_aspecto"))) if (not only or c["id"] in only) else None, j["comodos"]))
     for r in res:
         if r: print(f"  {r[0]:<16} vídeo {r[1][0] / 1024:.0f} KB · foto {r[1][1][0]}x{r[1][1][1]}")
     hero_dims = dims(os.path.join(dest, "img", "foto", f"{j['hero']}.jpg"))
@@ -524,7 +628,7 @@ def cmd_check(a):
         if ruim in sem_com and ruim not in proprio:
             erros.append(f"sobrou do modelo: {ruim}")
     if j.get("iptu_10x"):
-        print(f"IPTU confirmado pelo usuário (iptu_10x R$ {brl(j['iptu_10x'])})")
+        print(f"IPTU confirmado pelo usuário (iptu_10x R$ {brl_valor(j['iptu_10x'])})")
     else:
         ic = f.get("iptu_checagem") or {}
         if not ic:
