@@ -8,9 +8,9 @@
 #
 # Credenciais: as mesmas de scripts/crm/publicar.sh, só por variável de ambiente, nunca em arquivo. Saem da
 # operação hosting_files_generate-upload-url do conector da Hostinger (usuário e domínio em .hostinger/site.json):
-#   CRM_UPLOAD_URL  o "url" devolvido (termina em /api/tus/public_html)
-#   CRM_AUTH        o "auth_key"
-#   CRM_REST        o "rest_auth_key"
+#   HOSTINGER_FILES_URL  o "url" devolvido (termina em /api/tus/public_html)
+#   HOSTINGER_AUTH_KEY   o "auth_key"
+#   HOSTINGER_REST_KEY   o "rest_auth_key"
 #
 # O destino sai só dos argumentos (código numérico; bairro minúsculo, sem acento, como no Passo 0) e todo caminho
 # é conferido antes do primeiro envio. Cada arquivo vai por TUS com ?override=true e o Upload-Offset final tem de
@@ -23,6 +23,11 @@
 #        5 o index.html do servidor não confere com o local
 
 set -euo pipefail
+# Nomes únicos das credenciais do File Browser da Hostinger (os mesmos de scripts/remover-imovel.py).
+# Os nomes antigos CRM_UPLOAD_URL, CRM_AUTH e CRM_REST ainda valem como reserva (obs. 0061, 23/11/2026).
+HOSTINGER_FILES_URL=${HOSTINGER_FILES_URL:-${CRM_UPLOAD_URL:-}}
+HOSTINGER_AUTH_KEY=${HOSTINGER_AUTH_KEY:-${CRM_AUTH:-}}
+HOSTINGER_REST_KEY=${HOSTINGER_REST_KEY:-${CRM_REST:-}}
 
 RAIZ=$(cd "$(dirname "$0")/.." && pwd)
 cd "$RAIZ"
@@ -118,7 +123,7 @@ fi
 echo "Conferência depois do envio: GET {base}/api/raw/$INDEX_REMOTO e cmp com $INDEX_LOCAL"
 
 if [ "$SECO" = 1 ]; then
-    for v in CRM_UPLOAD_URL CRM_AUTH CRM_REST; do
+    for v in HOSTINGER_FILES_URL HOSTINGER_AUTH_KEY HOSTINGER_REST_KEY; do
         if [ -n "${!v:-}" ]; then echo "credencial $v: definida"; else echo "credencial $v: FALTA"; fi
     done
     echo "--dry-run: nada foi enviado, nenhuma chamada de rede."
@@ -126,26 +131,26 @@ if [ "$SECO" = 1 ]; then
 fi
 
 # ---- envio ---------------------------------------------------------------------------------------------------
-if [ -z "${CRM_UPLOAD_URL:-}" ] || [ -z "${CRM_AUTH:-}" ] || [ -z "${CRM_REST:-}" ]; then
-    echo "Faltam CRM_UPLOAD_URL, CRM_AUTH e CRM_REST (as mesmas de scripts/crm/publicar.sh)." >&2
+if [ -z "${HOSTINGER_FILES_URL:-}" ] || [ -z "${HOSTINGER_AUTH_KEY:-}" ] || [ -z "${HOSTINGER_REST_KEY:-}" ]; then
+    echo "Faltam HOSTINGER_FILES_URL, HOSTINGER_AUTH_KEY e HOSTINGER_REST_KEY (as mesmas de scripts/crm/publicar.sh)." >&2
     echo "Gere com o conector da Hostinger (hosting_files_generate-upload-url). Nada foi enviado." >&2
     exit 2
 fi
-BASE=${CRM_UPLOAD_URL%/}
+BASE=${HOSTINGER_FILES_URL%/}
 BASE=${BASE%/api/tus/public_html}
 BASE=${BASE%/api/tus}
-case "$BASE" in https://?*) ;; *) echo "CRM_UPLOAD_URL não começa com https://. Nada foi enviado." >&2; exit 2 ;; esac
+case "$BASE" in https://?*) ;; *) echo "HOSTINGER_FILES_URL não começa com https://. Nada foi enviado." >&2; exit 2 ;; esac
 command -v curl >/dev/null || { echo "curl não encontrado. Nada foi enviado." >&2; exit 2; }
 
 enviar(){   # $1 arquivo local, $2 caminho no servidor (a partir da raiz do File Browser); mesmo TUS de publicar.sh
     local size c off
     size=$(wc -c < "$1" | tr -d ' ')
     c=$(curl -s --connect-timeout 20 --max-time 120 -o /dev/null -w '%{http_code}' -X POST "$BASE/api/tus/$2?override=true" \
-        -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST" \
+        -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY" \
         -H 'Tus-Resumable: 1.0.0' -H "Upload-Length: $size" -H 'Upload-Offset: 0') || c="sem-resposta"
     case "$c" in 401|403) echo "O servidor recusou as credenciais ($c) em $2: gere um novo link de envio." >&2; exit 3 ;; esac
     off=$(curl -s --connect-timeout 20 --max-time 600 -D - -o /dev/null -X PATCH "$BASE/api/tus/$2?override=true" \
-        -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST" \
+        -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY" \
         -H 'Tus-Resumable: 1.0.0' -H 'Content-Type: application/offset+octet-stream' -H 'Upload-Offset: 0' --data-binary "@$1" \
         | tr -d '\r' | awk 'tolower($1)=="upload-offset:"{v=$2} END{print v}') || off=""
     [ "$off" = "$size" ] && { echo "enviado   $2 ($size bytes)"; return 0; }
@@ -161,7 +166,7 @@ done < "$TMP/plano"
 
 echo "== conferência do index.html no servidor"
 c=$(curl -s --connect-timeout 20 --max-time 120 -o "$TMP/lido" -w '%{http_code}' "$BASE/api/raw/$INDEX_REMOTO" \
-    -H "X-Auth: $CRM_AUTH" -H "X-Auth-Rest: $CRM_REST") || c="sem-resposta"
+    -H "X-Auth: $HOSTINGER_AUTH_KEY" -H "X-Auth-Rest: $HOSTINGER_REST_KEY") || c="sem-resposta"
 if [ "$c" = 200 ] && cmp -s "$TMP/lido" "$INDEX_LOCAL"; then
     echo "OK    $INDEX_REMOTO é idêntico a $INDEX_LOCAL ($(wc -c < "$INDEX_LOCAL" | tr -d ' ') bytes)"
 else

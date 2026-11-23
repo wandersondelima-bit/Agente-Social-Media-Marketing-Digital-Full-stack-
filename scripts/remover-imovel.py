@@ -80,8 +80,10 @@ def htaccess_redirect(cod, bairro):
 
 # ---------- servidor (File Browser da Hostinger) ----------
 def creds():
-    url = os.environ.get("HOSTINGER_FILES_URL", "").rstrip("/")
-    a, r = os.environ.get("HOSTINGER_AUTH_KEY", ""), os.environ.get("HOSTINGER_REST_KEY", "")
+    # os nomes antigos CRM_* (de scripts/crm/publicar.sh até 23/11/2026) ainda valem como reserva (obs. 0061)
+    env = lambda novo, antigo: os.environ.get(novo) or os.environ.get(antigo, "")
+    url = env("HOSTINGER_FILES_URL", "CRM_UPLOAD_URL").rstrip("/")
+    a, r = env("HOSTINGER_AUTH_KEY", "CRM_AUTH"), env("HOSTINGER_REST_KEY", "CRM_REST")
     if not (url and a and r):
         falha("--remoto precisa de HOSTINGER_FILES_URL, HOSTINGER_AUTH_KEY e HOSTINGER_REST_KEY no ambiente "
               "(valores de hosting_files_generate-upload-url)")
