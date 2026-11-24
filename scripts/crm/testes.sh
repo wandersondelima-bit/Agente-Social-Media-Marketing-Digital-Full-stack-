@@ -216,6 +216,46 @@ get adm r=importar >/dev/null; has "importou 2" '<b>2</b> leads importados'
 curl -s -o /dev/null -b "$J/adm" -c "$J/adm" -X POST "$B/?r=importar" -F "csrf=$(tok adm)" -F "arquivo=@$J/imp.csv;type=text/csv"
 get adm r=importar >/dev/null; has "reimportar não duplica" '<b>0</b> leads importados'
 
+echo "== entrada de leads do site (receber.php)"
+SITE=https://marceloosawaimoveis.com.br
+rcv(){ curl -s -o "$J/out" -w '%{http_code}' -X POST "$B/receber.php" -H 'Content-Type: text/plain;charset=utf-8' "$@"; }
+sql "DELETE FROM entradas_site"
+FORM='{"tipo":"formulario","nome":"Lead Site Teste","whatsapp":"+5511987650001","consentimento":true,"consentimento_versao":"v2-2026-10","imovel_codigo":"3143315","imovel":"Avenida Bernardino de Campos, Paraíso","interesse":"Agendar uma visita","pagina":"'$SITE'/3143315/paraiso/","utm_source":"instagram","utm_content":"reel-24-11","aceita_ofertas":true}'
+ck "abrir no navegador responde" "$(curl -s -o /dev/null -w '%{http_code}' "$B/receber.php")" 200
+ck "sem origem é recusado" "$(rcv --data "$FORM")" 403
+ck "outro site é recusado" "$(rcv -H 'Origin: https://golpe.example' --data "$FORM")" 403
+ck "JSON quebrado é recusado" "$(rcv -H "Origin: $SITE" --data '{nao e json')" 400
+ck "clique no WhatsApp não vira lead" "$(rcv -H "Origin: $SITE" --data '{"tipo":"clique_whatsapp","imovel_codigo":"3143315"}')" 200
+ck "formulário sem consentimento não vira lead" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Sem Consent","whatsapp":"+5511987650009"}')" 200
+ck "campo invisível preenchido (robô) responde ok" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Robo","whatsapp":"+5511987650008","consentimento":true,"empresa":"spam"}')" 200
+ck "nenhum dos três criou lead" "$(sql "SELECT count(*) FROM leads WHERE telefone IN ('11987650009','11987650008') OR nome='Robo'")" 0
+ck "formulário da landing cria o lead" "$(rcv -H "Origin: $SITE" --data "$FORM")" 201
+ck "lead do site: origem, status e A distribuir" "$(sql "SELECT origem||'|'||status||'|'||ifnull(corretor_id,'-')||'|'||telefone FROM leads WHERE nome='Lead Site Teste'")" 'Formulário do site|novo|-|11987650001'
+ck "lead do site: imóvel e interesse" "$(sql "SELECT imovel_codigo||'|'||interesse FROM leads WHERE nome='Lead Site Teste'")" '3143315|Agendar uma visita'
+ck "lead do site: origem do clique guardada" "$(sql "SELECT utm LIKE '%reel-24-11%' FROM leads WHERE nome='Lead Site Teste'")" 1
+ck "lead do site: consentimento no histórico" "$(sql "SELECT count(*) FROM lead_eventos e JOIN leads l ON l.id=e.lead_id WHERE l.nome='Lead Site Teste' AND e.acao='criar' AND e.detalhe LIKE '%v2-2026-10%aceita outras opções: sim%'")" 1
+ck "mesmo envio de novo não duplica" "$(rcv -H "Origin: $SITE" --data "$FORM")" 200
+ck "continua um lead só" "$(sql "SELECT count(*) FROM leads WHERE telefone='11987650001'")" 1
+ck "repetição anotada no histórico" "$(sql "SELECT count(*) FROM lead_eventos WHERE acao='site_repetido'")" 1
+ck "mesma pessoa em outro imóvel vira outro lead" "$(rcv -H "Origin: $SITE" --data "${FORM/3143315\"/2792851\"}")" 201
+ck "isca cria o lead" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Lead Isca Teste","whatsapp":"(11) 98765-0002","consentimento":true,"isca":"guia-vila-olimpia","isca_titulo":"Guia Vila Olímpia","utm_campaign":"guia-vila-olimpia"}')" 201
+ck "lead da isca: origem e material" "$(sql "SELECT origem||'|'||interesse||'|'||ifnull(imovel_codigo,'-') FROM leads WHERE nome='Lead Isca Teste'")" 'Isca do site|Isca: Guia Vila Olímpia|-'
+ck "isca com nome inválido é recusada" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"X","whatsapp":"+5511987650003","consentimento":true,"isca":"../admin"}')" 400
+ck "telefone inválido é recusado" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Tel Ruim","whatsapp":"123","consentimento":true}')" 400
+ck "sem Origin, com a página do site como referência, é aceito" "$(rcv -e "$SITE/3143315/paraiso/" --data '{"tipo":"formulario","nome":"Lead Referer","whatsapp":"+5511987650004","consentimento":true,"imovel_codigo":"3143315"}')" 201
+ck "nome com quebra de linha é limpo" "$(rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Linha\nQuebrada","whatsapp":"+5511987650005","consentimento":true}')" 201
+ck "nome guardado numa linha só" "$(sql "SELECT nome FROM leads WHERE telefone='11987650005'")" 'Linha Quebrada'
+get adm r=leads >/dev/null; has "admin vê o lead do site na lista" 'Lead Site Teste'; has "admin vê a isca na lista" 'Isca: Guia Vila Olímpia'
+get ger r=leads >/dev/null; has "gerente vê o lead do site" 'Lead Isca Teste'
+get ana r=leads >/dev/null; hasnt "corretor não vê lead A distribuir" 'Lead Site Teste'
+get adm r=lead_form >/dev/null; has "cadastro manual oferece a origem Isca do site" 'Isca do site'
+sql "DELETE FROM entradas_site"
+for i in 1 2 3 4 5 6 7 8 9 10; do rcv -H "Origin: $SITE" --data '{"tipo":"formulario","nome":"Lote","whatsapp":"1","consentimento":true}' >/dev/null; done
+ck "o 11º envio na mesma hora é barrado" "$(rcv -H "Origin: $SITE" --data "${FORM/0001/0006}")" 429
+sql "UPDATE entradas_site SET quando='2020-01-01 00:00:00'"
+ck "depois de 1 hora volta a aceitar" "$(rcv -H "Origin: $SITE" --data "${FORM/0001/0007}")" 201
+ck "registros com mais de 1 dia são apagados" "$(sql "SELECT count(*) FROM entradas_site WHERE quando < '2021-01-01'")" 0
+
 echo "== sessão de 24 horas e bloqueio por tentativas"
 SID=$(awk '$6=="crm_sessao"{print $7}' "$J/adm"); F=$APP/inc/_dados/sess/sess_$SID
 perl -pi -e "s/visto\|i:\d+;/visto|i:$(( $(date +%s) - 23*3600 ));/" "$F"; ck "23 h sem uso continua logado" "$(get adm r=leads)" 200
