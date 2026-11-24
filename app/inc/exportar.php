@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 const MESES = [1 => 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-const DIAS_PARADO = 14;   // lead em aberto sem atualização há este tempo conta como parado
 
 function nome_mes(string $ym): string
 {

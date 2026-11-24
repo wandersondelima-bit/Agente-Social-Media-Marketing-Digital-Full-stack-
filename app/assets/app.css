@@ -294,3 +294,59 @@ input[type=file].campo{padding:9px 10px}
 /* Resumo dos registros com o botão de baixar a planilha CSV ao lado */
 .barra-reg{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 2px 12px}
 .barra-reg .resumo-reg{margin:0}
+
+/* ===== Histórico na ficha do lead (24/11/2026) ===== */
+.hist > summary{cursor:pointer;font-size:.86rem;font-weight:500;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.hist > summary::-webkit-details-marker{display:none}
+.hist > summary::after{content:"";width:6px;height:6px;margin-left:4px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-2px)}
+.hist[open] > summary::after{transform:rotate(-135deg) translateY(-1px)}
+.hist ol{list-style:none;margin:10px 0 0;padding:0 0 0 14px;border-left:2px solid var(--line);display:grid;gap:9px}
+.hist li{position:relative;display:grid;gap:1px;font-size:.88rem;line-height:1.4}
+.hist li::before{content:"";position:absolute;left:-20px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--card);border:2px solid var(--accent)}
+.hist .h-q{font-size:.76rem;color:var(--muted)}
+.hist .h-o{overflow-wrap:anywhere}
+.hist .h-mais{font-size:.8rem}
+.hist .h-mais::before{display:none}
+
+/* ===== Aba Painel (24/11/2026) ===== */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media (min-width:640px){ .kpis{grid-template-columns:repeat(4, minmax(0,1fr))} .kpis.agora{grid-template-columns:1fr 1fr} }
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:13px 14px;display:grid;gap:2px;text-decoration:none;color:var(--ink);min-width:0}
+a.kpi:hover{border-color:var(--accent)}
+.kpi b{font-size:1.7rem;font-weight:500;line-height:1.15;letter-spacing:-.01em}
+.kpi-r{font-size:.84rem;color:var(--muted)}
+.kpi-d{font-size:.76rem;color:var(--muted);line-height:1.35}
+.kpi.atencao{border-color:var(--s-and);background:var(--s-and-bg)}
+.kpi.atencao .kpi-r,.kpi.atencao .kpi-d,.kpi.atencao b{color:var(--s-and-fg)}
+.painel-cx{gap:10px;align-content:start}
+.cx-t{display:grid;gap:2px}
+.cx-t p{margin:0;font-size:.82rem}
+.painel-2{display:grid;gap:0 16px}
+@media (min-width:720px){ .painel-2{grid-template-columns:1fr 1fr} }
+.colunas{display:block;width:100%;height:120px}
+.colunas .valor{fill:var(--accent)}
+.colunas .zero{fill:var(--line)}
+.colunas rect:hover{opacity:.75}
+.eixo{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:-4px}
+.eixo.cheio{margin-top:2px}
+.eixo.cheio span{flex:1 1 0;display:grid;justify-items:center;min-width:0}
+.eixo.cheio b{font-size:.92rem;color:var(--ink);font-weight:600}
+.pilha{display:block;width:100%;height:14px;border-radius:7px;overflow:hidden}
+.pilha .s-novo{fill:var(--s-novo)} .pilha .s-andamento{fill:var(--s-and)} .pilha .s-concluido{fill:var(--s-ok)} .pilha .s-perdido{fill:var(--s-perd)}
+.legenda{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem}
+.legenda li{display:inline-flex;align-items:center;gap:6px}
+.hbs{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+.hb-t{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:.88rem}
+.hb-r{min-width:0;overflow-wrap:anywhere}
+.hb-n{flex:none}
+.hb-b{display:block;width:100%;height:6px;margin-top:4px}
+.hb-b .fundo{fill:var(--soft)}
+.hb-b .valor{fill:var(--accent)}
+.hb.outros .hb-b .valor{fill:var(--muted)}
+.painel-cx .tabela{overflow-x:auto}
+.painel-cx table{min-width:520px}
+/* Menu com a aba Painel: no celular as abas rolam para o lado em vez de cortar a última */
+.menu .wrap{overflow-x:auto;scrollbar-width:none}
+.menu .wrap::-webkit-scrollbar{display:none}
+.menu a{flex:none}
+@media (max-width:479px){ .menu .wrap{gap:0} .menu a{padding:11px 9px 9px;font-size:.86rem} }

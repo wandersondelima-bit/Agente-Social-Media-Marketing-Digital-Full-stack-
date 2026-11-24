@@ -33,7 +33,7 @@ function topo(array $u, string $atual): string
 {
     $menu = '';
     if (ve_tudo($u)) {
-        $itens = $u['papel'] === 'admin' ? ['leads' => 'Leads', 'usuarios' => 'Usuários', 'importar' => 'Importar', 'exportar' => 'Exportar', 'registros' => 'Registros'] : ['leads' => 'Leads', 'exportar' => 'Exportar'];
+        $itens = $u['papel'] === 'admin' ? ['leads' => 'Leads', 'painel' => 'Painel', 'usuarios' => 'Usuários', 'importar' => 'Importar', 'exportar' => 'Exportar', 'registros' => 'Registros'] : ['leads' => 'Leads', 'painel' => 'Painel', 'exportar' => 'Exportar'];
         $menu = '<nav class="menu" aria-label="Seções"><div class="wrap">';
         foreach ($itens as $r => $t) $menu .= '<a href="' . e(url($r)) . '"' . ($r === $atual ? ' aria-current="page"' : '') . '>' . $t . '</a>';
         $menu .= '</div></nav>';
@@ -86,7 +86,62 @@ function opcoes(array $lista, $sel, ?string $vazio = null): string
     return $h;
 }
 
-function linha_lead(array $l, string $modo, array $cors, bool $lixeira): string
+/* ---------- Histórico do lead (linha do tempo na ficha; ideia do CRM do Sistema de Iscas) ---------- */
+const HIST_MAX = 15;   // eventos mostrados por lead; os mais antigos ficam resumidos numa linha
+
+/* Eventos dos leads listados, do mais novo para o mais antigo, numa consulta só. */
+function historicos(array $ids): array
+{
+    $r = [];
+    foreach (array_chunk(array_values(array_unique($ids)), 400) as $parte) {
+        $marcas = implode(',', array_fill(0, count($parte), '?'));
+        foreach (q("SELECT e.lead_id, e.usuario_id, e.acao, e.detalhe, e.quando, u.nome AS quem FROM lead_eventos e LEFT JOIN usuarios u ON u.id = e.usuario_id
+                    WHERE e.lead_id IN ($marcas) ORDER BY e.quando DESC, e.id DESC", $parte) as $ev) {
+            $r[(int)$ev['lead_id']][] = $ev;
+        }
+    }
+    return $r;
+}
+
+/* O evento em palavras. O detalhe vem do banco e passa por e() na hora de montar o HTML. */
+function texto_evento(array $ev): string
+{
+    $d = trim((string)$ev['detalhe']);
+    switch ($ev['acao']) {
+        case 'criar':
+            if ($ev['usuario_id'] === null) return 'Entrou pelo site' . ($d !== '' ? ' · ' . preg_replace('/^pelo site · /u', '', $d) : '');
+            return 'Cadastrado no CRM';
+        case 'importar': return 'Importado da planilha';
+        case 'status': return 'Status: ' . $d;
+        case 'motivo': return 'Motivo da perda: ' . $d;
+        case 'observacoes': return 'Observações atualizadas';
+        case 'atribuir': return $d === 'A distribuir' || $d === '' ? 'Voltou para A distribuir' : 'Atribuído a ' . $d;
+        case 'editar': return 'Dados do lead editados';
+        case 'excluir': return 'Lead excluído';
+        case 'restaurar': return 'Lead restaurado';
+        case 'site_repetido':
+            $extra = trim((string)preg_replace('/^enviou o formulário de novo ?·? ?/u', '', $d));
+            return 'Pediu de novo pelo site' . ($extra !== '' ? ' · ' . $extra : '');
+    }
+    return $ev['acao'] . ($d !== '' ? ' · ' . $d : '');
+}
+
+function bloco_historico(array $evs): string
+{
+    if (!$evs) return '';
+    $n = count($evs);
+    $li = '';
+    foreach (array_slice($evs, 0, HIST_MAX) as $ev) {
+        $t = strtotime((string)$ev['quando']);
+        $quem = $ev['usuario_id'] !== null ? ((string)($ev['quem'] ?? '') ?: 'usuário removido') : '';
+        $li .= '<li><span class="h-q num">' . e($t ? date('d/m/Y H:i', $t) : '') . '</span><span class="h-o">' . e(texto_evento($ev))
+            . ($quem !== '' ? ' <span class="muted">· ' . e($quem) . '</span>' : '') . '</span></li>';
+    }
+    if ($n > HIST_MAX) $li .= '<li class="h-mais muted">E mais ' . ($n - HIST_MAX) . ' ' . ($n - HIST_MAX === 1 ? 'registro anterior' : 'registros anteriores') . '.</li>';
+    return '<details class="hist"><summary>Histórico <span class="muted num">(' . $n . ')</span></summary><ol>' . $li . '</ol></details>';
+}
+
+function linha_lead(array $l, string $modo, array $cors, bool $lixeira, array $hist = []): string
 {
     $id = (int)$l['id'];
     $adm = $modo === 'admin';
@@ -128,7 +183,7 @@ function linha_lead(array $l, string $modo, array $cors, bool $lixeira): string
                 . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar: apagar para sempre">Excluir definitivamente</button></form>'
                 . '<p class="dica">Excluir definitivamente apaga o lead e o histórico dele do banco. Não dá para desfazer.</p>';
         }
-        return $h . '</div></li>';
+        return $h . bloco_historico($hist) . '</div></li>';
     }
     $h .= '<div class="motivo" data-motivo' . ($l['status'] === 'perdido' ? '' : ' hidden') . '><label for="mot-' . $id . '">Motivo da perda</label>'
         . '<select class="campo" id="mot-' . $id . '" data-acao="lead_motivo">' . opcoes(MOTIVOS, $l['motivo_perda'], 'Escolha o motivo') . '</select></div>';
@@ -147,7 +202,7 @@ function linha_lead(array $l, string $modo, array $cors, bool $lixeira): string
             . '<form method="post" action="' . e(url('lead_excluir')) . '" class="confirma">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">'
             . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar exclusão">Excluir lead</button></form></div>';
     }
-    return $h . '</div></li>';
+    return $h . bloco_historico($hist) . '</div></li>';
 }
 
 function tela_leads(array $u): void
@@ -157,7 +212,7 @@ function tela_leads(array $u): void
     $modo = $adm ? 'admin' : ($geral ? 'gerente' : 'corretor');
     $f = (string)($_GET['f'] ?? 'abertos');   // a tela abre só com o que ainda está em atendimento
     $fc = $geral ? (int)($_GET['c'] ?? 0) : 0;
-    $validos = array_merge(['abertos', 'todos'], array_keys(STATUS), $geral ? ['distribuir', 'excluidos'] : []);
+    $validos = array_merge(['abertos', 'todos'], array_keys(STATUS), $geral ? ['distribuir', 'parados', 'excluidos'] : []);
     if (!in_array($f, $validos, true)) $f = 'abertos';
     $lixeira = $f === 'excluidos';
     $_SESSION['lista_qs'] = http_build_query(array_filter(['r' => 'leads', 'f' => $f === 'abertos' ? '' : $f, 'c' => $fc ?: '']));
@@ -176,8 +231,11 @@ function tela_leads(array $u): void
     if (isset(STATUS[$f])) { $onde[] = 'l.status = ?'; $p[] = $f; }
     if ($f === 'abertos') $onde[] = "l.status IN ('novo', 'andamento')";
     if ($f === 'distribuir') $onde[] = 'l.corretor_id IS NULL';
+    if ($f === 'parados') { $onde[] = "l.status IN ('novo', 'andamento') AND l.atualizado_em < ?"; $p[] = date('Y-m-d H:i:s', time() - DIAS_PARADO * 86400); }
     if ($fc) { $onde[] = 'l.corretor_id = ?'; $p[] = $fc; }
     $leads = q('SELECT l.*, u.nome AS corretor FROM leads l LEFT JOIN usuarios u ON u.id = l.corretor_id WHERE ' . implode(' AND ', $onde) . ' ORDER BY l.entrada DESC, l.id DESC LIMIT 500', $p)->fetchAll();
+
+    $hist = historicos(array_map(fn($l) => (int)$l['id'], $leads));
 
     $cors = [];
     $cors_filtro = [];   // no filtro entram também os desativados, que ainda têm leads
@@ -203,7 +261,7 @@ function tela_leads(array $u): void
         . ($geral ? $chip('excluidos', 'Excluídos', null) : '') . '</div>'
         . '<form class="busca' . ($geral ? ' dupla' : '') . '" method="get" action="' . e(base()) . '/"><input type="hidden" name="r" value="leads">'
         . ($geral ? '<select class="campo" name="c" aria-label="Filtrar por corretor" data-envia>' . opcoes($cors_filtro, $fc ?: '', 'Todos os corretores') . '</select>' : '')
-        . '<select class="campo" name="f" aria-label="Filtrar por status" title="Em aberto = Novo e Em andamento" data-envia>' . opcoes(['todos' => 'Todos os status'] + STATUS + ($geral ? ['distribuir' => 'A distribuir', 'excluidos' => 'Excluídos'] : []), $f === 'abertos' ? '' : $f, 'Em aberto') . '</select>'
+        . '<select class="campo" name="f" aria-label="Filtrar por status" title="Em aberto = Novo e Em andamento" data-envia>' . opcoes(['todos' => 'Todos os status'] + STATUS + ($geral ? ['distribuir' => 'A distribuir', 'parados' => 'Parados há ' . DIAS_PARADO . ' dias ou mais', 'excluidos' => 'Excluídos'] : []), $f === 'abertos' ? '' : $f, 'Em aberto') . '</select>'
         . '<noscript><button class="btn btn-ghost" type="submit">Filtrar</button></noscript></form>'
         . '<ul class="lista"><li class="cab" aria-hidden="true"><span>Entrada</span><span>Nome</span><span>Status</span></li>';
     if (!$leads) {
@@ -211,7 +269,7 @@ function tela_leads(array $u): void
         else $vazio = 'Nenhum lead neste filtro.';
         $h .= '<li class="vazio">' . $vazio . '</li>';
     }
-    foreach ($leads as $l) $h .= linha_lead($l, $modo, $cors, $lixeira);
+    foreach ($leads as $l) $h .= linha_lead($l, $modo, $cors, $lixeira, $hist[(int)$l['id']] ?? []);
     $h .= '</ul>' . (count($leads) === 500 ? '<p class="muted nota-lista">Mostrando os 500 mais recentes. Use os filtros para ver os demais.</p>' : '')
         . '</div></main>';
     pagina($geral ? 'Leads' : 'Meus leads', $h);

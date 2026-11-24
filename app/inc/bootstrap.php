@@ -15,6 +15,7 @@ const SESSAO_OCIOSA = 86400;      // 24 horas sem uso encerram a sessão (era 12
 const LOGIN_JANELA = 900;         // 15 minutos
 const LOGIN_MAX = 8;              // tentativas erradas na janela, por login
 const LOGIN_MAX_IP = 30;          // tentativas erradas na janela, por IP
+const DIAS_PARADO = 14;           // lead em aberto sem atualização há este tempo conta como parado (Painel, Exportar e filtro da lista)
 const LOG_MESES = 12;             // registros de acesso e de exportação ficam guardados por 12 meses
 const RESULTADOS_ACESSO = ['entrou' => 'Entrou', 'saiu' => 'Saiu', 'senha_errada' => 'Senha errada', 'login_inexistente' => 'Login não existe',
     'desativado' => 'Usuário desativado', 'bloqueado' => 'Bloqueado por tentativas'];

@@ -61,6 +61,10 @@ switch ($rota) {
     case 'importar':
         tela_importar(exigir_admin());
         break;
+    case 'painel':
+        require __DIR__ . '/inc/painel.php';
+        tela_painel(exigir_visao_geral());   // admin e gerente; o corretor recebe 403
+        break;
     case 'exportar':
         require __DIR__ . '/inc/exportar.php';
         tela_exportar(exigir_visao_geral());
