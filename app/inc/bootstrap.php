@@ -7,7 +7,7 @@ mb_internal_encoding('UTF-8');
 
 const STATUS = ['novo' => 'Novo', 'andamento' => 'Em andamento', 'concluido' => 'Concluído', 'perdido' => 'Perdido'];
 const MOTIVOS = ['Sem retorno', 'Comprou outro imóvel', 'Fora do orçamento', 'Desistiu', 'Outro'];
-const ORIGENS = ['WhatsApp Business', 'Direct do Instagram', 'Formulário do site', 'Outro'];
+const ORIGENS = ['WhatsApp Business', 'Direct do Instagram', 'Formulário do site', 'Isca do site', 'Outro'];   // as duas "do site" chegam sozinhas por receber.php
 const OBS_MAX = 300;               // observações do lead (era 200; pedido de 19/11/2026)
 const PAPEIS = ['admin' => 'Admin', 'gerente' => 'Gerente', 'corretor' => 'Corretor'];   // gerente: vê tudo, não altera nada
 const SENHA_MIN = 6;              // tamanho mínimo da senha (decisão do administrador em 11/11/2026)

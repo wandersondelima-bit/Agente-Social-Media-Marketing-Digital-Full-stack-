@@ -69,6 +69,12 @@ function criar_tabelas(): void
             login VARCHAR(60) NOT NULL DEFAULT '',
             filtro VARCHAR(500) NOT NULL
         )$fim",
+        // Envios do formulário do site (receber.php), só para o limite por IP. Guardados por 1 dia.
+        "CREATE TABLE IF NOT EXISTS entradas_site (
+            id $pk,
+            ip VARCHAR(45) NOT NULL,
+            quando DATETIME NOT NULL
+        )$fim",
     ];
     foreach ($tabelas as $sql) db()->exec($sql);
     $indices = [
@@ -79,6 +85,7 @@ function criar_tabelas(): void
         'CREATE INDEX ix_tentativas ON tentativas_login (quando)',
         'CREATE INDEX ix_log_acessos ON log_acessos (quando)',
         'CREATE INDEX ix_log_exportacoes ON log_exportacoes (quando)',
+        'CREATE INDEX ix_entradas_site ON entradas_site (ip, quando)',
     ];
     foreach ($indices as $sql) { try { db()->exec($sql); } catch (Throwable $t) { /* índice já existe */ } }
 }
