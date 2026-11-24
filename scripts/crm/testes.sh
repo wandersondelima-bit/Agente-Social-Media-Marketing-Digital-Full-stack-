@@ -95,6 +95,8 @@ echo "== corretor"
 ck "login da corretora" "$(post ana entrar -d login=ana -d senha=$PC)" 303
 get ana "r=leads" >/dev/null; has "vê o próprio lead" 'Lead Da Ana'; hasnt "não vê lead de outro" 'Lead Do Bruno'; hasnt "não vê lead sem dono" 'Lead Sem Dono'; hasnt "não tem Novo lead" 'Novo lead'; hasnt "não tem a aba Exportar" 'r=exportar'; hasnt "não tem a aba Registros" 'r=registros'
 ck "não abre Registros" "$(get ana r=registros)" 403
+get ana "r=leads" >/dev/null; hasnt "corretor não tem a aba Painel" 'r=painel'
+ck "corretor não abre o Painel" "$(get ana r=painel)" 403
 ck "muda o status do próprio lead" "$(postj ana lead_status -d id=$L1 -d valor=andamento)" 200
 ck "não muda lead de outro" "$(postj ana lead_status -d id=$L2 -d valor=perdido)" 404
 ck "não grava obs em lead sem dono" "$(postj ana lead_obs -d id=$L3 -d valor=oi)" 404
@@ -133,6 +135,7 @@ ck "gerente não abre Usuários" "$(get ger r=usuarios)" 403
 ck "gerente não abre Importar" "$(get ger r=importar)" 403
 ck "gerente não abre o formulário de lead" "$(get ger r=lead_form)" 403
 ck "gerente abre Exportar" "$(get ger r=exportar)" 200
+ck "gerente abre o Painel" "$(get ger r=painel)" 200; has "Painel do gerente mostra os números" 'Entraram'; hasnt "Painel do gerente não tem ação de gravação" 'data-acao='
 ck "gerente baixa a planilha" "$(baixar ger 'r=exportar_arquivo')" 200
 ck "planilha do gerente tem cabeçalho + 3 leads" "$(xlsx_linhas "$J/arq")" 4
 
@@ -255,6 +258,41 @@ ck "o 11º envio na mesma hora é barrado" "$(rcv -H "Origin: $SITE" --data "${F
 sql "UPDATE entradas_site SET quando='2020-01-01 00:00:00'"
 ck "depois de 1 hora volta a aceitar" "$(rcv -H "Origin: $SITE" --data "${FORM/0001/0007}")" 201
 ck "registros com mais de 1 dia são apagados" "$(sql "SELECT count(*) FROM entradas_site WHERE quando < '2021-01-01'")" 0
+
+echo "== Painel (números) e histórico na ficha"
+get adm "r=leads" >/dev/null; has "admin tem a aba Painel" 'r=painel'
+ck "admin abre o Painel" "$(get adm r=painel)" 200
+N30=$(sql "SELECT count(*) FROM leads WHERE excluido_em IS NULL AND entrada >= '$(date -v-29d +%F)'")
+has "Painel conta os leads que entraram nos 30 dias ($N30)" "Entraram</span><b class=\"num\">$N30<"
+NDIS=$(sql "SELECT count(*) FROM leads WHERE excluido_em IS NULL AND corretor_id IS NULL AND status IN ('novo','andamento')")
+has "Painel mostra os A distribuir de agora ($NDIS)" "A distribuir agora</span><b class=\"num\">$NDIS<"
+has "Painel mostra leads por dia" 'Leads por dia'; has "Painel separa a origem Isca do site" 'Isca do site'
+has "Painel mostra o material da isca" 'Material: Guia Vila Olímpia'; has "Painel mostra a campanha do link" 'guia-vila-olimpia'
+has "Painel mostra o imóvel pelo código" 'Cód. 3143315'; has "Painel tem a tabela por corretor" 'Por corretor'
+hasnt "HTML do imóvel é neutralizado no Painel" '<img src=x'; hasnt "HTML do nome não aparece no Painel" '<script>alert(1)'
+hasnt "Painel não usa estilo em linha (bloqueado pela segurança)" 'style="'
+get adm "r=painel&p=tudo" >/dev/null; has "Todo o período agrupa por mês" 'Leads por mês'
+get adm "r=painel&p=7d" >/dev/null; has "7 dias mostra o número de cada dia" 'class="eixo cheio num"'
+ck "período inventado cai nos 30 dias" "$(get adm 'r=painel&p=xyz')" 200; has "e marca Últimos 30 dias" 'aria-current="true">Últimos 30 dias'
+get adm "r=painel&p=mes_passado" >/dev/null; has "mês sem leads mostra o aviso" 'Nenhum lead entrou neste período'
+ck "sem login, o Painel manda para o login" "$(get sem r=painel)" 303
+sql "UPDATE leads SET atualizado_em='2020-01-01 00:00:00' WHERE nome='Lead Isca Teste'"
+get adm "r=leads&f=parados" >/dev/null; has "filtro Parados traz o lead sem atualização" 'Lead Isca Teste'; hasnt "filtro Parados deixa de fora o atualizado" 'Lead Site Teste'
+get adm "r=painel" >/dev/null; has "Painel destaca os parados" 'class="kpi atencao" href="[^"]*f=parados'
+get adm "r=leads&f=todos" >/dev/null
+has "ficha tem o Histórico" 'class="hist"'
+has "histórico: entrada pelo site com o consentimento" 'Entrou pelo site · consentimento v2-2026-10'
+has "histórico: pedido repetido pelo site" 'Pediu de novo pelo site'
+has "histórico: mudança de status" 'Status: Novo → Em andamento'
+has "histórico: quem mudou" '· Ana Teste</span>'
+has "histórico: motivo da perda" 'Motivo da perda: Sem retorno'
+has "histórico: lead importado" 'Importado da planilha'
+has "histórico: cadastro manual" 'Cadastrado no CRM'
+get ger "r=leads&f=todos" >/dev/null; has "gerente também vê o histórico" 'Status: Novo → Em andamento'
+LH=$(sql "SELECT id FROM leads WHERE nome='Lead Site Teste' ORDER BY id LIMIT 1")
+for i in $(seq 1 20); do sql "INSERT INTO lead_eventos (lead_id, acao, detalhe, quando) VALUES ($LH, 'site_repetido', '<b>x</b>', '2026-01-01 00:00:0$((i % 10))')"; done
+get adm "r=leads&f=todos" >/dev/null; has "histórico longo resume os mais antigos" 'E mais [0-9]* registros anteriores'
+hasnt "detalhe do histórico é neutralizado" '<b>x</b>'
 
 echo "== sessão de 24 horas e bloqueio por tentativas"
 SID=$(awk '$6=="crm_sessao"{print $7}' "$J/adm"); F=$APP/inc/_dados/sess/sess_$SID
