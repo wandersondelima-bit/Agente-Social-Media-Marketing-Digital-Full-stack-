@@ -535,6 +535,7 @@ const CONFIG = {
   consentimentoVersao: 'v2-2026-10',
   fotoSegundos: 5                 // tempo de cada foto no modo automático
 };
+const CRM_ENDPOINT = '/app/receber.php';   /* entrada de leads do CRM: a mesma para todos os imóveis */
 const ROOMS = [
   {id:'living',    n:'Living',             d:'Piso de madeira e vista livre'},
   {id:'sala',      n:'Sala de estar',      d:'Fechamento em vidro voltado para a cidade'},
@@ -585,6 +586,9 @@ function waLink(nome, chave) {
 function send(payload, beacon) {
   if (!CONFIG.endpoint) return Promise.resolve(false);
   const body = JSON.stringify(payload);
+  if (payload.tipo === 'formulario') {   /* o lead também entra no CRM (/app), desde 24/11/2026; a planilha continua recebendo */
+    try { fetch(CRM_ENDPOINT, {method:'POST', keepalive:true, headers:{'Content-Type':'text/plain;charset=utf-8'}, body}).catch(() => {}); } catch (e) {}
+  }
   if (beacon && navigator.sendBeacon) {
     try { return Promise.resolve(navigator.sendBeacon(CONFIG.endpoint, new Blob([body], {type:'text/plain;charset=utf-8'}))); } catch (e) {}
   }
