@@ -1,7 +1,7 @@
 """Monta site/guias/<slug>/index.html a partir da página inicial (cabeçalho, rodapé, cores, ícones e cartões)
 e do conteúdo do guia em scripts/guias/<slug>-conteudo.html. O guia fica igual ao site sem copiar à mão.
 
-Uso: python3 scripts/guias/montar-guia.py pinheiros
+Uso: python3 scripts/guias/montar-guia.py pinheiros   (ou brooklin)
 """
 import pathlib, re, sys
 
@@ -16,7 +16,19 @@ GUIAS = {
         "description": "O preço do m² em Pinheiros, a conta da compra com ITBI e cartório para 70, 100 e 130 m², o aluguel e o que pedir antes da visita. Dados de outubro de 2026.",
         "og_title": "Quanto custa morar em Pinheiros: a conta completa da compra",
         "og_description": "R$ 18.225 por m² (FipeZAP, out/2026). ITBI e cartório somam cerca de 4% do preço. Guia completo com a conta por metragem.",
-    }
+    },
+    "brooklin": {
+        "bairro": "Brooklin",
+        # cartões: o bairro e a vizinhança imediata, nesta ordem (o nome é o do campo `bairro` da página inicial)
+        "bairros": ["Brooklin Paulista", "Brooklin - Itaim Bibi", "Jardim das Acácias", "Cidade Monções",
+                    "Vila Cordeiro", "Campo Belo", "Chácara Santo Antônio"],
+        "isca": "quanto-custa-morar-no-brooklin",
+        "titulo": "Quanto custa morar no Brooklin",
+        "title": "Quanto custa morar no Brooklin · Guia de bairro · Marcelo Osawa Imóveis",
+        "description": "O preço do m² no Brooklin, a conta da compra com ITBI e cartório para 70, 100 e 130 m², o aluguel e o que pedir antes da visita. Dados de 2026.",
+        "og_title": "Quanto custa morar no Brooklin: a conta completa da compra",
+        "og_description": "R$ 14.649 por m² (levantamento do QuintoAndar, fev/2026). ITBI e cartório somam cerca de 4% do preço. Guia completo com a conta por metragem.",
+    },
 }
 g = GUIAS[SLUG]
 home = (RAIZ / "site/index.html").read_text(encoding="utf-8")
@@ -101,9 +113,19 @@ css_guia = """<style>
 .g-fim{margin-top:48px}
 </style>"""
 
+# Guia de um bairro só: filtro igual ao de sempre. Guia com vizinhança ("bairros"): cartões na ordem da lista,
+# os mais novos primeiro dentro de cada bairro.
+if "bairros" in g:
+    extra_guia = ", bairros:[" + ", ".join("'" + b + "'" for b in g["bairros"]) + "]"
+    filtro = ("todos.filter(im => GUIA.bairros.includes(im.bairro)).reverse()"
+              ".sort((a, b) => GUIA.bairros.indexOf(a.bairro) - GUIA.bairros.indexOf(b.bairro))")
+else:
+    extra_guia = ""
+    filtro = "todos.filter(im => im.bairro === GUIA.bairro).reverse()"
+
 script = """<script>
 """ + whatsapp + """
-const GUIA = {isca:'""" + g["isca"] + """', titulo:'""" + g["titulo"] + """', bairro:'""" + g["bairro"] + """'};
+const GUIA = {isca:'""" + g["isca"] + """', titulo:'""" + g["titulo"] + """', bairro:'""" + g["bairro"] + """'""" + extra_guia + """};
 const CONFIG = {
   endpoint: 'https://script.google.com/macros/s/AKfycbwzySt1EMvokNnTXpiIOeslLxopo_WfLSI9UWSEHWbyKqSjBvfvUJHlAFrJuPL6tO68/exec',   /* a mesma planilha das landings */
   consentimentoVersao: 'v2-2026-10'
@@ -184,7 +206,7 @@ fetch('/', {cache:'no-store'}).then(r => r.text()).then(h => {
   const m = h.match(/const IMOVEIS = \\[\\n([\\s\\S]*?)\\n\\];/);
   if (!m) return;
   const todos = new Function('return [' + m[1] + ']')();
-  const doBairro = todos.filter(im => im.bairro === GUIA.bairro).reverse();
+  const doBairro = """ + filtro + """;
   if (!doBairro.length) return;
   const lista = document.getElementById('lista');
   doBairro.forEach(im => {
@@ -231,7 +253,7 @@ html = f"""<!doctype html>
 <meta property="og:image" content="{url}img/capa.jpg">
 <meta property="og:image:width" content="1080">
 <meta property="og:image:height" content="1080">
-<meta property="og:image:alt" content="Capa do guia Quanto custa morar em {g['bairro']}">
+<meta property="og:image:alt" content="Capa do guia {g['titulo']}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#141719">
 {favicon}
