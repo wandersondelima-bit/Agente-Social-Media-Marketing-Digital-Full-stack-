@@ -119,13 +119,15 @@ function tela_exportar(array $u): void
         . '<p class="contagem" aria-live="polite"><b class="num">' . $n . '</b> ' . ($n === 1 ? 'lead' : 'leads') . ' com estes filtros · ' . e($flt['texto']) . '</p>'
         . '<div class="acoes"><button class="btn btn-primary" type="submit" name="r" value="exportar_arquivo"' . ($n ? '' : ' disabled') . '>Baixar planilha</button>'
         . '<button class="btn btn-ghost" type="submit" name="r" value="exportar">Atualizar contagem</button></div></form>'
-        . '<p class="muted nota-lista">A planilha traz contato, imóvel, origem, campanha (UTM), status, motivo da perda, corretor, observações e há quantos dias o lead entrou. Guarde o arquivo com cuidado: ele tem nome e telefone de clientes.</p>'
+        . '<p class="muted nota-lista">A planilha traz contato, imóvel, origem, campanha (UTM), status, motivo da perda, corretor, observações e há quantos dias o lead entrou. '
+        . ($u['papel'] === 'admin' ? 'Guarde o arquivo com cuidado: ele tem nome e telefone de clientes.' : 'Para proteger os clientes, o telefone sai com os dígitos do meio ocultos.') . '</p>'
         . '</div></main>';
     pagina('Exportar', $h);
 }
 
 /* ---------- Download ---------- */
-function linhas_exportacao(array $flt): array
+/* O telefone completo só sai na planilha do admin; para os demais perfis ele vai parcial (telefone_parcial). */
+function linhas_exportacao(array $flt, bool $tel_completo): array
 {
     $rs = q('SELECT l.*, u.nome AS corretor FROM leads l LEFT JOIN usuarios u ON u.id = l.corretor_id WHERE ' . implode(' AND ', $flt['onde']) . ' ORDER BY l.entrada DESC, l.id DESC', $flt['p'])->fetchAll();
     $hoje = new DateTimeImmutable('today');
@@ -135,7 +137,7 @@ function linhas_exportacao(array $flt): array
         $dias = $hoje->diff(new DateTimeImmutable((string)$l['entrada']))->days;
         $out[] = [
             ['d', (string)$l['entrada']], ['s', nome_mes(substr((string)$l['entrada'], 0, 7))], ['s', STATUS[$l['status']] ?? $l['status']], ['s', (string)$l['motivo_perda']],
-            ['s', (string)($l['corretor'] ?? '') !== '' ? (string)$l['corretor'] : 'A distribuir'], ['s', (string)$l['nome']], ['s', telefone_fmt((string)$l['telefone'])],
+            ['s', (string)($l['corretor'] ?? '') !== '' ? (string)$l['corretor'] : 'A distribuir'], ['s', (string)$l['nome']], ['s', $tel_completo ? telefone_fmt((string)$l['telefone']) : telefone_parcial((string)$l['telefone'])],
             ['s', (string)$l['imovel_codigo']], ['s', (string)$l['imovel_titulo']], ['s', (string)$l['imovel_url']], ['s', (string)$l['interesse']], ['s', (string)$l['origem']],
             ['s', (string)($utm['utm_source'] ?? '')], ['s', (string)($utm['utm_medium'] ?? '')], ['s', (string)($utm['utm_campaign'] ?? '')], ['s', (string)($utm['utm_content'] ?? '')],
             ['s', (string)$l['observacoes']], ['d', substr((string)$l['atualizado_em'], 0, 10)], ['n', $dias],
@@ -169,14 +171,15 @@ function filtro_em_texto(array $v): string
 /* Registro da exportação: quem pediu, quando e o filtro usado. Somente isso: nada dos leads exportados é guardado. */
 function registrar_exportacao(array $u, array $flt): void
 {
-    q('INSERT INTO log_exportacoes (quando, usuario_id, login, filtro) VALUES (?,?,?,?)', [agora(), (int)$u['id'], (string)$u['login'], filtro_em_texto($flt['v'])]);
+    $tel = $u['papel'] === 'admin' ? '' : ' · Telefone parcial';
+    q('INSERT INTO log_exportacoes (quando, usuario_id, login, filtro) VALUES (?,?,?,?)', [agora(), (int)$u['id'], (string)$u['login'], mb_substr(filtro_em_texto($flt['v']) . $tel, 0, 500)]);
 }
 
 function exportar_arquivo(array $u): void
 {
     $flt = filtros_exportacao($_GET);
     registrar_exportacao($u, $flt);
-    $linhas = linhas_exportacao($flt);
+    $linhas = linhas_exportacao($flt, $u['papel'] === 'admin');
     $nome = 'leads-' . $flt['sufixo'];
     if (($_GET['fmt'] ?? 'xlsx') === 'csv') {
         enviar_csv($nome, array_column(COLUNAS_EXPORT, 0), array_map(fn($l) => array_map(fn($c) => $c[0] === 'd' ? data_br($c[1]) : $c[1], $l), $linhas));

@@ -138,6 +138,13 @@ ck "gerente abre Exportar" "$(get ger r=exportar)" 200
 ck "gerente abre o Painel" "$(get ger r=painel)" 200; has "Painel do gerente mostra os números" 'Entraram'; hasnt "Painel do gerente não tem ação de gravação" 'data-acao='
 ck "gerente baixa a planilha" "$(baixar ger 'r=exportar_arquivo')" 200
 ck "planilha do gerente tem cabeçalho + 3 leads" "$(xlsx_linhas "$J/arq")" 4
+unzip -p "$J/arq" xl/worksheets/sheet1.xml > "$J/xml"
+grep -q '(11) •••••-0001' "$J/xml" && ok "planilha do gerente traz o telefone parcial" || nok "planilha do gerente sem o telefone parcial"
+grep -q '90000-000' "$J/xml" && nok "planilha do gerente vazou o telefone completo" || ok "planilha do gerente não traz telefone completo"
+ck "gerente baixa o csv" "$(baixar ger 'r=exportar_arquivo&fmt=csv')" 200
+grep -q '90000-000' "$J/arq" && nok "csv do gerente vazou o telefone completo" || ok "csv do gerente não traz telefone completo"
+get ger "r=leads" >/dev/null; hasnt "lista do gerente não fala em só leitura" 'só para leitura'
+get ger "r=exportar" >/dev/null; has "Exportar avisa o gerente do telefone parcial" 'dígitos do meio ocultos'; hasnt "Exportar do gerente não promete telefone completo" 'ele tem nome e telefone'
 
 echo "== exportação (admin)"
 post adm lead_salvar --data-urlencode 'nome=<script>alert(1)</script>' -d telefone=11900000004 --data-urlencode 'imovel_ref="><img src=x onerror=1>' >/dev/null
@@ -146,6 +153,7 @@ get adm "r=leads&f=todos" >/dev/null; hasnt "HTML no nome é neutralizado" '<scr
 get adm "r=exportar" >/dev/null; has "resumo mensal aparece" 'Resumo pela data de entrada'; has "contagem inicial de 5 leads" '<b class="num">5</b>'
 ck "xlsx de tudo" "$(baixar adm 'r=exportar_arquivo')" 200
 ck "xlsx válido com cabeçalho + 5" "$(xlsx_linhas "$J/arq")" 6
+unzip -p "$J/arq" xl/worksheets/sheet1.xml | grep -q '(11) 90000-0001' && ok "planilha do admin traz o telefone completo" || nok "planilha do admin sem o telefone completo"
 grep -q 'sheet' <(unzip -l "$J/arq" 2>/dev/null) && ok "xlsx tem a aba de dados" || nok "xlsx sem aba"
 baixar adm 'r=exportar_arquivo&enviado=1&s[]=perdido' >/dev/null; ck "filtro só Perdido" "$(xlsx_linhas "$J/arq")" 2
 baixar adm 'r=exportar_arquivo&enviado=1&s[]=novo&s[]=andamento&c=sem' >/dev/null; ck "filtro A distribuir em aberto" "$(xlsx_linhas "$J/arq")" 4
@@ -159,13 +167,15 @@ grep -q "'=HYPERLINK" "$J/arq" && ok "csv neutraliza fórmula" || nok "csv deixo
 ck "csv tem cabeçalho + 5 linhas" "$(python3 -c "import csv,sys; print(len(list(csv.reader(open(sys.argv[1], encoding='utf-8-sig')))))" "$J/arq")" 6
 
 echo "== registro de exportações"
-ck "cada planilha baixada gera um registro; ver a contagem não (gerente 1 + admin 6)" "$(sql 'SELECT count(*) FROM log_exportacoes')" 7
+ck "cada planilha baixada gera um registro; ver a contagem não (gerente 2 + admin 6)" "$(sql 'SELECT count(*) FROM log_exportacoes')" 8
 ck "o registro tem só quem, quando e o filtro" "$(sql "SELECT group_concat(name, ',') FROM pragma_table_info('log_exportacoes')")" 'id,quando,usuario_id,login,filtro'
 ck "filtro só Perdido, em palavras" "$(sql "SELECT filtro FROM log_exportacoes WHERE filtro LIKE '%Status: Perdido %'")" 'Período: Todo o período · Status: Perdido · Corretor: todos · Origem: todas · Excluídos: não'
 ck "filtro A distribuir em aberto" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Status: Novo, Em andamento · Corretor: A distribuir%'")" 1
 ck "filtro por corretor guarda o nome" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Corretor: Bruno Teste%'")" 1
 ck "filtro Este mês guarda as datas" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE 'Período: Este mês (01/%'")" 1
-ck "exportação do gerente fica no nome dele" "$(sql "SELECT count(*) FROM log_exportacoes x JOIN usuarios u ON u.id = x.usuario_id WHERE u.login = 'gerente.teste'")" 1
+ck "exportação do gerente fica no nome dele" "$(sql "SELECT count(*) FROM log_exportacoes x JOIN usuarios u ON u.id = x.usuario_id WHERE u.login = 'gerente.teste'")" 2
+ck "registro marca o telefone parcial do gerente" "$(sql "SELECT count(*) FROM log_exportacoes WHERE login = 'gerente.teste' AND filtro LIKE '% · Telefone parcial'")" 2
+ck "registro do admin não marca telefone parcial" "$(sql "SELECT count(*) FROM log_exportacoes WHERE login = 'adm' AND filtro LIKE '%Telefone parcial%'")" 0
 ck "nenhum dado de lead no registro" "$(sql "SELECT count(*) FROM log_exportacoes WHERE filtro LIKE '%Lead%' OR filtro LIKE '%9000%' OR filtro LIKE '%HYPERLINK%'")" 0
 
 echo "== aba Registros (admin)"
@@ -192,7 +202,7 @@ head -1 "$J/arq" | grep -q 'Data,Hora,Usuário,Login,Período,Status,Corretor,Or
 ck "CSV de exportações tem cabeçalho + todos os registros" "$(csvn "$J/arq")" $((NEX+1))
 ck "coluna Status traz o filtro só Perdido" "$(csvcol "$J/arq" 5 Perdido)" 1
 GER=$(sql "SELECT id FROM usuarios WHERE login='gerente.teste'")
-baixar adm "r=registros_arquivo&t=exportacoes&u=$GER" >/dev/null; ck "CSV filtrado pelo gerente" "$(csvn "$J/arq")" 2
+baixar adm "r=registros_arquivo&t=exportacoes&u=$GER" >/dev/null; ck "CSV filtrado pelo gerente (planilha e csv)" "$(csvn "$J/arq")" 3
 ck "baixar os registros não entra no registro de exportações de leads" "$(sql 'SELECT count(*) FROM log_exportacoes')" "$NEX"
 ck "gerente não baixa os registros" "$(get ger r=registros_arquivo)" 403
 ck "corretor não baixa os registros" "$(get ana r=registros_arquivo)" 403
