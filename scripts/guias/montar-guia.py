@@ -1,7 +1,7 @@
 """Monta site/guias/<slug>/index.html a partir da página inicial (cabeçalho, rodapé, cores, ícones e cartões)
 e do conteúdo do guia em scripts/guias/<slug>-conteudo.html. O guia fica igual ao site sem copiar à mão.
 
-Uso: python3 scripts/guias/montar-guia.py pinheiros   (ou brooklin, itaim-bibi)
+Uso: python3 scripts/guias/montar-guia.py pinheiros   (ou brooklin, itaim-bibi, vila-nova-conceicao)
 """
 import pathlib, re, sys
 
@@ -38,6 +38,16 @@ GUIAS = {
         "description": "O preço do m² no Itaim Bibi, a conta da compra com ITBI e cartório para 70, 100 e 130 m², o aluguel e o que pedir antes da visita. Dados de outubro de 2026.",
         "og_title": "Quanto custa morar no Itaim Bibi: a conta completa da compra",
         "og_description": "R$ 20.040 por m² (FipeZAP, out/2026). ITBI e cartório somam cerca de 4% do preço. Guia completo com a conta por metragem.",
+    },
+    "vila-nova-conceicao": {
+        "bairro": "Vila Nova Conceição",
+        "bairros": ["Vila Nova Conceição", "Moema", "Itaim Bibi", "Vila Olímpia"],
+        "isca": "quanto-custa-morar-na-vila-nova-conceicao",
+        "titulo": "Quanto custa morar na Vila Nova Conceição",
+        "title": "Quanto custa morar na Vila Nova Conceição · Guia de bairro · Marcelo Osawa Imóveis",
+        "description": "O preço do m² na Vila Nova Conceição, a conta da compra com ITBI e cartório para 70, 100 e 130 m², o aluguel e o que pedir antes da visita. Dados de 2026.",
+        "og_title": "Quanto custa morar na Vila Nova Conceição: a conta completa da compra",
+        "og_description": "R$ 21.600 por m², o mais caro do país (ranking QuintoAndar, mar/2026). ITBI e cartório somam cerca de 4% do preço. Guia completo com a conta por metragem.",
     },
 }
 g = GUIAS[SLUG]
