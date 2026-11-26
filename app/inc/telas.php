@@ -21,6 +21,12 @@ function pagina(string $titulo, string $corpo, string $classe = ''): void
         '<meta name="robots" content="noindex, nofollow"><meta name="csrf" content="', e(csrf()), '">',
         '<title>', e($titulo), ' · Leads · Marcelo Osawa Imóveis</title>',
         '<link rel="icon" href="', $b, '/assets/favicon.svg">',
+        // Ícone e nome ao "Adicionar à Tela de Início" (sem isso o iPhone desenha a 1ª letra do título)
+        '<link rel="apple-touch-icon" href="', $b, '/assets/apple-touch-icon.png">',
+        '<link rel="manifest" href="', $b, '/assets/manifest.json">',
+        '<meta name="apple-mobile-web-app-title" content="Leads"><meta name="application-name" content="Leads">',
+        '<meta name="theme-color" content="#EFECE4" media="(prefers-color-scheme: light)">',
+        '<meta name="theme-color" content="#141719" media="(prefers-color-scheme: dark)">',
         '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&amp;display=swap">',
         '<link rel="stylesheet" href="', $b, '/assets/app.css?v=', $v, '">',

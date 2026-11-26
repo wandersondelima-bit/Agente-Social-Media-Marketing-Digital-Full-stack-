@@ -305,6 +305,19 @@ ck "bloqueio registrado uma vez só" "$(sql "SELECT count(*) FROM log_acessos WH
 post ger sair >/dev/null
 ck "saída registrada" "$(sql "SELECT count(*) FROM log_acessos WHERE resultado='saiu' AND login='gerente.teste'")" 1
 curl -s -D "$J/h" -o /dev/null "$B/?r=login"; grep -qi 'x-robots-tag: noindex' "$J/h" && ok "página fora do Google" || nok "sem noindex"
+
+# Ícone de aplicativo ("Adicionar à Tela de Início"): a tela de login aponta para o ícone e o manifest, e os dois existem
+curl -s -o "$J/out" "$B/?r=login"
+has "login aponta para o apple-touch-icon" 'rel="apple-touch-icon" href="/assets/apple-touch-icon.png"'
+has "login aponta para o manifest" 'rel="manifest" href="/assets/manifest.json"'
+has "nome do aplicativo é Leads" 'name="apple-mobile-web-app-title" content="Leads"'
+ck "apple-touch-icon é PNG de 180 px" "$(python3 -c "from PIL import Image; i=Image.open('$APP/assets/apple-touch-icon.png'); print(i.format, i.size[0], i.size[1], i.mode)" 2>&1)" "PNG 180 180 RGB"
+ck "ícones do manifest existem" "$(python3 - "$APP/assets" <<'PY'
+import json, os, sys
+d = sys.argv[1]; m = json.load(open(d + '/manifest.json'))
+print(m['short_name'], all(os.path.isfile(os.path.join(d, i['src'])) for i in m['icons']))
+PY
+)" "Leads True"
 grep -qi "content-security-policy" "$J/h" && ok "política de segurança de conteúdo" || nok "sem CSP"
 
 echo "== migração de um banco sem as tabelas de registro"
