@@ -202,6 +202,12 @@ function telefone_fmt(string $d): string
     if (strlen($d) === 10) return sprintf('(%s) %s-%s', substr($d, 0, 2), substr($d, 2, 4), substr($d, 6));
     return $d;
 }
+/* Telefone com os dígitos do meio ocultos: (11) •••••-0001. Usado na planilha de quem não é admin. */
+function telefone_parcial(string $d): string
+{
+    if (strlen($d) < 10) return '';
+    return sprintf('(%s) %s-%s', substr($d, 0, 2), str_repeat('•', strlen($d) - 6), substr($d, -4));
+}
 function data_br(?string $iso): string
 {
     if (!$iso) return '';

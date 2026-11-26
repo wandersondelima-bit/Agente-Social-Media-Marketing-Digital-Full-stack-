@@ -258,7 +258,7 @@ function tela_leads(array $u): void
     };
     $h = topo($u, 'leads') . '<main><div class="wrap"><div class="head"><div><h1>' . ($geral ? 'Leads' : 'Meus leads') . '</h1><p class="muted">'
         . ($adm ? 'A tela abre com os leads em aberto. Concluídos e perdidos ficam nos filtros.'
-            : ($geral ? 'Visão de acompanhamento de todos os leads da equipe, só para leitura. Concluídos e perdidos ficam nos filtros.'
+            : ($geral ? 'Acompanhe os leads de toda a equipe. Concluídos e perdidos ficam nos filtros.'
                 : 'Seus leads em aberto. Toque em um nome para ver o contato e as observações.')) . '</p></div>'
         . ($adm ? '<a class="btn btn-primary" href="' . e(url('lead_form')) . '">Novo lead</a>' : '') . '</div>'
         . '<div class="filtros">' . $chip('abertos', 'Em aberto', $cont['abertos']) . $chip('todos', 'Todos', $cont['todos']) . ($geral ? $chip('distribuir', 'A distribuir', $cont['distribuir']) : '')
