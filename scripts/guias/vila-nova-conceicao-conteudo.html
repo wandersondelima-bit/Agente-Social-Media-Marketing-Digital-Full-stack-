@@ -1,0 +1,147 @@
+<main>
+  <section class="g-hero" aria-label="Apresentação">
+    <svg class="orn" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor"><circle cx="24" cy="24" r="22" stroke-width="1.15"/><circle cx="24" cy="24" r="18.4" stroke-width=".6" opacity=".55"/></g></svg>
+    <div class="wrap g-narrow">
+      <p class="g-rotulo">Guia de bairro · Vila Nova Conceição</p>
+      <h1>Quanto custa morar na Vila Nova Conceição</h1>
+      <p class="lead">A conta completa da compra, o aluguel e o que pedir antes da visita. Dados de 2026, com a fonte de cada número.</p>
+
+      <div class="g-form" id="captura">
+        <form id="form" novalidate>
+          <h2>Receba o guia completo</h2>
+          <p class="sub">Deixe seu nome e WhatsApp e o guia abre na hora, nesta página.</p>
+          <label for="nome">Seu nome</label>
+          <input id="nome" name="nome" autocomplete="given-name" placeholder="Como podemos te chamar?" maxlength="80" aria-describedby="nome-err">
+          <p class="err" id="nome-err" hidden>Escreva seu nome.</p>
+          <label for="whats">Seu WhatsApp</label>
+          <input id="whats" name="whats" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="DDD + número" aria-describedby="whats-err">
+          <p class="err" id="whats-err" hidden>Confira o número com DDD.</p>
+          <div class="hp" aria-hidden="true"><label for="empresa">Empresa</label><input id="empresa" name="empresa" tabindex="-1" autocomplete="off"></div>
+          <button class="btn btn-primary" id="send" type="submit">Abrir o guia completo</button>
+          <p class="consent">Ao enviar, você autoriza o contato pelo WhatsApp sobre imóveis na Vila Nova Conceição e região e concorda com a <a href="/privacidade.html">Política de Privacidade</a>.</p>
+        </form>
+        <p class="g-aberto" id="aberto" hidden>Guia aberto. Obrigado, <span id="nomeOk"></span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="guia" class="g-guia" hidden>
+    <div class="wrap g-narrow">
+
+      <section class="g-sec" id="preco">
+        <p class="g-num">01</p>
+        <h2>O preço do m²</h2>
+        <div class="g-destaque"><span class="rs">R$</span><strong>21.600</strong><span class="un">por metro quadrado</span></div>
+        <p>É o valor de venda na Vila Nova Conceição, vizinha do Parque Ibirapuera, no ranking do QuintoAndar publicado em março de 2026.</p>
+        <ul class="g-fatos">
+          <li><strong>1º lugar do país em preço de venda:</strong> entre quase 400 bairros de São Paulo, Rio de Janeiro, Belo Horizonte, Brasília, Curitiba e Porto Alegre, nenhum tem o m² mais caro.</li>
+          <li><strong>Ao lado do Parque Ibirapuera</strong>, entre Moema, o Itaim Bibi e a Vila Olímpia.</li>
+        </ul>
+      </section>
+
+      <section class="g-sec" id="metragem">
+        <p class="g-num">02</p>
+        <h2>Quanto sai um apartamento, por metragem</h2>
+        <div class="g-tabela" role="region" aria-label="Preço estimado por metragem" tabindex="0">
+          <table>
+            <thead><tr><th scope="col">Apartamento</th><th scope="col">Preço estimado</th></tr></thead>
+            <tbody>
+              <tr><td>70&nbsp;m²</td><td>R$&nbsp;1.512.000</td></tr>
+              <tr><td>100&nbsp;m²</td><td>R$&nbsp;2.160.000</td></tr>
+              <tr><td>130&nbsp;m²</td><td>R$&nbsp;2.808.000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="g-nota">Conta feita pelo valor do m² do ranking. O imóvel real varia com a rua, o andar e o estado do prédio.</p>
+      </section>
+
+      <section class="g-sec" id="compra">
+        <p class="g-num">03</p>
+        <h2>Quanto custa comprar, além do preço</h2>
+        <p>Quem compra precisa reservar <strong>cerca de 4% do preço</strong> para o imposto e o cartório. Veja a conta para cada metragem:</p>
+        <div class="g-tabela" role="region" aria-label="Custos de compra por metragem" tabindex="0">
+          <table class="g-custos">
+            <thead><tr><th scope="col"></th><th scope="col">70&nbsp;m²</th><th scope="col">100&nbsp;m²</th><th scope="col">130&nbsp;m²</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">ITBI (3%)</th><td>R$&nbsp;45.360,00</td><td>R$&nbsp;64.800,00</td><td>R$&nbsp;84.240,00</td></tr>
+              <tr><th scope="row">Escritura</th><td>R$&nbsp;6.682,74</td><td>R$&nbsp;7.384,26</td><td>R$&nbsp;10.255,96</td></tr>
+              <tr><th scope="row">Registro</th><td>R$&nbsp;4.427,79</td><td>R$&nbsp;5.310,30</td><td>R$&nbsp;6.814,06</td></tr>
+              <tr class="total"><th scope="row">Total</th><td>R$&nbsp;56.470,53<small>3,7% do preço</small></td><td>R$&nbsp;77.494,56<small>3,6% do preço</small></td><td>R$&nbsp;101.310,02<small>3,6% do preço</small></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="g-fatos">
+          <li><strong>ITBI:</strong> imposto da Prefeitura, de 3% sobre o maior valor entre o da compra e o valor venal de referência. É pago antes da escritura. A alíquota reduzida do financiamento pelo SFH só vale para imóveis de até R$&nbsp;725.808 em 2026, então não se aplica a esses valores.</li>
+          <li><strong>Escritura e registro:</strong> valores das tabelas oficiais de 2026 do Colégio Notarial de São Paulo (versão da capital) e da Associação dos Registradores Imobiliários de São Paulo, em vigor desde 8 de janeiro de 2026. São os mesmos em todos os cartórios do estado e calculados sobre o maior valor entre o declarado e o valor venal.</li>
+          <li><strong>Quem paga:</strong> pela lei (art. 490 do Código Civil), as despesas de escritura e registro ficam com quem compra, salvo combinação diferente no contrato.</li>
+          <li><strong>Não inclui:</strong> os custos do financiamento (avaliação do banco, registro da alienação fiduciária) nem as certidões. Confirme o valor exato com o cartório antes de fechar.</li>
+        </ul>
+      </section>
+
+      <section class="g-sec" id="mensal">
+        <p class="g-num">04</p>
+        <h2>Todo mês: condomínio e IPTU</h2>
+        <ul class="g-fatos">
+          <li><strong>Condomínio:</strong> muda muito de um prédio para outro, conforme o lazer e os serviços. Peça o valor dos últimos meses e pergunte se há taxa extra ou obra prevista.</li>
+          <li><strong>IPTU:</strong> em São Paulo, vem em 10 parcelas e depende do cadastro de cada unidade. Peça o valor do carnê do ano.</li>
+        </ul>
+        <p class="g-nota">Um m² mais barato nem sempre sai mais barato no fim do mês.</p>
+      </section>
+
+      <section class="g-sec" id="investe">
+        <p class="g-num">05</p>
+        <h2>Para quem investe</h2>
+        <div class="g-destaque"><span class="rs">R$</span><strong>99,20</strong><span class="un">por metro quadrado, ao mês</span></div>
+        <ul class="g-fatos">
+          <li>É o <strong>5º aluguel por m² mais caro de São Paulo</strong>, 32% acima da média da cidade (R$&nbsp;75,20), no Índice de Aluguel QuintoAndar Imovelweb de julho de 2026. Um apartamento de 100&nbsp;m² sai por cerca de R$&nbsp;9.920 por mês.</li>
+          <li>Rendimento bruto de <strong>cerca de 5,5% ao ano</strong>, na média, sobre o preço de compra. A conta usa a venda de março e o aluguel de julho de 2026, e é antes de condomínio, IPTU, meses sem inquilino e imposto de renda.</li>
+        </ul>
+      </section>
+
+      <section class="g-sec" id="visita">
+        <p class="g-num">06</p>
+        <h2>Antes da visita</h2>
+        <p>Leve esta lista e peça cada item ao corretor:</p>
+        <div class="g-copia">
+          <ol id="checklist">
+            <li>Valor do condomínio dos últimos meses e se há taxa extra prevista.</li>
+            <li>Valor do IPTU do ano.</li>
+            <li>Número de vagas e se são fixas ou rotativas.</li>
+            <li>Andar, face do sol e se a vista pode ser fechada por obra vizinha.</li>
+            <li>Documentação do imóvel em dia (matrícula atualizada).</li>
+          </ol>
+          <button class="btn btn-ghost" id="copiar" type="button">Copiar a lista</button>
+        </div>
+      </section>
+
+      <section class="g-sec" id="imoveis" hidden>
+        <p class="g-num">07</p>
+        <h2>Apartamentos à venda na Vila Nova Conceição e na região</h2>
+        <p>Estes são os apartamentos do nosso site na Vila Nova Conceição e nos bairros vizinhos. Cada um tem tour em vídeo cômodo a cômodo e ficha completa.</p>
+        <p><strong>Além deles, trabalhamos com uma carteira ampla de apartamentos em parceria na região.</strong> Diga o que você procura e fazemos a curadoria.</p>
+        <ul class="imoveis g-imoveis" id="lista"></ul>
+      </section>
+
+      <section class="g-sec g-fontes" id="fontes">
+        <h2>Fontes</h2>
+        <ul>
+          <li>QuintoAndar: ranking dos bairros mais caros para venda de imóveis no país, publicado em 19 de março de 2026.</li>
+          <li>Índice de Aluguel QuintoAndar Imovelweb, julho de 2026.</li>
+          <li>Prefeitura de São Paulo, ITBI: cálculo do imposto e limites de 2026.</li>
+          <li>Colégio Notarial do Brasil, Seção São Paulo: Tabela de Emolumentos 2026, capital, escritura com valor declarado.</li>
+          <li>Associação dos Registradores Imobiliários de São Paulo (ARISP): Tabela de Emolumentos 2026, registro com valor declarado.</li>
+        </ul>
+        <p class="g-nota">Valores estimados pela média do bairro. Não é proposta nem avaliação de imóvel. Guia atualizado em novembro de 2026.</p>
+      </section>
+
+      <section class="contato g-fim">
+        <div>
+          <h2>Quer saber quanto custa o apartamento certo para você na Vila Nova Conceição?</h2>
+          <p>Nossos corretores credenciados fazem a curadoria dentro do seu perfil e orçamento. Você avalia com calma e só visita o que aprovar.</p>
+        </div>
+        <a class="btn btn-primary wa" href="#" target="_blank" rel="noopener" data-msg="Olá! Li o guia Quanto custa morar na Vila Nova Conceição e gostaria de conhecer apartamentos na região."><svg aria-hidden="true"><use href="#i-wa"/></svg>Falar pelo WhatsApp</a>
+      </section>
+
+    </div>
+  </div>
+</main>
