@@ -132,7 +132,7 @@ function texto_evento(array $ev): string
     return $ev['acao'] . ($d !== '' ? ' · ' . $d : '');
 }
 
-function bloco_historico(array $evs): string
+function bloco_historico(array $evs, bool $ocultar = false): string
 {
     if (!$evs) return '';
     $n = count($evs);
@@ -140,7 +140,7 @@ function bloco_historico(array $evs): string
     foreach (array_slice($evs, 0, HIST_MAX) as $ev) {
         $t = strtotime((string)$ev['quando']);
         $quem = $ev['usuario_id'] !== null ? ((string)($ev['quem'] ?? '') ?: 'usuário removido') : '';
-        $li .= '<li><span class="h-q num">' . e($t ? date('d/m/Y H:i', $t) : '') . '</span><span class="h-o">' . e(texto_evento($ev))
+        $li .= '<li><span class="h-q num">' . e($t ? date('d/m/Y H:i', $t) : '') . '</span><span class="h-o">' . e($ocultar ? ocultar_telefones(texto_evento($ev)) : texto_evento($ev))
             . ($quem !== '' ? ' <span class="muted">· ' . e($quem) . '</span>' : '') . '</span></li>';
     }
     if ($n > HIST_MAX) $li .= '<li class="h-mais muted">E mais ' . ($n - HIST_MAX) . ' ' . ($n - HIST_MAX === 1 ? 'registro anterior' : 'registros anteriores') . '.</li>';
@@ -164,7 +164,8 @@ function linha_lead(array $l, string $modo, array $cors, bool $lixeira, array $h
         $h .= '<span class="st" data-s="' . e($l['status']) . '"><select aria-label="Status de ' . e($l['nome']) . '" data-acao="lead_status">' . opcoes(STATUS, $l['status']) . '</select></span>';
     }
     $h .= '</div><div class="det" id="det-' . $id . '" hidden><dl class="dados">'
-        . '<div><dt>WhatsApp</dt><dd class="num">' . e(telefone_fmt($l['telefone'])) . '</dd></div>'
+        // O gerente vê o telefone parcial, na ficha, nas observações e no histórico; o número completo fica com corretor e admin.
+        . '<div><dt>WhatsApp</dt><dd class="num">' . e($modo === 'gerente' ? telefone_parcial($l['telefone']) : telefone_fmt($l['telefone'])) . '</dd></div>'
         . '<div><dt>Imóvel de referência</dt><dd>';
     $rot = trim((string)$l['imovel_titulo']) . ($l['imovel_codigo'] ? ' (cód. ' . $l['imovel_codigo'] . ')' : '');
     if ($l['imovel_url']) $h .= '<a href="' . e($l['imovel_url']) . '" target="_blank" rel="noopener">' . e($rot) . '</a>';
@@ -182,14 +183,14 @@ function linha_lead(array $l, string $modo, array $cors, bool $lixeira, array $h
     }
     if ($leitura) {
         $h .= '<div class="obs"><span class="rotulo">Observações</span>'
-            . ($l['observacoes'] !== '' ? '<p class="obs-lida">' . nl2br(e($l['observacoes'])) . '</p>' : '<p class="obs-lida muted">Sem observações.</p>') . '</div>';
+            . ($l['observacoes'] !== '' ? '<p class="obs-lida">' . nl2br(e($modo === 'gerente' ? ocultar_telefones($l['observacoes']) : $l['observacoes'])) . '</p>' : '<p class="obs-lida muted">Sem observações.</p>') . '</div>';
         if ($lixeira && $adm) {
             $h .= '<form method="post" action="' . e(url('lead_restaurar')) . '" class="acoes">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '"><button class="btn btn-primary btn-small" type="submit">Restaurar lead</button></form>'
                 . '<form method="post" action="' . e(url('lead_apagar')) . '" class="acoes confirma">' . campo_csrf() . '<input type="hidden" name="id" value="' . $id . '">'
                 . '<button class="btn btn-ghost btn-small btn-danger" type="submit" data-confirma="Confirmar: apagar para sempre">Excluir definitivamente</button></form>'
                 . '<p class="dica">Excluir definitivamente apaga o lead e o histórico dele do banco. Não dá para desfazer.</p>';
         }
-        return $h . bloco_historico($hist) . '</div></li>';
+        return $h . bloco_historico($hist, $modo === 'gerente') . '</div></li>';
     }
     $h .= '<div class="motivo" data-motivo' . ($l['status'] === 'perdido' ? '' : ' hidden') . '><label for="mot-' . $id . '">Motivo da perda</label>'
         . '<select class="campo" id="mot-' . $id . '" data-acao="lead_motivo">' . opcoes(MOTIVOS, $l['motivo_perda'], 'Escolha o motivo') . '</select></div>';

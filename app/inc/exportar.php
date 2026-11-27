@@ -120,7 +120,7 @@ function tela_exportar(array $u): void
         . '<div class="acoes"><button class="btn btn-primary" type="submit" name="r" value="exportar_arquivo"' . ($n ? '' : ' disabled') . '>Baixar planilha</button>'
         . '<button class="btn btn-ghost" type="submit" name="r" value="exportar">Atualizar contagem</button></div></form>'
         . '<p class="muted nota-lista">A planilha traz contato, imóvel, origem, campanha (UTM), status, motivo da perda, corretor, observações e há quantos dias o lead entrou. '
-        . ($u['papel'] === 'admin' ? 'Guarde o arquivo com cuidado: ele tem nome e telefone de clientes.' : 'Para proteger os clientes, o telefone sai com os dígitos do meio ocultos.') . '</p>'
+        . ($u['papel'] === 'admin' ? 'Guarde o arquivo com cuidado: ele tem nome e telefone de clientes.' : 'Para proteger os clientes, o telefone sai com os dígitos do meio ocultos, também nas observações.') . '</p>'
         . '</div></main>';
     pagina('Exportar', $h);
 }
@@ -140,7 +140,7 @@ function linhas_exportacao(array $flt, bool $tel_completo): array
             ['s', (string)($l['corretor'] ?? '') !== '' ? (string)$l['corretor'] : 'A distribuir'], ['s', (string)$l['nome']], ['s', $tel_completo ? telefone_fmt((string)$l['telefone']) : telefone_parcial((string)$l['telefone'])],
             ['s', (string)$l['imovel_codigo']], ['s', (string)$l['imovel_titulo']], ['s', (string)$l['imovel_url']], ['s', (string)$l['interesse']], ['s', (string)$l['origem']],
             ['s', (string)($utm['utm_source'] ?? '')], ['s', (string)($utm['utm_medium'] ?? '')], ['s', (string)($utm['utm_campaign'] ?? '')], ['s', (string)($utm['utm_content'] ?? '')],
-            ['s', (string)$l['observacoes']], ['d', substr((string)$l['atualizado_em'], 0, 10)], ['n', $dias],
+            ['s', $tel_completo ? (string)$l['observacoes'] : ocultar_telefones((string)$l['observacoes'])], ['d', substr((string)$l['atualizado_em'], 0, 10)], ['n', $dias],
             ['d', $l['excluido_em'] ? substr((string)$l['excluido_em'], 0, 10) : ''],
         ];
     }
