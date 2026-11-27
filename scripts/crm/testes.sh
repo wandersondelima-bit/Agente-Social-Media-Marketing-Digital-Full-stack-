@@ -121,6 +121,12 @@ ck "sem login, a lista manda para o login" "$(get sem r=leads)" 303
 
 echo "== gerente (somente leitura)"
 ck "login do gerente" "$(post ger entrar -d login=gerente.teste -d senha=$PG)" 303
+sql "UPDATE leads SET observacoes='Cliente pediu retorno no (11 97873-0170), código 2902302, até R$ 1.250.000' WHERE nome='Lead Sem Dono'"
+get ger "r=leads&f=todos" >/dev/null
+hasnt "ficha do gerente não mostra telefone completo" '90000-000'; has "ficha do gerente mostra o telefone parcial" '(11) •••••-0001'
+hasnt "observação do gerente esconde o telefone escrito" '97873-0170'; has "observação do gerente mostra o telefone parcial" '(11 •••••-0170)'
+has "observação do gerente mantém código e preço" 'código 2902302, até R$ 1.250.000'
+get adm "r=leads&f=todos" >/dev/null; has "ficha do admin mostra o telefone completo" '(11) 90000-0001'; has "observação do admin mostra o telefone completo" '97873-0170'
 get ger "r=leads&f=todos" >/dev/null
 has "vê lead da Ana" 'Lead Da Ana'; has "vê lead do Bruno" 'Lead Do Bruno'; has "vê lead sem dono" 'Lead Sem Dono'
 hasnt "não tem seletor de status nem de corretor" 'data-acao='; hasnt "não tem Novo lead" 'Novo lead'; hasnt "não tem botão de WhatsApp" 'Abrir WhatsApp'
@@ -141,6 +147,7 @@ ck "planilha do gerente tem cabeçalho + 3 leads" "$(xlsx_linhas "$J/arq")" 4
 unzip -p "$J/arq" xl/worksheets/sheet1.xml > "$J/xml"
 grep -q '(11) •••••-0001' "$J/xml" && ok "planilha do gerente traz o telefone parcial" || nok "planilha do gerente sem o telefone parcial"
 grep -q '90000-000' "$J/xml" && nok "planilha do gerente vazou o telefone completo" || ok "planilha do gerente não traz telefone completo"
+grep -q '97873-0170' "$J/xml" && nok "observação na planilha do gerente vazou telefone" || ok "observação na planilha do gerente esconde o telefone"
 ck "gerente baixa o csv" "$(baixar ger 'r=exportar_arquivo&fmt=csv')" 200
 grep -q '90000-000' "$J/arq" && nok "csv do gerente vazou o telefone completo" || ok "csv do gerente não traz telefone completo"
 get ger "r=leads" >/dev/null; hasnt "lista do gerente não fala em só leitura" 'só para leitura'
@@ -154,6 +161,7 @@ get adm "r=exportar" >/dev/null; has "resumo mensal aparece" 'Resumo pela data d
 ck "xlsx de tudo" "$(baixar adm 'r=exportar_arquivo')" 200
 ck "xlsx válido com cabeçalho + 5" "$(xlsx_linhas "$J/arq")" 6
 unzip -p "$J/arq" xl/worksheets/sheet1.xml | grep -q '(11) 90000-0001' && ok "planilha do admin traz o telefone completo" || nok "planilha do admin sem o telefone completo"
+unzip -p "$J/arq" xl/worksheets/sheet1.xml | grep -q '97873-0170' && ok "observação na planilha do admin fica completa" || nok "observação do admin perdeu o telefone"
 grep -q 'sheet' <(unzip -l "$J/arq" 2>/dev/null) && ok "xlsx tem a aba de dados" || nok "xlsx sem aba"
 baixar adm 'r=exportar_arquivo&enviado=1&s[]=perdido' >/dev/null; ck "filtro só Perdido" "$(xlsx_linhas "$J/arq")" 2
 baixar adm 'r=exportar_arquivo&enviado=1&s[]=novo&s[]=andamento&c=sem' >/dev/null; ck "filtro A distribuir em aberto" "$(xlsx_linhas "$J/arq")" 4

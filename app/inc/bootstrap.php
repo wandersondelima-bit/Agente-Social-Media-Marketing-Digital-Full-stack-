@@ -208,6 +208,21 @@ function telefone_parcial(string $d): string
     if (strlen($d) < 10) return '';
     return sprintf('(%s) %s-%s', substr($d, 0, 2), str_repeat('•', strlen($d) - 6), substr($d, -4));
 }
+/* Esconde, num texto livre (observações, histórico), qualquer número com cara de telefone: DDD + 8 ou 9 dígitos,
+   com ou sem 55, parênteses, espaço, ponto ou hífen. Preços, códigos de imóvel, CEPs e datas não têm dígitos suficientes. */
+function ocultar_telefones(string $s): string
+{
+    return preg_replace_callback('/(?<!\d)(?:\+?55[\s.-]?)?\(?\d{2}\)?[\s.-]?(?:9[\s.-]?)?\d{4}[\s.-]?\d{4}(?!\d)/u', function ($m) {
+        $n = strlen(so_digitos($m[0]));
+        $ini = $n >= 12 ? $n - 9 : 2;       // mantém o 55 (se houver) e o DDD
+        if ($n < 10 || $n > 13) return $m[0];
+        $out = ''; $i = 0;                  // troca só os dígitos do meio, a pontuação de quem escreveu fica
+        foreach (mb_str_split($m[0]) as $c) {
+            if (ctype_digit($c)) { $out .= ($i >= $ini && $i < $n - 4) ? '•' : $c; $i++; } else $out .= $c;
+        }
+        return $out;
+    }, $s) ?? $s;
+}
 function data_br(?string $iso): string
 {
     if (!$iso) return '';
