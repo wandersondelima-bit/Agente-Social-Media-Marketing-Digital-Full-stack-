@@ -459,6 +459,8 @@ def render_html(j, f):
         f = dict(f, iptu_10x=j["iptu_10x"])
     if j.get("condominio_valor"):   # idem para o condomínio corrigido pelo usuário
         f = dict(f, condominio=j["condominio_valor"])
+    if j.get("preco_valor"):   # preço passado pelo usuário (ex.: direto do proprietário), vale mais que o do anúncio
+        f = dict(f, preco=j["preco_valor"])
     preco = f"R$ {brl(f['preco'])}"
     hoje = date.today()
     area = f["area"]

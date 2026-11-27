@@ -50,6 +50,7 @@ título, mês do valor, mapa, código, WhatsApp/planilha (vêm do modelo).
 
 - IPTU confirmado pelo usuário: `"iptu_10x": 1050` no `imovel.json` (vale mais que o do anúncio).
 - Condomínio confirmado/corrigido pelo usuário: `"condominio_valor": 1400` no `imovel.json` (vale mais que o do anúncio).
+- Preço de venda informado pelo usuário (ex.: combinado com o proprietário antes de o anúncio ser atualizado): `"preco_valor": 1740000` no `imovel.json` (vale mais que o do anúncio; o cartão da página inicial é editado à parte).
 - Valor com centavos (número JSON com ponto): `"condominio_valor": 2032.84`, `"iptu_10x": 899.56` saem como
   R$ 2.032,84 e 10x R$ 899,56. Valor inteiro sai sem centavos, como antes (R$ 1.800).
 - Vagas com observação do proprietário: `"vagas_obs": "fixas"` sai na ficha técnica como nota sob o número
